@@ -28,8 +28,9 @@ function HomePage() {
       <header className="flex items-center justify-between px-4 pt-4 pb-2">
         <div className="w-10" />
         <h1 className="text-lg font-bold tracking-tight">
-          CONV<span className="text-primary">AE</span>
+          Ken<span className="text-primary">der</span>
         </h1>
+
         <button
           aria-label="Notifications"
           className="relative flex h-10 w-10 items-center justify-center rounded-full bg-surface"
