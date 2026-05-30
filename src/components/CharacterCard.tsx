@@ -1,10 +1,13 @@
 import { MessageSquare } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import type { Character } from "@/lib/mock-data";
 
 export function CharacterCard({ char }: { char: Character }) {
   return (
-    <article
-      className="group relative mb-3 overflow-hidden rounded-[20px] bg-surface animate-pop-in"
+    <Link
+      to="/chat/$id"
+      params={{ id: char.id }}
+      className="group relative mb-3 block overflow-hidden rounded-[20px] bg-surface animate-pop-in"
       style={{ height: char.height * 4 }}
     >
       <img
@@ -15,13 +18,12 @@ export function CharacterCard({ char }: { char: Character }) {
       />
       <div className="absolute inset-0 gradient-overlay" />
 
-      <button
-        type="button"
-        aria-label={`Chat with ${char.name}`}
-        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/55 text-foreground backdrop-blur-md transition active:scale-90"
+      <span
+        aria-hidden
+        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/55 text-foreground backdrop-blur-md"
       >
         <MessageSquare className="h-4 w-4" />
-      </button>
+      </span>
 
       <div className="absolute inset-x-0 bottom-0 p-3">
         <h3 className="line-clamp-1 text-sm font-semibold text-foreground">{char.name}</h3>
@@ -33,6 +35,6 @@ export function CharacterCard({ char }: { char: Character }) {
           </span>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }
