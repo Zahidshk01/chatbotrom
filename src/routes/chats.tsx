@@ -57,7 +57,11 @@ function ChatsPage() {
         <ul className="px-2">
           {chats.map((c) => (
             <li key={c.id}>
-              <button className="flex w-full items-center gap-3 rounded-[20px] px-3 py-3 text-left active:bg-surface">
+              <Link
+                to="/chat/$id"
+                params={{ id: c.characterId }}
+                className="flex w-full items-center gap-3 rounded-[20px] px-3 py-3 text-left active:bg-surface"
+              >
                 <img
                   src={c.image}
                   alt={c.name}
@@ -81,8 +85,9 @@ function ChatsPage() {
                     )}
                   </div>
                 </div>
-              </button>
+              </Link>
             </li>
+
           ))}
         </ul>
       )}
