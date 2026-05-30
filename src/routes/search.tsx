@@ -8,8 +8,8 @@ import { categories, characters, recents, trending } from "@/lib/mock-data";
 export const Route = createFileRoute("/search")({
   head: () => ({
     meta: [
-      { title: "Search · CONVAE" },
-      { name: "description", content: "Search characters, creators and categories across CONVAE." },
+      { title: "Search · Kender" },
+      { name: "description", content: "Search characters, creators and categories across Kender." },
     ],
   }),
   component: SearchPage,

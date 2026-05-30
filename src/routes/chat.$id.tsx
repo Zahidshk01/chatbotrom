@@ -8,7 +8,7 @@ export const Route = createFileRoute("/chat/$id")({
     const c = characters.find((x) => x.id === params.id);
     return {
       meta: [
-        { title: `${c?.name ?? "Chat"} · CONVAE` },
+        { title: `${c?.name ?? "Chat"} · Kender` },
         { name: "description", content: c?.tagline ?? "Chat with an AI character." },
       ],
     };
