@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Search, Trash2, MessageCircle, Pin } from "lucide-react";
 import { chats as initialChats } from "@/lib/mock-data";
 
+
 export const Route = createFileRoute("/chats")({
   head: () => ({
     meta: [
