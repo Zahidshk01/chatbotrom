@@ -8,10 +8,10 @@ import { categories, characters } from "@/lib/mock-data";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CONVAE — Discover AI Characters" },
-      { name: "description", content: "Chat with thousands of AI characters. Discover romance, anime, fantasy, gaming companions and more on CONVAE." },
-      { property: "og:title", content: "CONVAE — Discover AI Characters" },
-      { property: "og:description", content: "Chat with thousands of AI characters on CONVAE." },
+      { title: "Kender — Discover AI Characters" },
+      { name: "description", content: "Chat with thousands of AI characters. Discover romance, anime, fantasy, gaming companions and more on Kender." },
+      { property: "og:title", content: "Kender — Discover AI Characters" },
+      { property: "og:description", content: "Chat with thousands of AI characters on Kender." },
     ],
   }),
   component: HomePage,
@@ -28,8 +28,9 @@ function HomePage() {
       <header className="flex items-center justify-between px-4 pt-4 pb-2">
         <div className="w-10" />
         <h1 className="text-lg font-bold tracking-tight">
-          CONV<span className="text-primary">AE</span>
+          Ken<span className="text-primary">der</span>
         </h1>
+
         <button
           aria-label="Notifications"
           className="relative flex h-10 w-10 items-center justify-center rounded-full bg-surface"

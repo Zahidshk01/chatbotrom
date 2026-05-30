@@ -5,8 +5,8 @@ import { Camera, Sparkles, Globe, Lock, EyeOff } from "lucide-react";
 export const Route = createFileRoute("/create")({
   head: () => ({
     meta: [
-      { title: "Create · CONVAE" },
-      { name: "description", content: "Create your own AI character on CONVAE." },
+      { title: "Create · Kender" },
+      { name: "description", content: "Create your own AI character on Kender." },
     ],
   }),
   component: CreatePage,

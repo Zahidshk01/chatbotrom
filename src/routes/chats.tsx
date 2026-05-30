@@ -7,7 +7,7 @@ import { chats as initialChats } from "@/lib/mock-data";
 export const Route = createFileRoute("/chats")({
   head: () => ({
     meta: [
-      { title: "Chats · CONVAE" },
+      { title: "Chats · Kender" },
       { name: "description", content: "Your conversations with AI characters." },
     ],
   }),

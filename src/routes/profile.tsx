@@ -8,8 +8,8 @@ import { profile } from "@/lib/mock-data";
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "Profile · CONVAE" },
-      { name: "description", content: "Your CONVAE profile, characters, and settings." },
+      { title: "Profile · Kender" },
+      { name: "description", content: "Your Kender profile, characters, and settings." },
     ],
   }),
   component: ProfilePage,
