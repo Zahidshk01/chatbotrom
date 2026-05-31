@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BottomNav } from "../components/BottomNav";
+import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -122,6 +123,7 @@ function RootComponent() {
       <div className="dark mx-auto min-h-screen max-w-md bg-background pb-24">
         <Outlet />
         <BottomNav />
+        <Toaster position="top-center" theme="dark" />
       </div>
     </QueryClientProvider>
   );

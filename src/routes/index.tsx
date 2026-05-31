@@ -1,17 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Bell, Search, Sparkles } from "lucide-react";
+import { Bell, Plus } from "lucide-react";
 import { CategoryChips } from "@/components/CategoryChips";
-import { MasonryGrid } from "@/components/MasonryGrid";
+import { CharacterPost } from "@/components/CharacterPost";
 import { categories, characters } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Kender — Discover AI Characters" },
-      { name: "description", content: "Chat with thousands of AI characters. Discover romance, anime, fantasy, gaming companions and more on Kender." },
+      { name: "description", content: "An Instagram-style feed of AI characters. Like, share, and chat with them on Kender." },
       { property: "og:title", content: "Kender — Discover AI Characters" },
-      { property: "og:description", content: "Chat with thousands of AI characters on Kender." },
+      { property: "og:description", content: "An Instagram-style feed of AI characters on Kender." },
     ],
   }),
   component: HomePage,
@@ -20,53 +20,35 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const [cat, setCat] = useState("All");
   const filtered = cat === "All" ? characters : characters.filter((c) => c.category === cat);
-  // duplicate to give the feed some length
   const feed = [...filtered, ...filtered];
 
   return (
     <div className="safe-top">
-      <header className="flex items-center justify-between px-4 pt-4 pb-2">
-        <div className="w-10" />
-        <h1 className="text-lg font-bold tracking-tight">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 py-3 backdrop-blur-xl">
+        <h1 className="text-xl font-bold tracking-tight">
           Ken<span className="text-primary">der</span>
         </h1>
-
-        <button
-          aria-label="Notifications"
-          className="relative flex h-10 w-10 items-center justify-center rounded-full bg-surface"
-        >
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
-        </button>
-      </header>
-
-      <div className="px-4 pt-2">
-        <label className="relative flex h-14 items-center rounded-[28px] bg-surface px-4">
-          <Search className="h-5 w-5 text-muted-foreground" />
-          <input
-            className="ml-3 h-full flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-            placeholder="Search characters, creators, or categories"
-          />
-        </label>
-      </div>
-
-      <CategoryChips items={categories} selected={cat} onSelect={setCat} />
-
-      <MasonryGrid items={feed} />
-
-      <div className="px-4 pt-2">
-        <div className="sticky bottom-24 flex items-center justify-between gap-3 rounded-[20px] gradient-accent p-4 shadow-accent">
-          <div className="flex items-center gap-3">
-            <Sparkles className="h-6 w-6 text-primary-foreground" />
-            <div className="text-primary-foreground">
-              <div className="text-sm font-semibold">Go Premium</div>
-              <div className="text-xs opacity-80">Unlimited chats · faster replies</div>
-            </div>
-          </div>
-          <button className="rounded-full bg-background/20 px-4 py-2 text-xs font-semibold text-primary-foreground backdrop-blur">
-            Upgrade
+        <div className="flex items-center gap-2">
+          <button aria-label="Create" className="flex h-9 w-9 items-center justify-center rounded-full bg-surface active:scale-95">
+            <Plus className="h-5 w-5" />
+          </button>
+          <button aria-label="Notifications" className="relative flex h-9 w-9 items-center justify-center rounded-full bg-surface active:scale-95">
+            <Bell className="h-5 w-5" />
+            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
           </button>
         </div>
+      </header>
+
+      {/* Stories / categories rail */}
+      <div className="border-b border-border/60">
+        <CategoryChips items={categories} selected={cat} onSelect={setCat} />
+      </div>
+
+      {/* Feed */}
+      <div className="divide-y divide-border/60">
+        {feed.map((c, i) => (
+          <CharacterPost key={`${c.id}-${i}`} char={c} />
+        ))}
       </div>
     </div>
   );
