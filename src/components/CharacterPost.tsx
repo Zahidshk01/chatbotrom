@@ -1,14 +1,22 @@
 import { useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Heart, MessageCircle, Bookmark, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import type { Character } from "@/lib/mock-data";
+
+function fmt(n: number) {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(n);
+}
 
 export function CharacterPost({ char }: { char: Character }) {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [likes, setLikes] = useState(() => 1000 + Math.floor(Math.random() * 90000));
+  const [following, setFollowing] = useState(false);
+  const [likes, setLikes] = useState(() => 5000 + Math.floor(Math.random() * 40000));
+  const comments = 1000 + Math.floor(Math.random() * 150000);
 
   const toggleLike = () => {
     setLiked((v) => {
@@ -17,44 +25,45 @@ export function CharacterPost({ char }: { char: Character }) {
     });
   };
 
-  const share = async () => {
-    const url = `${window.location.origin}/chat/${char.id}`;
-    const data = { title: char.name, text: `Chat with ${char.name} on Kender`, url };
-    try {
-      if (navigator.share) {
-        await navigator.share(data);
-      } else {
-        await navigator.clipboard.writeText(url);
-        toast.success("Link copied to clipboard");
-      }
-    } catch {
-      /* user cancelled */
-    }
+  const toggleSave = () => {
+    setSaved((s) => {
+      toast.success(s ? "Removed from your profile" : "Saved to your profile");
+      return !s;
+    });
+  };
+
+  const toggleFollow = () => {
+    setFollowing((f) => {
+      toast.success(f ? `Unfollowed ${char.creator}` : `Following ${char.creator}`);
+      return !f;
+    });
   };
 
   const openChat = () => navigate({ to: "/chat/$id", params: { id: char.id } });
 
+  // Creator initial for the avatar circle (matches reference)
+  const creatorLabel = char.creator.replace(/^@/, "");
+  const creatorInitial = creatorLabel.charAt(0).toUpperCase();
+
   return (
-    <article className="animate-pop-in">
-      {/* Header */}
-      <header className="flex items-center gap-3 px-4 py-2.5">
-        <Link
-          to="/chat/$id"
-          params={{ id: char.id }}
-          className="relative h-9 w-9 shrink-0 rounded-full p-[2px] gradient-accent"
-        >
-          <img src={char.image} alt={char.name} className="h-full w-full rounded-full border-2 border-background object-cover" />
-        </Link>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1 text-sm font-semibold leading-tight">
-            <span className="truncate">{char.name}</span>
-            <span className="text-primary">·</span>
-            <span className="text-[11px] font-medium text-primary">AI</span>
+    <article className="animate-pop-in pb-4">
+      {/* Creator row (above image, like the reference) */}
+      <header className="flex items-center justify-between px-4 py-2.5">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-foreground">
+            {creatorInitial}
           </div>
-          <div className="truncate text-[11px] text-muted-foreground">{char.creator} · {char.category}</div>
+          <span className="truncate text-sm font-semibold">{creatorLabel}</span>
         </div>
-        <button aria-label="More" className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground active:scale-95">
-          <MoreHorizontal className="h-5 w-5" />
+        <button
+          onClick={toggleFollow}
+          className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors ${
+            following
+              ? "border-border bg-surface text-muted-foreground"
+              : "border-border bg-transparent text-foreground active:scale-95"
+          }`}
+        >
+          {following ? "Following" : "Follow"}
         </button>
       </header>
 
@@ -63,61 +72,45 @@ export function CharacterPost({ char }: { char: Character }) {
         onDoubleClick={toggleLike}
         onClick={openChat}
         className="relative block w-full overflow-hidden bg-surface"
-        aria-label={`Open chat with ${char.name}`}
+        aria-label={`Chat with ${char.name}`}
       >
         <img src={char.image} alt={char.name} className="aspect-[4/5] w-full object-cover" loading="lazy" />
-        <span className="absolute left-3 top-3 rounded-full bg-background/55 px-2 py-1 text-[10px] font-semibold backdrop-blur-md">
-          {char.chats} chats
+        {/* Floating chat bubble like reference */}
+        <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-md bg-background/70 backdrop-blur-md">
+          <MessageCircle className="h-5 w-5 fill-foreground text-foreground" />
         </span>
       </button>
 
-      {/* Actions */}
-      <div className="flex items-center gap-1 px-2 pt-2">
-        <button
-          onClick={toggleLike}
-          aria-label="Like"
-          className="flex h-10 w-10 items-center justify-center rounded-full active:scale-90 transition-transform"
-        >
+      {/* Counts row (under image, like reference) */}
+      <div className="flex items-center gap-5 px-4 pt-3">
+        <button onClick={toggleLike} className="flex items-center gap-2 active:scale-95">
           <Heart className={`h-6 w-6 transition-colors ${liked ? "fill-primary text-primary" : "text-foreground"}`} />
+          <span className="text-sm font-semibold">{fmt(likes)}</span>
         </button>
-        <button
-          onClick={openChat}
-          aria-label="Comment / chat"
-          className="flex h-10 w-10 items-center justify-center rounded-full active:scale-90"
-        >
+        <button onClick={openChat} className="flex items-center gap-2 active:scale-95">
           <MessageCircle className="h-6 w-6" />
+          <span className="text-sm font-semibold">{fmt(comments)}</span>
         </button>
         <button
-          onClick={share}
-          aria-label="Share"
-          className="flex h-10 w-10 items-center justify-center rounded-full active:scale-90"
+          onClick={toggleSave}
+          aria-label="Save"
+          className="ml-auto flex h-9 w-9 items-center justify-center active:scale-95"
         >
-          <Send className="h-6 w-6" />
+          <Bookmark className={`h-6 w-6 ${saved ? "fill-primary text-primary" : "text-foreground"}`} />
         </button>
-        <div className="ml-auto">
-          <button
-            onClick={() => setSaved((s) => !s)}
-            aria-label="Save"
-            className="flex h-10 w-10 items-center justify-center rounded-full active:scale-90"
-          >
-            <Bookmark className={`h-6 w-6 ${saved ? "fill-foreground" : ""}`} />
-          </button>
-        </div>
+        <button aria-label="More" className="flex h-9 w-9 items-center justify-center text-muted-foreground active:scale-95">
+          <MoreHorizontal className="h-5 w-5" />
+        </button>
       </div>
 
-      {/* Meta */}
-      <div className="px-4 pb-4">
-        <div className="text-sm font-semibold">{likes.toLocaleString()} likes</div>
-        <p className="mt-1 text-sm leading-snug">
-          <span className="font-semibold">{char.name}</span>{" "}
-          <span className="text-foreground/90">{char.tagline}</span>
+      {/* Name + relation + tagline */}
+      <div className="px-4 pt-1.5">
+        <p className="text-sm leading-snug">
+          <span className="font-semibold">{char.name}</span>
+          <span className="text-muted-foreground"> ({char.relation})</span>
+          <span className="text-foreground/90">  {char.tagline} </span>
+          <button onClick={openChat} className="text-muted-foreground active:opacity-70">…more</button>
         </p>
-        <button
-          onClick={openChat}
-          className="mt-1 text-xs text-muted-foreground active:opacity-70"
-        >
-          Tap comment to chat with {char.name.split(" ")[0]}…
-        </button>
       </div>
     </article>
   );

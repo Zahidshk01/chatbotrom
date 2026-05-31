@@ -16,6 +16,7 @@ export type Character = {
   category: string;
   height: number; // tailwind h-* scale
   tagline: string;
+  relation: string; // shown in brackets next to name — who they are to you / topic
 };
 
 export const categories = [
@@ -31,14 +32,14 @@ export const categories = [
 ];
 
 export const characters: Character[] = [
-  { id: "1", name: "Kira Nyx",          image: c1, creator: "@nova",     chats: "1.2M", category: "Anime",    height: 96, tagline: "Cyberpunk hacker with a soft side." },
-  { id: "2", name: "Lyra Goldleaf",     image: c2, creator: "@mythos",   chats: "842K", category: "Fantasy",  height: 72, tagline: "Elven warrior sworn to the forest." },
-  { id: "3", name: "Sebastian Vale",    image: c3, creator: "@nightowl", chats: "2.4M", category: "Romance",  height: 88, tagline: "A vampire lord with secrets." },
-  { id: "4", name: "Mochi",             image: c4, creator: "@kawaii",   chats: "560K", category: "Friends",  height: 64, tagline: "Your cozy morning companion." },
-  { id: "5", name: "Cmdr. Rook",        image: c5, creator: "@orbit",    chats: "318K", category: "Adventure",height: 80, tagline: "Leads the 9th deep-space squad." },
-  { id: "6", name: "Scarlet Hex",       image: c6, creator: "@coven",    chats: "1.8M", category: "Horror",   height: 76, tagline: "A witch with too many secrets." },
-  { id: "7", name: "Det. Marlowe",      image: c7, creator: "@noirstudio",chats: "245K",category: "Story",    height: 84, tagline: "Walks the rain-slick streets alone." },
-  { id: "8", name: "Hana Aoki",         image: c8, creator: "@sakura",   chats: "990K", category: "Anime",    height: 68, tagline: "Sweet, smart, and a little shy." },
+  { id: "1", name: "Kira Nyx",          image: c1, creator: "@nova",     chats: "1.2M", category: "Anime",    height: 96, tagline: "Cyberpunk hacker with a soft side.",        relation: "hacker friend" },
+  { id: "2", name: "Lyra Goldleaf",     image: c2, creator: "@mythos",   chats: "842K", category: "Fantasy",  height: 72, tagline: "Elven warrior sworn to the forest.",        relation: "your bodyguard" },
+  { id: "3", name: "Sebastian Vale",    image: c3, creator: "@nightowl", chats: "2.4M", category: "Romance",  height: 88, tagline: "A vampire lord with secrets.",              relation: "obsessive lover" },
+  { id: "4", name: "Mochi",             image: c4, creator: "@kawaii",   chats: "560K", category: "Friends",  height: 64, tagline: "Your cozy morning companion.",              relation: "best friend" },
+  { id: "5", name: "Cmdr. Rook",        image: c5, creator: "@orbit",    chats: "318K", category: "Adventure",height: 80, tagline: "Leads the 9th deep-space squad.",           relation: "your captain" },
+  { id: "6", name: "Scarlet Hex",       image: c6, creator: "@coven",    chats: "1.8M", category: "Horror",   height: 76, tagline: "A witch with too many secrets.",            relation: "cursed ex" },
+  { id: "7", name: "Det. Marlowe",      image: c7, creator: "@noirstudio",chats: "245K",category: "Story",    height: 84, tagline: "Walks the rain-slick streets alone.",       relation: "murder case" },
+  { id: "8", name: "Hana Aoki",         image: c8, creator: "@sakura",   chats: "990K", category: "Anime",    height: 68, tagline: "Sweet, smart, and a little shy.",           relation: "childhood crush" },
 ];
 
 export const trending = [
