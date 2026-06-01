@@ -1,9 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, Plus } from "lucide-react";
-import { CategoryChips } from "@/components/CategoryChips";
 import { CharacterPost } from "@/components/CharacterPost";
-import { categories, characters } from "@/lib/mock-data";
+import { characters } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -18,9 +16,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const [cat, setCat] = useState("All");
-  const filtered = cat === "All" ? characters : characters.filter((c) => c.category === cat);
-  const feed = [...filtered, ...filtered];
+  const feed = [...characters, ...characters];
 
   return (
     <div className="safe-top">
@@ -29,22 +25,24 @@ function HomePage() {
           Ken<span className="text-primary">der</span>
         </h1>
         <div className="flex items-center gap-2">
-          <button aria-label="Create" className="flex h-9 w-9 items-center justify-center rounded-full bg-surface active:scale-95">
+          <Link
+            to="/create"
+            aria-label="Create"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface active:scale-95"
+          >
             <Plus className="h-5 w-5" />
-          </button>
-          <button aria-label="Notifications" className="relative flex h-9 w-9 items-center justify-center rounded-full bg-surface active:scale-95">
+          </Link>
+          <Link
+            to="/notifications"
+            aria-label="Notifications"
+            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-surface active:scale-95"
+          >
             <Bell className="h-5 w-5" />
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
-          </button>
+          </Link>
         </div>
       </header>
 
-      {/* Stories / categories rail */}
-      <div className="border-b border-border/60">
-        <CategoryChips items={categories} selected={cat} onSelect={setCat} />
-      </div>
-
-      {/* Feed */}
       <div className="divide-y divide-border/60">
         {feed.map((c, i) => (
           <CharacterPost key={`${c.id}-${i}`} char={c} />
