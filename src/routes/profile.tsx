@@ -1,9 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
-  Sparkles, Share2, Pencil, ChevronRight,
-  User, Heart, Bookmark, Users, Settings, HelpCircle, Shield, LogOut,
+  Sparkles, Share2, Pencil, ChevronRight, Bookmark,
+  User, Heart, Users, Settings, HelpCircle, Shield, LogOut,
 } from "lucide-react";
-import { profile } from "@/lib/mock-data";
+import { profile, characters } from "@/lib/mock-data";
+import { useSavedIds } from "@/lib/saved-store";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -16,17 +17,20 @@ export const Route = createFileRoute("/profile")({
 });
 
 const sections = [
-  { icon: User,     label: "My Characters" },
-  { icon: Heart,    label: "Liked Characters" },
-  { icon: Bookmark, label: "Saved Characters" },
-  { icon: Users,    label: "Following" },
-  { icon: Settings, label: "Settings" },
+  { icon: User,       label: "My Characters" },
+  { icon: Heart,      label: "Liked Characters" },
+  { icon: Users,      label: "Following" },
+  { icon: Settings,   label: "Settings" },
   { icon: HelpCircle, label: "Help" },
-  { icon: Shield,   label: "Privacy Policy" },
-  { icon: LogOut,   label: "Log out", danger: true },
+  { icon: Shield,     label: "Privacy Policy" },
+  { icon: LogOut,     label: "Log out", danger: true },
 ];
 
 function ProfilePage() {
+  const navigate = useNavigate();
+  const savedIds = useSavedIds();
+  const savedChars = characters.filter((c) => savedIds.includes(c.id));
+
   return (
     <div className="safe-top">
       <div className="flex flex-col items-center px-4 pt-6 text-center">
@@ -45,7 +49,7 @@ function ProfilePage() {
           ["Created", profile.stats.created],
           ["Followers", profile.stats.followers],
           ["Following", profile.stats.following],
-          ["Likes", profile.stats.likes],
+          ["Saved", savedChars.length],
         ].map(([k, v]) => (
           <div key={k}>
             <div className="text-base font-bold">{v}</div>
@@ -62,6 +66,39 @@ function ProfilePage() {
           <Share2 className="h-4 w-4" /> Share
         </button>
       </div>
+
+      {/* Saved characters section */}
+      <section className="mt-6 px-4">
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
+            <Bookmark className="h-4 w-4 fill-primary text-primary" />
+            Saved Characters
+            <span className="text-muted-foreground">({savedChars.length})</span>
+          </h2>
+        </div>
+
+        {savedChars.length === 0 ? (
+          <p className="mt-3 rounded-2xl bg-surface px-4 py-6 text-center text-sm text-muted-foreground">
+            No saved characters yet. Tap the bookmark icon on any post to save them here.
+          </p>
+        ) : (
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {savedChars.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => navigate({ to: "/chat/$id", params: { id: c.id } })}
+                className="group relative aspect-[3/4] overflow-hidden rounded-xl bg-surface active:scale-95"
+              >
+                <img src={c.image} alt={c.name} className="h-full w-full object-cover" />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-left">
+                  <p className="truncate text-xs font-semibold text-white">{c.name}</p>
+                  <p className="truncate text-[10px] text-white/70">({c.relation})</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="mx-4 mt-5 overflow-hidden rounded-[24px] gradient-accent p-5 shadow-accent">
         <div className="flex items-center gap-2 text-primary-foreground">
