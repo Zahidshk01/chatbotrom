@@ -224,12 +224,12 @@ function CreatePage() {
 
       {promptOpen && (
         <div
-          className="fixed inset-0 z-50 grid place-items-end bg-black/60 backdrop-blur-sm sm:place-items-center"
+          className="fixed inset-0 z-[100] grid place-items-center bg-black/60 backdrop-blur-sm p-4"
           onClick={() => !generating && setPromptOpen(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-t-3xl bg-surface p-5 sm:rounded-3xl"
+            className="w-full max-w-md rounded-3xl bg-surface p-5 shadow-elegant"
           >
             <div className="mb-3 flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
