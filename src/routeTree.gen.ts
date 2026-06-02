@@ -16,6 +16,7 @@ import { Route as CreateRouteImport } from './routes/create'
 import { Route as ChatsRouteImport } from './routes/chats'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChatIdRouteImport } from './routes/chat.$id'
+import { Route as ApiGenerateFirstMessageRouteImport } from './routes/api/generate-first-message'
 import { Route as ApiGenerateCharacterImageRouteImport } from './routes/api/generate-character-image'
 
 const SearchRoute = SearchRouteImport.update({
@@ -53,6 +54,11 @@ const ChatIdRoute = ChatIdRouteImport.update({
   path: '/chat/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerateFirstMessageRoute = ApiGenerateFirstMessageRouteImport.update({
+  id: '/api/generate-first-message',
+  path: '/api/generate-first-message',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGenerateCharacterImageRoute =
   ApiGenerateCharacterImageRouteImport.update({
     id: '/api/generate-character-image',
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/api/generate-character-image': typeof ApiGenerateCharacterImageRoute
+  '/api/generate-first-message': typeof ApiGenerateFirstMessageRoute
   '/chat/$id': typeof ChatIdRoute
 }
 export interface FileRoutesByTo {
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/api/generate-character-image': typeof ApiGenerateCharacterImageRoute
+  '/api/generate-first-message': typeof ApiGenerateFirstMessageRoute
   '/chat/$id': typeof ChatIdRoute
 }
 export interface FileRoutesById {
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/api/generate-character-image': typeof ApiGenerateCharacterImageRoute
+  '/api/generate-first-message': typeof ApiGenerateFirstMessageRoute
   '/chat/$id': typeof ChatIdRoute
 }
 export interface FileRouteTypes {
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/api/generate-character-image'
+    | '/api/generate-first-message'
     | '/chat/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/api/generate-character-image'
+    | '/api/generate-first-message'
     | '/chat/$id'
   id:
     | '__root__'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/api/generate-character-image'
+    | '/api/generate-first-message'
     | '/chat/$id'
   fileRoutesById: FileRoutesById
 }
@@ -132,6 +144,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
   ApiGenerateCharacterImageRoute: typeof ApiGenerateCharacterImageRoute
+  ApiGenerateFirstMessageRoute: typeof ApiGenerateFirstMessageRoute
   ChatIdRoute: typeof ChatIdRoute
 }
 
@@ -186,6 +199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/generate-first-message': {
+      id: '/api/generate-first-message'
+      path: '/api/generate-first-message'
+      fullPath: '/api/generate-first-message'
+      preLoaderRoute: typeof ApiGenerateFirstMessageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/generate-character-image': {
       id: '/api/generate-character-image'
       path: '/api/generate-character-image'
@@ -204,8 +224,19 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
   ApiGenerateCharacterImageRoute: ApiGenerateCharacterImageRoute,
+  ApiGenerateFirstMessageRoute: ApiGenerateFirstMessageRoute,
   ChatIdRoute: ChatIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
