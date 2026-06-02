@@ -16,6 +16,7 @@ import { Route as CreateRouteImport } from './routes/create'
 import { Route as ChatsRouteImport } from './routes/chats'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChatIdRouteImport } from './routes/chat.$id'
+import { Route as ApiGenerateCharacterImageRouteImport } from './routes/api/generate-character-image'
 
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
@@ -52,6 +53,12 @@ const ChatIdRoute = ChatIdRouteImport.update({
   path: '/chat/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerateCharacterImageRoute =
+  ApiGenerateCharacterImageRouteImport.update({
+    id: '/api/generate-character-image',
+    path: '/api/generate-character-image',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/api/generate-character-image': typeof ApiGenerateCharacterImageRoute
   '/chat/$id': typeof ChatIdRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +77,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/api/generate-character-image': typeof ApiGenerateCharacterImageRoute
   '/chat/$id': typeof ChatIdRoute
 }
 export interface FileRoutesById {
@@ -79,6 +88,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/api/generate-character-image': typeof ApiGenerateCharacterImageRoute
   '/chat/$id': typeof ChatIdRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +100,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/search'
+    | '/api/generate-character-image'
     | '/chat/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +110,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/search'
+    | '/api/generate-character-image'
     | '/chat/$id'
   id:
     | '__root__'
@@ -108,6 +120,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/search'
+    | '/api/generate-character-image'
     | '/chat/$id'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +131,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
+  ApiGenerateCharacterImageRoute: typeof ApiGenerateCharacterImageRoute
   ChatIdRoute: typeof ChatIdRoute
 }
 
@@ -172,6 +186,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/generate-character-image': {
+      id: '/api/generate-character-image'
+      path: '/api/generate-character-image'
+      fullPath: '/api/generate-character-image'
+      preLoaderRoute: typeof ApiGenerateCharacterImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -182,6 +203,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
+  ApiGenerateCharacterImageRoute: ApiGenerateCharacterImageRoute,
   ChatIdRoute: ChatIdRoute,
 }
 export const routeTree = rootRouteImport
