@@ -140,7 +140,7 @@ function CreatePage() {
                 <Upload className="h-4 w-4 text-primary" /> Upload from device
               </button>
               <button
-                onClick={aiGenerateImage}
+                onClick={openAiPrompt}
                 className="flex w-full items-center gap-3 border-t border-border px-4 py-3 text-left text-sm hover:bg-surface"
               >
                 <Sparkles className="h-4 w-4 text-primary" /> Generate with AI
