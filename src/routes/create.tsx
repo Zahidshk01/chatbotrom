@@ -26,6 +26,8 @@ function CreatePage() {
   const [generating, setGenerating] = useState(false);
   const [name, setName] = useState("");
   const [visibility, setVisibility] = useState<"public" | "private">("public");
+  const [promptOpen, setPromptOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
 
   function onUpload(file?: File) {
     if (!file) return;
@@ -34,14 +36,35 @@ function CreatePage() {
     setShowImageMenu(false);
   }
 
-  async function aiGenerateImage() {
+  function openAiPrompt() {
     setShowImageMenu(false);
+    setPromptOpen(true);
+  }
+
+  async function aiGenerateImage() {
+    if (!aiPrompt.trim()) return toast("Describe your character first");
+    setPromptOpen(false);
     setGenerating(true);
-    // placeholder — use a stock-style portrait until wired to AI Gateway
-    await new Promise((r) => setTimeout(r, 900));
-    setImage(`https://picsum.photos/seed/${Math.random().toString(36).slice(2)}/512`);
-    setGenerating(false);
-    toast("Generated a portrait. Tap the image to try again.");
+    try {
+      const res = await fetch("/api/generate-character-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiPrompt }),
+      });
+      const json = (await res.json()) as { image?: string; error?: string };
+      if (!res.ok || !json.image) {
+        if (res.status === 429) toast("Rate limit hit. Try again in a moment.");
+        else if (res.status === 402) toast("Out of AI credits. Add funds to continue.");
+        else toast(json.error || "Couldn't generate image");
+      } else {
+        setImage(json.image);
+        toast("Anime portrait generated");
+      }
+    } catch {
+      toast("Network error generating image");
+    } finally {
+      setGenerating(false);
+    }
   }
 
   function generateName() {
