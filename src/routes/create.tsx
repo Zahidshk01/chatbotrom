@@ -238,29 +238,43 @@ function CreatePage() {
             <p className="mb-3 text-sm text-muted-foreground">
               Describe your character — looks, vibe, outfit, mood.
             </p>
-            <textarea
-              autoFocus
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-              placeholder="e.g. silver-haired swordswoman with violet eyes, hooded cloak, dusk lighting"
-              rows={4}
-              className="w-full resize-none rounded-2xl bg-surface-2 p-3 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
-            />
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={() => setPromptOpen(false)}
-                className="flex-1 rounded-full bg-surface-2 py-3 text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={aiGenerateImage}
-                disabled={!aiPrompt.trim()}
-                className="flex-1 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-              >
-                Generate
-              </button>
-            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                aiGenerateImage();
+              }}
+            >
+              <textarea
+                autoFocus
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && e.metaKey) {
+                    e.preventDefault();
+                    aiGenerateImage();
+                  }
+                }}
+                placeholder="e.g. silver-haired swordswoman with violet eyes, hooded cloak, dusk lighting"
+                rows={4}
+                className="w-full resize-none rounded-2xl bg-surface-2 p-3 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
+              />
+              <div className="mt-4 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPromptOpen(false)}
+                  className="flex-1 rounded-full bg-surface-2 py-3 text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!aiPrompt.trim()}
+                  className="flex-1 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
