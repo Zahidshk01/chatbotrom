@@ -21,6 +21,7 @@ const nameSamples = [
 function CreatePage() {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [step, setStep] = useState<1 | 2>(1);
   const [image, setImage] = useState<string | null>(null);
   const [showImageMenu, setShowImageMenu] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -28,6 +29,9 @@ function CreatePage() {
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [promptOpen, setPromptOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
+  const [firstMessage, setFirstMessage] = useState("");
+  const [editingFirst, setEditingFirst] = useState(false);
+  const [generatingFirst, setGeneratingFirst] = useState(false);
 
   function onUpload(file?: File) {
     if (!file) return;
@@ -71,9 +75,38 @@ function CreatePage() {
     setName(nameSamples[Math.floor(Math.random() * nameSamples.length)]);
   }
 
-  function create() {
+  async function generateFirstMessage() {
+    setGeneratingFirst(true);
+    try {
+      const res = await fetch("/api/generate-first-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description: aiPrompt }),
+      });
+      const json = (await res.json()) as { message?: string; error?: string };
+      if (!res.ok || !json.message) {
+        if (res.status === 429) toast("Rate limit hit. Try again in a moment.");
+        else if (res.status === 402) toast("Out of AI credits. Add funds to continue.");
+        else toast(json.error || "Couldn't generate message");
+      } else {
+        setFirstMessage(json.message);
+      }
+    } catch {
+      toast("Network error generating message");
+    } finally {
+      setGeneratingFirst(false);
+    }
+  }
+
+  function goToFirstMessage() {
     if (!image) return toast("Add an image first");
     if (!name.trim()) return toast("Give your character a name");
+    setStep(2);
+    if (!firstMessage) void generateFirstMessage();
+  }
+
+  function finish() {
+    if (!firstMessage.trim()) return toast("Add a first message");
     toast.success(`${name} is ready to chat`);
     navigate({ to: "/" });
   }
