@@ -26,6 +26,8 @@ function CreatePage() {
   const [generating, setGenerating] = useState(false);
   const [name, setName] = useState("");
   const [visibility, setVisibility] = useState<"public" | "private">("public");
+  const [promptOpen, setPromptOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
 
   function onUpload(file?: File) {
     if (!file) return;
@@ -34,14 +36,35 @@ function CreatePage() {
     setShowImageMenu(false);
   }
 
-  async function aiGenerateImage() {
+  function openAiPrompt() {
     setShowImageMenu(false);
+    setPromptOpen(true);
+  }
+
+  async function aiGenerateImage() {
+    if (!aiPrompt.trim()) return toast("Describe your character first");
+    setPromptOpen(false);
     setGenerating(true);
-    // placeholder — use a stock-style portrait until wired to AI Gateway
-    await new Promise((r) => setTimeout(r, 900));
-    setImage(`https://picsum.photos/seed/${Math.random().toString(36).slice(2)}/512`);
-    setGenerating(false);
-    toast("Generated a portrait. Tap the image to try again.");
+    try {
+      const res = await fetch("/api/generate-character-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiPrompt }),
+      });
+      const json = (await res.json()) as { image?: string; error?: string };
+      if (!res.ok || !json.image) {
+        if (res.status === 429) toast("Rate limit hit. Try again in a moment.");
+        else if (res.status === 402) toast("Out of AI credits. Add funds to continue.");
+        else toast(json.error || "Couldn't generate image");
+      } else {
+        setImage(json.image);
+        toast("Anime portrait generated");
+      }
+    } catch {
+      toast("Network error generating image");
+    } finally {
+      setGenerating(false);
+    }
   }
 
   function generateName() {
@@ -117,7 +140,7 @@ function CreatePage() {
                 <Upload className="h-4 w-4 text-primary" /> Upload from device
               </button>
               <button
-                onClick={aiGenerateImage}
+                onClick={openAiPrompt}
                 className="flex w-full items-center gap-3 border-t border-border px-4 py-3 text-left text-sm hover:bg-surface"
               >
                 <Sparkles className="h-4 w-4 text-primary" /> Generate with AI
@@ -198,6 +221,49 @@ function CreatePage() {
           Continue
         </button>
       </div>
+
+      {promptOpen && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-end bg-black/60 backdrop-blur-sm sm:place-items-center"
+          onClick={() => !generating && setPromptOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-t-3xl bg-surface p-5 sm:rounded-3xl"
+          >
+            <div className="mb-3 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Generate anime character</h2>
+            </div>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Describe your character — looks, vibe, outfit, mood.
+            </p>
+            <textarea
+              autoFocus
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder="e.g. silver-haired swordswoman with violet eyes, hooded cloak, dusk lighting"
+              rows={4}
+              className="w-full resize-none rounded-2xl bg-surface-2 p-3 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
+            />
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => setPromptOpen(false)}
+                className="flex-1 rounded-full bg-surface-2 py-3 text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={aiGenerateImage}
+                disabled={!aiPrompt.trim()}
+                className="flex-1 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              >
+                Generate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
