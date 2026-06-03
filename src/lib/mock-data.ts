@@ -39,6 +39,7 @@ export type Character = {
 
 export const categories = [
   "All",
+  "18+",
   "Family",
   "Romance",
   "Friends",
