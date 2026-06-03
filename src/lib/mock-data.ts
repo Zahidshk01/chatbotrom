@@ -18,8 +18,12 @@ import cGrandma from "@/assets/char-grandma.jpg";
 import cRival from "@/assets/char-rival.jpg";
 import cSenpai from "@/assets/char-senpai.jpg";
 import cChildhood from "@/assets/char-childhood.jpg";
-
-export type Character = {
+import cM1 from "@/assets/char-mature-1.jpg";
+import cM2 from "@/assets/char-mature-2.jpg";
+import cM3 from "@/assets/char-mature-3.jpg";
+import cM4 from "@/assets/char-mature-4.jpg";
+import cM5 from "@/assets/char-mature-5.jpg";
+import cM6 from "@/assets/char-mature-6.jpg";
   id: string;
   name: string;
   image: string;
