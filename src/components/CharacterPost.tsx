@@ -29,10 +29,8 @@ export function CharacterPost({ char }: { char: Character }) {
   }, []);
 
   const toggleLike = () => {
-    setLiked((v) => {
-      setLikes((n) => n + (v ? -1 : 1));
-      return !v;
-    });
+    const nowLiked = toggleLiked(char.id);
+    setLikes((n) => n + (nowLiked ? 1 : -1));
   };
 
   const onSave = () => {
