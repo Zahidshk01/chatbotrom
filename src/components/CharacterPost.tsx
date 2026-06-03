@@ -4,6 +4,7 @@ import { Heart, MessageCircle, Bookmark } from "lucide-react";
 import { toast } from "sonner";
 import type { Character } from "@/lib/mock-data";
 import { toggleSaved, useIsSaved } from "@/lib/saved-store";
+import { toggleLiked, useIsLiked } from "@/lib/liked-store";
 
 function fmt(n: number) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
@@ -14,7 +15,7 @@ function fmt(n: number) {
 export function CharacterPost({ char }: { char: Character }) {
   const navigate = useNavigate();
   const saved = useIsSaved(char.id);
-  const [liked, setLiked] = useState(false);
+  const liked = useIsLiked(char.id);
   const [following, setFollowing] = useState(false);
   const [likes, setLikes] = useState(() => 5000 + Math.floor(Math.random() * 40000));
   const [comments, setComments] = useState(() => 1000 + Math.floor(Math.random() * 150000));
