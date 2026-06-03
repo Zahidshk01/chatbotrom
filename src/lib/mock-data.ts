@@ -18,6 +18,12 @@ import cGrandma from "@/assets/char-grandma.jpg";
 import cRival from "@/assets/char-rival.jpg";
 import cSenpai from "@/assets/char-senpai.jpg";
 import cChildhood from "@/assets/char-childhood.jpg";
+import cM1 from "@/assets/char-mature-1.jpg";
+import cM2 from "@/assets/char-mature-2.jpg";
+import cM3 from "@/assets/char-mature-3.jpg";
+import cM4 from "@/assets/char-mature-4.jpg";
+import cM5 from "@/assets/char-mature-5.jpg";
+import cM6 from "@/assets/char-mature-6.jpg";
 
 export type Character = {
   id: string;
@@ -33,6 +39,7 @@ export type Character = {
 
 export const categories = [
   "All",
+  "18+",
   "Family",
   "Romance",
   "Friends",
@@ -68,6 +75,13 @@ export const characters: Character[] = [
 
   { id: "19", name: "Best Friend Riku", image: cBffBoy,    creator: "@circle",    chats: "1.6M", category: "Friends", height: 72, tagline: "Crashed at your place with snacks and a new game. \"Bro. New ranked grind. You + me. Pizza's on me if we hit Diamond.\"",        relation: "best friend (boy)" },
   { id: "20", name: "Bestie Momo",      image: cBffGirl,   creator: "@circle",    chats: "2.3M", category: "Friends", height: 76, tagline: "Drags you out for bubble tea drama therapy. \"Spill. Everything. I already told the barista we'd be a while.\"",                relation: "best friend (girl)" },
+
+  { id: "21", name: "Scarlett — 27",    image: cM1,        creator: "@afterdark",  chats: "5.8M", category: "18+", height: 96, tagline: "She poured you a second glass of wine, candlelight in her eyes. \"Stay tonight. No promises, no questions — just us.\"",                       relation: "older woman" },
+  { id: "22", name: "Damien Cross",     image: cM2,        creator: "@afterdark",  chats: "4.9M", category: "18+", height: 92, tagline: "CEO by day, all yours by midnight. \"My driver's downstairs. My penthouse, twenty minutes. Don't keep me waiting.\"",                       relation: "billionaire CEO" },
+  { id: "23", name: "Mira the Bartender", image: cM3,      creator: "@afterdark",  chats: "3.6M", category: "18+", height: 84, tagline: "She slid the drink across the bar without asking. \"On the house. But it'll cost you a story… and maybe the rest of your night.\"",       relation: "flirty bartender" },
+  { id: "24", name: "Ryker — Rockstar", image: cM4,        creator: "@afterdark",  chats: "4.4M", category: "18+", height: 92, tagline: "Backstage, his hand wraps around your wrist. \"You came to all my shows. Tonight I'm playing one song — just for you.\"",                relation: "bad-boy musician" },
+  { id: "25", name: "Lady Vivienne",    image: cM5,        creator: "@afterdark",  chats: "3.2M", category: "18+", height: 88, tagline: "She bets her last chip on you. \"If I win this hand, you owe me one dance. If I lose… you still owe me one dance.\"",                       relation: "high-stakes seductress" },
+  { id: "26", name: "Alex — Husband",   image: cM6,        creator: "@afterdark",  chats: "2.8M", category: "18+", height: 88, tagline: "Anniversary night, ocean breeze, his ring catching the sunset. \"Ten years. And I'd marry you all over again — right here, right now.\"", relation: "loving husband" },
 ];
 
 export const trending = [
