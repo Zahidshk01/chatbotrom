@@ -6,6 +6,18 @@ import c5 from "@/assets/char-5.jpg";
 import c6 from "@/assets/char-6.jpg";
 import c7 from "@/assets/char-7.jpg";
 import c8 from "@/assets/char-8.jpg";
+import cMom from "@/assets/char-mom.jpg";
+import cDad from "@/assets/char-dad.jpg";
+import cSister from "@/assets/char-sister.jpg";
+import cBrother from "@/assets/char-brother.jpg";
+import cGf from "@/assets/char-gf.jpg";
+import cBf from "@/assets/char-bf.jpg";
+import cBffBoy from "@/assets/char-bff-boy.jpg";
+import cBffGirl from "@/assets/char-bff-girl.jpg";
+import cGrandma from "@/assets/char-grandma.jpg";
+import cRival from "@/assets/char-rival.jpg";
+import cSenpai from "@/assets/char-senpai.jpg";
+import cChildhood from "@/assets/char-childhood.jpg";
 
 export type Character = {
   id: string;
@@ -21,11 +33,12 @@ export type Character = {
 
 export const categories = [
   "All",
+  "Family",
   "Romance",
+  "Friends",
   "Anime",
   "Fantasy",
   "Gaming",
-  "Friends",
   "Story",
   "Adventure",
   "Horror",
@@ -40,6 +53,21 @@ export const characters: Character[] = [
   { id: "6", name: "Scarlet Hex",       image: c6, creator: "@coven",    chats: "1.8M", category: "Horror",   height: 76, tagline: "A witch with too many secrets.",            relation: "cursed ex" },
   { id: "7", name: "Det. Marlowe",      image: c7, creator: "@noirstudio",chats: "245K",category: "Story",    height: 84, tagline: "Walks the rain-slick streets alone.",       relation: "murder case" },
   { id: "8", name: "Hana Aoki",         image: c8, creator: "@sakura",   chats: "990K", category: "Anime",    height: 68, tagline: "Sweet, smart, and a little shy.",           relation: "childhood crush" },
+
+  { id: "9",  name: "Mom — Yuki",       image: cMom,       creator: "@home",      chats: "3.1M", category: "Family",  height: 84, tagline: "She kept your favorite curry warm. \"Sit down, tell me everything — and eat before it gets cold.\"",                            relation: "mother" },
+  { id: "10", name: "Dad — Haruto",     image: cDad,       creator: "@home",      chats: "1.9M", category: "Family",  height: 80, tagline: "He's quiet, but he drove four hours just to see you. \"I'm proud of you. I don't say it enough.\"",                          relation: "father" },
+  { id: "11", name: "Lil Sis — Mei",    image: cSister,    creator: "@home",      chats: "1.4M", category: "Family",  height: 72, tagline: "She read your diary AGAIN. \"Onii-chan~ I'll tell mom unless you take me to the arcade.\"",                                  relation: "little sister" },
+  { id: "12", name: "Big Bro — Ren",    image: cBrother,   creator: "@home",      chats: "1.1M", category: "Family",  height: 88, tagline: "Came home from the city with a black eye and a smirk. \"Don't tell mom. I'll handle the people bothering you.\"",          relation: "older brother" },
+  { id: "13", name: "Grandma Sumi",     image: cGrandma,   creator: "@home",      chats: "820K", category: "Family",  height: 76, tagline: "Tea, mochi, and decades of stories. \"Come closer, dear. Let me tell you how I met your grandfather.\"",                   relation: "grandmother" },
+
+  { id: "14", name: "Aiko",             image: cGf,        creator: "@hearts",    chats: "4.6M", category: "Romance", height: 96, tagline: "It's raining and she's standing under your umbrella, cheeks pink. \"I lied about hating the rain… I just wanted an excuse.\"", relation: "girlfriend" },
+  { id: "15", name: "Kaito",            image: cBf,        creator: "@hearts",    chats: "4.2M", category: "Romance", height: 92, tagline: "Sunset on the rooftop, his hand finds yours. \"I've loved you since the day you spilled coffee on my notebook.\"",            relation: "boyfriend" },
+  { id: "16", name: "Sora",             image: cChildhood, creator: "@hearts",    chats: "2.7M", category: "Romance", height: 80, tagline: "Your childhood friend is back — taller, and not so shy anymore. \"I made a promise under that cherry tree. Remember?\"",       relation: "childhood friend" },
+  { id: "17", name: "Senpai Rin",       image: cSenpai,    creator: "@hearts",    chats: "3.3M", category: "Romance", height: 84, tagline: "She left a bookmarked note in the library: \"Meet me on the roof after class. I have something to say… finally.\"",            relation: "senpai" },
+  { id: "18", name: "Yuu — Rival",      image: cRival,     creator: "@hearts",    chats: "2.1M", category: "Romance", height: 88, tagline: "Cold to everyone — except you. \"Tch. Don't get the wrong idea. I just… didn't want you walking home alone.\"",              relation: "tsundere rival" },
+
+  { id: "19", name: "Best Friend Riku", image: cBffBoy,    creator: "@circle",    chats: "1.6M", category: "Friends", height: 72, tagline: "Crashed at your place with snacks and a new game. \"Bro. New ranked grind. You + me. Pizza's on me if we hit Diamond.\"",        relation: "best friend (boy)" },
+  { id: "20", name: "Bestie Momo",      image: cBffGirl,   creator: "@circle",    chats: "2.3M", category: "Friends", height: 76, tagline: "Drags you out for bubble tea drama therapy. \"Spill. Everything. I already told the barista we'd be a while.\"",                relation: "best friend (girl)" },
 ];
 
 export const trending = [
