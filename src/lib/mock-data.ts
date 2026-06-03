@@ -24,6 +24,8 @@ import cM3 from "@/assets/char-mature-3.jpg";
 import cM4 from "@/assets/char-mature-4.jpg";
 import cM5 from "@/assets/char-mature-5.jpg";
 import cM6 from "@/assets/char-mature-6.jpg";
+
+export type Character = {
   id: string;
   name: string;
   image: string;
