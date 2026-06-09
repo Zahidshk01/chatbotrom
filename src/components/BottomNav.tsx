@@ -6,9 +6,9 @@ type Item = { to: string; label: string; icon: LucideIcon; accent?: boolean };
 
 const items: Item[] = [
   { to: "/",        label: "Home",   icon: Home },
-  { to: "/search",  label: "Search", icon: Search },
-  { to: "/create",  label: "Create", icon: Plus, accent: true },
   { to: "/chats",   label: "Chats",  icon: MessageCircle },
+  { to: "/create",  label: "Create", icon: Plus, accent: true },
+  { to: "/search",  label: "Search", icon: Search },
   { to: "/profile", label: "Profile",icon: User },
 ];
 
