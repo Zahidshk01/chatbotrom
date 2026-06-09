@@ -52,13 +52,6 @@ function AuthPage() {
     }
   };
 
-  if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen flex-col justify-center px-6 py-10">
