@@ -4,15 +4,18 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BottomNav } from "../components/BottomNav";
 import { Toaster } from "../components/ui/sonner";
+import { AuthProvider, useAuth } from "../hooks/useAuth";
 
 function NotFoundComponent() {
   return (
@@ -120,11 +123,47 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="dark mx-auto min-h-screen max-w-md bg-background pb-24">
-        <Outlet />
-        <BottomNav />
-        <Toaster position="top-center" theme="dark" />
-      </div>
+      <AuthProvider>
+        <div className="dark mx-auto min-h-screen max-w-md bg-background pb-24">
+          <AuthGate>
+            <Outlet />
+            <BottomNavGate />
+          </AuthGate>
+          <Toaster position="top-center" theme="dark" />
+        </div>
+      </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+function AuthGate({ children }: { children: ReactNode }) {
+  const { session, loading } = useAuth();
+  const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isAuthRoute = pathname === "/auth";
+
+  useEffect(() => {
+    if (loading) return;
+    if (!session && !isAuthRoute) {
+      router.navigate({ to: "/auth" });
+    } else if (session && isAuthRoute) {
+      router.navigate({ to: "/" });
+    }
+  }, [session, loading, isAuthRoute, router]);
+
+  if (loading || (!session && !isAuthRoute)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
+function BottomNavGate() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname === "/auth") return null;
+  return null;
 }
