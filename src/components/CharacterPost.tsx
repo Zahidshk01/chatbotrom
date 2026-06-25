@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Heart, MessageCircle, Bookmark } from "lucide-react";
 import { toast } from "sonner";
-import type { Character } from "@/lib/mock-data";
+import type { Character } from "@/lib/character";
 import { toggleSaved, useIsSaved } from "@/lib/saved-store";
 import { toggleLiked, useIsLiked } from "@/lib/liked-store";
 
@@ -47,7 +47,7 @@ export function CharacterPost({ char }: { char: Character }) {
 
   const openChat = () => navigate({ to: "/chat/$id", params: { id: char.id } });
 
-  const creatorLabel = char.creator.replace(/^@/, "");
+  const creatorLabel = (char.creator ?? "unknown").replace(/^@/, "");
   const creatorInitial = creatorLabel.charAt(0).toUpperCase();
 
   return (
@@ -77,7 +77,12 @@ export function CharacterPost({ char }: { char: Character }) {
         className="relative block w-full overflow-hidden bg-surface"
         aria-label={`Chat with ${char.name}`}
       >
-        <img src={char.image} alt={char.name} className="aspect-[4/5] w-full object-cover" loading="lazy" />
+        <img
+          src={char.image ?? "/placeholder.png"}
+          alt={char.name}
+          className="aspect-[4/5] w-full object-cover"
+          loading="lazy"
+        />
         <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-md bg-background/70 backdrop-blur-md">
           <MessageCircle className="h-5 w-5 fill-foreground text-foreground" />
         </span>

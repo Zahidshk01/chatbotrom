@@ -45,24 +45,73 @@ function ChatPage() {
     );
   }
 
-  const send = () => {
-    const v = text.trim();
-    if (!v) return;
-    const mine: Msg = { id: crypto.randomUUID(), from: "me", text: v };
-    setText("");
-    setMsgs((m) => [...m, mine]);
-    setTimeout(() => {
-      const variants = repliesFor(char.name, v);
-      const reply: Msg = {
-        id: crypto.randomUUID(),
-        from: "them",
-        text: variants[0],
-        variants,
-        variantIndex: 0,
-      };
-      setMsgs((m) => [...m, reply]);
-    }, 700);
+  const send = async () => {
+  const v = text.trim();
+  if (!v) return;
+
+  const mine: Msg = {
+    id: crypto.randomUUID(),
+    from: "me",
+    text: v,
   };
+
+  // Add user message immediately
+  const nextMsgs = [...msgs, mine];
+  setMsgs(nextMsgs);
+  setText("");
+
+  try {
+    const apiMessages = nextMsgs.map((m) => ({
+      role: m.from === "me" ? "user" : "assistant",
+      content: m.text,
+    }));
+
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        characterName: char.name,
+        characterDescription: char.tagline,
+        characterCategory: char.category,
+        characterRelation: char.relation,
+        messages: apiMessages,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data?.details || data?.error || "Chat request failed");
+    }
+
+    const replyText = data.reply?.trim();
+    if (!replyText) {
+      throw new Error("No reply returned from Qwen");
+    }
+
+    const reply: Msg = {
+      id: crypto.randomUUID(),
+      from: "them",
+      text: replyText,
+    };
+
+    setMsgs((m) => [...m, reply]);
+  } catch (err) {
+    const errorText =
+      err instanceof Error ? err.message : "Something went wrong.";
+
+    const reply: Msg = {
+      id: crypto.randomUUID(),
+      from: "them",
+      text: `⚠️ ${errorText}`,
+    };
+
+    setMsgs((m) => [...m, reply]);
+  }
+};
+
 
   const cycleVariant = (mid: string) =>
     setMsgs((arr) =>
@@ -304,12 +353,12 @@ function openingScene(name: string, category: string, tagline: string) {
   }
 }
 
-function repliesFor(name: string, input: string): string[] {
-  const first = name.split(" ")[0];
-  const snippet = input.slice(0, 40);
-  return [
-    `${first} tilts their head, considering you. "${snippet}…" they echo softly. A small smile tugs at the corner of their mouth.`,
-    `${first} crosses their arms and leans closer. "Now that's interesting. Tell me more — I want every detail."`,
-    `${first} laughs quietly, eyes glinting. "You always know exactly what to say, don't you?"`,
-  ];
-}
+// function repliesFor(name: string, input: string): string[] {
+//   const first = name.split(" ")[0];
+//   const snippet = input.slice(0, 40);
+//   return [
+//     `${first} tilts their head, considering you. "${snippet}…" they echo softly. A small smile tugs at the corner of their mouth.`,
+//     `${first} crosses their arms and leans closer. "Now that's interesting. Tell me more — I want every detail."`,
+//     `${first} laughs quietly, eyes glinting. "You always know exactly what to say, don't you?"`,
+//   ];
+// }
