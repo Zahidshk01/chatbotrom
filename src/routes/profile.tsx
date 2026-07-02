@@ -1,13 +1,18 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
-  Sparkles, Share2, Pencil, ChevronDown, Bookmark,
-  User, Heart, Users, Settings, HelpCircle, Shield, LogOut,
+  Settings, Camera, Users as UsersIcon, ChevronRight,
+  Mail, FileText, ShieldCheck, Info, LogOut, Trash2, BadgeCheck,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import { profile, characters, type Character } from "@/lib/mock-data";
+import { characters, type Character } from "@/lib/mock-data";
 import { useSavedIds } from "@/lib/saved-store";
 import { useLikedIds } from "@/lib/liked-store";
+import { useProfile, updateProfile } from "@/lib/profile-store";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -19,13 +24,385 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
-function CharGrid({ items, empty }: { items: Character[]; empty: string }) {
+const APP_VERSION = "v2.4.1";
+
+type TabKey = "characters" | "liked" | "saved";
+
+function ProfilePage() {
+  const navigate = useNavigate();
+  const profile = useProfile();
+  const savedIds = useSavedIds();
+  const likedIds = useLikedIds();
+
+  const savedChars = useMemo(
+    () => characters.filter((c) => savedIds.includes(c.id)),
+    [savedIds],
+  );
+  const likedChars = useMemo(
+    () => characters.filter((c) => likedIds.includes(c.id)),
+    [likedIds],
+  );
+  const myChars: Character[] = []; // no created characters yet
+
+  const [tab, setTab] = useState<TabKey>("characters");
+  const [editOpen, setEditOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [infoDialog, setInfoDialog] = useState<null | "premium" | "contact" | "terms" | "privacy" | "version">(null);
+  const [confirm, setConfirm] = useState<null | "signout" | "delete">(null);
+
+  async function handleSignOut() {
+    try {
+      await supabase.auth.signOut();
+    } catch { /* ignore */ }
+    toast("Signed out");
+    navigate({ to: "/" });
+  }
+
+  async function handleDelete() {
+    try {
+      await supabase.auth.signOut();
+    } catch { /* ignore */ }
+    localStorage.removeItem("kender.profile");
+    localStorage.removeItem("kender.saved");
+    localStorage.removeItem("kender.liked");
+    toast("Account deleted");
+    navigate({ to: "/" });
+  }
+
+  const tabItems: { key: TabKey; label: string }[] = [
+    { key: "characters", label: "Characters" },
+    { key: "liked", label: "Liked" },
+    { key: "saved", label: "Saved" },
+  ];
+
+  return (
+    <div className="safe-top min-h-screen bg-background pb-32">
+      {/* Top bar with settings icon */}
+      <div className="flex items-center justify-end px-4 pt-3">
+        <button
+          onClick={() => setSettingsOpen(true)}
+          aria-label="Settings"
+          className="rounded-full p-2 text-foreground/90 active:bg-surface"
+        >
+          <Settings className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* Avatar */}
+      <div className="mt-2 flex flex-col items-center px-4">
+        <div className="relative">
+          {profile.avatar ? (
+            <img
+              src={profile.avatar}
+              alt={profile.username}
+              className="h-24 w-24 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-surface text-2xl font-bold text-foreground/70">
+              {profile.username.replace("@", "").slice(0, 1).toUpperCase()}
+            </div>
+          )}
+        </div>
+
+        <h1 className="mt-3 text-lg font-semibold">{profile.username}</h1>
+
+        {/* Stats */}
+        <div className="mt-4 grid w-full max-w-xs grid-cols-3">
+          <Stat value={profile.stats.following} label="Following" />
+          <Stat value={profile.stats.followers} label="Followers" />
+          <Stat value={profile.stats.interactions} label="Interactions" />
+        </div>
+
+        {/* Bio */}
+        <p className="mt-4 text-center text-sm text-foreground/85">{profile.bio}</p>
+
+        {/* Edit button */}
+        <button
+          onClick={() => setEditOpen(true)}
+          className="mt-3 rounded-full bg-surface px-8 py-2 text-sm font-semibold active:bg-surface-2"
+        >
+          Edit
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="mt-6 border-b border-border/60">
+        <div className="grid grid-cols-3">
+          {tabItems.map((t) => {
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className="relative py-3 text-sm"
+              >
+                <span className={active ? "font-semibold text-foreground" : "text-muted-foreground"}>
+                  {t.label}
+                </span>
+                {active && (
+                  <span className="absolute inset-x-6 -bottom-px h-0.5 bg-foreground" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Tab content */}
+      <div className="px-4 pt-6">
+        {tab === "characters" && (
+          <TabContent
+            items={myChars}
+            emptyIcon={<UsersIcon className="h-6 w-6 text-muted-foreground" />}
+            emptyTitle="Create your first character"
+            action={{ label: "Create", onClick: () => navigate({ to: "/create" }) }}
+          />
+        )}
+        {tab === "liked" && (
+          <TabContent
+            items={likedChars}
+            emptyIcon={<UsersIcon className="h-6 w-6 text-muted-foreground" />}
+            emptyTitle="No liked characters yet"
+            emptyHint="Tap the heart on any character to see them here."
+          />
+        )}
+        {tab === "saved" && (
+          <TabContent
+            items={savedChars}
+            emptyIcon={<UsersIcon className="h-6 w-6 text-muted-foreground" />}
+            emptyTitle="No saved characters yet"
+            emptyHint="Tap the bookmark on any character to save them."
+          />
+        )}
+      </div>
+
+      {/* Menu card 1 */}
+      <div className="mx-4 mt-8 overflow-hidden rounded-2xl bg-surface">
+        <MenuRow
+          icon={<BadgeCheck className="h-5 w-5 text-amber-400" />}
+          onClick={() => setInfoDialog("premium")}
+          right={
+            <span className="rounded-full bg-gradient-to-r from-amber-400 to-amber-600 px-3 py-1 text-xs font-bold text-black">
+              Get Premium
+            </span>
+          }
+        />
+        <MenuRow
+          icon={<Mail className="h-5 w-5 text-foreground/80" />}
+          label="Contact Us"
+          onClick={() => setInfoDialog("contact")}
+        />
+        <MenuRow
+          icon={<FileText className="h-5 w-5 text-foreground/80" />}
+          label="Terms of Service"
+          onClick={() => setInfoDialog("terms")}
+        />
+        <MenuRow
+          icon={<ShieldCheck className="h-5 w-5 text-foreground/80" />}
+          label="Privacy Policy"
+          onClick={() => setInfoDialog("privacy")}
+          isLast
+        />
+      </div>
+
+      {/* Menu card 2 */}
+      <div className="mx-4 mt-4 overflow-hidden rounded-2xl bg-surface">
+        <MenuRow
+          icon={<Info className="h-5 w-5 text-foreground/80" />}
+          label="App Version"
+          onClick={() => setInfoDialog("version")}
+          right={<span className="text-xs text-muted-foreground">{APP_VERSION}</span>}
+          hideChevron
+        />
+        <MenuRow
+          icon={<LogOut className="h-5 w-5 text-orange-400" />}
+          label="Sign Out"
+          labelClass="text-orange-400"
+          onClick={() => setConfirm("signout")}
+          hideChevron
+        />
+        <MenuRow
+          icon={<Trash2 className="h-5 w-5 text-orange-400" />}
+          label="Delete Account"
+          labelClass="text-orange-400"
+          onClick={() => setConfirm("delete")}
+          hideChevron
+          isLast
+        />
+      </div>
+
+      {/* Edit profile dialog */}
+      <EditProfileDialog open={editOpen} onOpenChange={setEditOpen} />
+
+      {/* Settings dialog (gear icon) */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Settings</DialogTitle>
+            <DialogDescription>
+              Manage your account preferences.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 text-sm">
+            <p className="text-muted-foreground">
+              Notification, appearance, and privacy preferences are coming soon.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Info dialogs */}
+      <InfoDialog
+        open={infoDialog === "premium"}
+        onClose={() => setInfoDialog(null)}
+        title="Get Premium"
+        body={
+          <>
+            <p>Unlock everything Kender has to offer:</p>
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-foreground/80">
+              <li>Unlimited chats</li>
+              <li>Priority AI responses</li>
+              <li>Advanced character creation</li>
+              <li>No ads</li>
+            </ul>
+          </>
+        }
+      />
+      <InfoDialog
+        open={infoDialog === "contact"}
+        onClose={() => setInfoDialog(null)}
+        title="Contact Us"
+        body={
+          <p>
+            Questions, feedback or issues? Email us at{" "}
+            <a href="mailto:support@kender.app" className="text-primary underline">
+              support@kender.app
+            </a>
+            .
+          </p>
+        }
+      />
+      <InfoDialog
+        open={infoDialog === "terms"}
+        onClose={() => setInfoDialog(null)}
+        title="Terms of Service"
+        body={
+          <p>
+            By using Kender you agree to use the app respectfully. Characters are
+            fictional. Do not share content that violates laws or the rights of
+            others. Full terms coming soon.
+          </p>
+        }
+      />
+      <InfoDialog
+        open={infoDialog === "privacy"}
+        onClose={() => setInfoDialog(null)}
+        title="Privacy Policy"
+        body={
+          <p>
+            We respect your privacy. Your chats and characters stay yours. We only
+            store the data required to run your account. Full policy coming soon.
+          </p>
+        }
+      />
+      <InfoDialog
+        open={infoDialog === "version"}
+        onClose={() => setInfoDialog(null)}
+        title="App Version"
+        body={<p>Kender {APP_VERSION}</p>}
+      />
+
+      {/* Confirmations */}
+      <Dialog open={confirm === "signout"} onOpenChange={(o) => !o && setConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sign out?</DialogTitle>
+            <DialogDescription>You'll need to sign back in to chat.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              onClick={() => setConfirm(null)}
+              className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => { setConfirm(null); handleSignOut(); }}
+              className="flex-1 rounded-full bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white"
+            >
+              Sign out
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirm === "delete"} onOpenChange={(o) => !o && setConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete your account?</DialogTitle>
+            <DialogDescription>
+              This clears your profile, saved and liked characters on this device.
+              This action can't be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              onClick={() => setConfirm(null)}
+              className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => { setConfirm(null); handleDelete(); }}
+              className="flex-1 rounded-full bg-red-600 px-4 py-2.5 text-sm font-semibold text-white"
+            >
+              Delete
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function Stat({ value, label }: { value: number | string; label: string }) {
+  return (
+    <div className="flex flex-col items-center">
+      <span className="text-lg font-bold">{value}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
+    </div>
+  );
+}
+
+function TabContent({
+  items,
+  emptyIcon,
+  emptyTitle,
+  emptyHint,
+  action,
+}: {
+  items: Character[];
+  emptyIcon: React.ReactNode;
+  emptyTitle: string;
+  emptyHint?: string;
+  action?: { label: string; onClick: () => void };
+}) {
   const navigate = useNavigate();
   if (items.length === 0) {
     return (
-      <p className="rounded-2xl bg-surface-2 px-4 py-6 text-center text-sm text-muted-foreground">
-        {empty}
-      </p>
+      <div className="flex flex-col items-center justify-center py-10 text-center">
+        <div className="mb-3">{emptyIcon}</div>
+        <p className="text-sm text-foreground/85">{emptyTitle}</p>
+        {emptyHint && <p className="mt-1 text-xs text-muted-foreground">{emptyHint}</p>}
+        {action && (
+          <button
+            onClick={action.onClick}
+            className="mt-4 rounded-full bg-primary px-8 py-2.5 text-sm font-semibold text-primary-foreground active:opacity-90"
+          >
+            {action.label}
+          </button>
+        )}
+      </div>
     );
   }
   return (
@@ -47,148 +424,176 @@ function CharGrid({ items, empty }: { items: Character[]; empty: string }) {
   );
 }
 
-type SectionProps = {
-  icon: LucideIcon;
-  label: string;
-  count?: number | string;
-  defaultOpen?: boolean;
-  danger?: boolean;
+function MenuRow({
+  icon, label, onClick, right, isLast, hideChevron, labelClass,
+}: {
+  icon: React.ReactNode;
+  label?: string;
   onClick?: () => void;
-  children?: React.ReactNode;
-};
-
-function Section({ icon: Icon, label, count, defaultOpen, danger, onClick, children }: SectionProps) {
-  const [open, setOpen] = useState(!!defaultOpen);
-  const isCollapsible = !!children;
-
+  right?: React.ReactNode;
+  isLast?: boolean;
+  hideChevron?: boolean;
+  labelClass?: string;
+}) {
   return (
-    <div className="overflow-hidden rounded-[20px] bg-surface">
-      <button
-        onClick={() => (isCollapsible ? setOpen((v) => !v) : onClick?.())}
-        className={`flex w-full items-center justify-between px-4 py-3.5 text-left active:bg-surface-2 ${danger ? "text-destructive" : ""}`}
-      >
-        <span className="flex items-center gap-3 text-sm font-semibold">
-          <Icon className={`h-5 w-5 ${danger ? "text-destructive" : "text-muted-foreground"}`} />
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-surface-2 ${isLast ? "" : "border-b border-border/40"}`}
+    >
+      <span className="flex h-6 w-6 items-center justify-center">{icon}</span>
+      {label && (
+        <span className={`flex-1 text-sm font-semibold ${labelClass ?? ""}`}>
           {label}
-          {count !== undefined && (
-            <span className="text-xs font-normal text-muted-foreground">({count})</span>
-          )}
         </span>
-        {isCollapsible && (
-          <ChevronDown
-            className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
-          />
-        )}
-      </button>
-      {isCollapsible && open && <div className="px-4 pb-4">{children}</div>}
-    </div>
+      )}
+      {!label && <span className="flex-1" />}
+      {right}
+      {!hideChevron && <ChevronRight className="ml-1 h-4 w-4 text-muted-foreground" />}
+    </button>
   );
 }
 
-function ProfilePage() {
-  const savedIds = useSavedIds();
-  const likedIds = useLikedIds();
-  const savedChars = characters.filter((c) => savedIds.includes(c.id));
-  const likedChars = characters.filter((c) => likedIds.includes(c.id));
-  const myChars: Character[] = []; // user-created characters (none yet)
+function InfoDialog({
+  open, onClose, title, body,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  body: React.ReactNode;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="text-sm leading-relaxed text-foreground/85">{body}</div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditProfileDialog({
+  open, onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}) {
+  const profile = useProfile();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [username, setUsername] = useState(profile.username);
+  const [bio, setBio] = useState(profile.bio);
+  const [avatar, setAvatar] = useState(profile.avatar);
+
+  // Sync when dialog opens
+  useMemo(() => {
+    if (open) {
+      setUsername(profile.username);
+      setBio(profile.bio);
+      setAvatar(profile.avatar);
+    }
+  }, [open, profile]);
+
+  function onPickFile(file?: File) {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast("Image too large (max 5MB)");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") setAvatar(reader.result);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function save() {
+    let u = username.trim();
+    if (!u) return toast("Username can't be empty");
+    if (u.length > 30) return toast("Username too long (max 30)");
+    if (!u.startsWith("@")) u = "@" + u;
+    if (bio.length > 160) return toast("Bio too long (max 160)");
+    updateProfile({ username: u, bio: bio.trim(), avatar });
+    toast("Profile updated");
+    onOpenChange(false);
+  }
 
   return (
-    <div className="safe-top pb-8">
-      <div className="flex flex-col items-center px-4 pt-6 text-center">
-        <img
-          src={profile.avatar}
-          alt={profile.name}
-          className="h-24 w-24 rounded-full object-cover ring-2 ring-border"
-        />
-        <h1 className="mt-3 text-xl font-bold">{profile.name}</h1>
-        <p className="text-sm text-muted-foreground">{profile.username}</p>
-        <p className="mt-2 max-w-xs text-balance text-sm text-foreground/80">{profile.bio}</p>
-      </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Profile</DialogTitle>
+          <DialogDescription>Change your photo, username and bio.</DialogDescription>
+        </DialogHeader>
 
-      <div className="mt-5 flex gap-2 px-4">
-        <button className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-surface text-sm font-semibold active:bg-surface-2">
-          <Pencil className="h-4 w-4" /> Edit Profile
-        </button>
-        <button className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-surface text-sm font-semibold active:bg-surface-2">
-          <Share2 className="h-4 w-4" /> Share
-        </button>
-      </div>
-
-      <div className="mx-4 mt-5 overflow-hidden rounded-[24px] gradient-accent p-5 shadow-accent">
-        <div className="flex items-center gap-2 text-primary-foreground">
-          <Sparkles className="h-5 w-5" />
-          <span className="text-sm font-semibold uppercase tracking-wide">Premium</span>
-        </div>
-        <h2 className="mt-2 text-xl font-bold text-primary-foreground">Upgrade to Premium</h2>
-        <ul className="mt-3 space-y-1 text-sm text-primary-foreground/90">
-          <li>· Unlimited chats</li>
-          <li>· Priority responses</li>
-          <li>· Advanced character creation</li>
-          <li>· No ads</li>
-        </ul>
-        <button className="mt-4 w-full rounded-full bg-background/15 py-3 text-sm font-semibold text-primary-foreground backdrop-blur">
-          Upgrade
-        </button>
-      </div>
-
-      <div className="mx-4 mt-5 space-y-2">
-        <Section icon={User} label="My Characters" count={myChars.length} defaultOpen>
-          <CharGrid items={myChars} empty="You haven't created any characters yet." />
-        </Section>
-
-        <Section icon={Bookmark} label="Saved Characters" count={savedChars.length}>
-          <CharGrid
-            items={savedChars}
-            empty="No saved characters yet. Tap the bookmark icon on any post to save them here."
-          />
-        </Section>
-
-        <Section icon={Heart} label="Liked Characters" count={likedChars.length}>
-          <CharGrid
-            items={likedChars}
-            empty="No liked characters yet. Tap the heart on any post to like them."
-          />
-        </Section>
-
-        <Section icon={Users} label="Following" count={profile.stats.following}>
-          <div className="grid grid-cols-2 gap-2 text-center">
-            {[
-              ["Created", profile.stats.created],
-              ["Followers", profile.stats.followers],
-              ["Following", profile.stats.following],
-              ["Saved", savedChars.length],
-            ].map(([k, v]) => (
-              <div key={k as string} className="rounded-xl bg-surface-2 py-3">
-                <div className="text-base font-bold">{v}</div>
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{k}</div>
+        <div className="flex flex-col items-center">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="relative"
+          >
+            {avatar ? (
+              <img src={avatar} alt="avatar" className="h-24 w-24 rounded-full object-cover" />
+            ) : (
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-surface text-2xl font-bold text-foreground/70">
+                {username.replace("@", "").slice(0, 1).toUpperCase() || "?"}
               </div>
-            ))}
-          </div>
-        </Section>
+            )}
+            <span className="absolute -bottom-1 -right-1 rounded-full bg-primary p-1.5 text-primary-foreground shadow">
+              <Camera className="h-3.5 w-3.5" />
+            </span>
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => onPickFile(e.target.files?.[0])}
+          />
+        </div>
 
-        <Section icon={Settings} label="Settings">
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <p>Account, notifications, appearance, and privacy preferences.</p>
-            <button className="w-full rounded-xl bg-surface-2 py-2.5 text-foreground active:scale-[0.99]">Manage settings</button>
-          </div>
-        </Section>
+        <div className="space-y-3">
+          <label className="block text-sm">
+            <span className="mb-1 block text-xs font-semibold text-muted-foreground">Username</span>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              maxLength={31}
+              className="w-full rounded-xl bg-surface px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+              placeholder="@yourname"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-xs font-semibold text-muted-foreground">Bio</span>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              maxLength={160}
+              rows={3}
+              className="w-full resize-none rounded-xl bg-surface px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Tell people about you"
+            />
+            <span className="mt-1 block text-right text-[10px] text-muted-foreground">
+              {bio.length}/160
+            </span>
+          </label>
+        </div>
 
-        <Section icon={HelpCircle} label="Help">
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <p>Need a hand? Browse the FAQ or contact support.</p>
-            <button className="w-full rounded-xl bg-surface-2 py-2.5 text-foreground active:scale-[0.99]">Contact support</button>
-          </div>
-        </Section>
-
-        <Section icon={Shield} label="Privacy Policy">
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            We respect your privacy. Your chats and characters stay yours. Read the full policy for
-            details on data collection, storage, and your rights.
-          </p>
-        </Section>
-
-        <Section icon={LogOut} label="Log out" danger onClick={() => {}} />
-      </div>
-    </div>
+        <DialogFooter className="gap-2 sm:gap-2">
+          <button
+            onClick={() => onOpenChange(false)}
+            className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={save}
+            className="flex-1 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+          >
+            Save
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
