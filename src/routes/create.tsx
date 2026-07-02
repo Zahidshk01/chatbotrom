@@ -2,6 +2,15 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { Image as ImageIcon, Sparkles, Upload, RotateCcw, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token
+    ? { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+    : { "Content-Type": "application/json" };
+}
 
 export const Route = createFileRoute("/create")({
   head: () => ({
@@ -52,7 +61,7 @@ function CreatePage() {
     try {
       const res = await fetch("/api/generate-character-image", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders(),
         body: JSON.stringify({ prompt: aiPrompt }),
       });
       const json = (await res.json()) as { image?: string; error?: string };
@@ -80,7 +89,7 @@ function CreatePage() {
     try {
       const res = await fetch("/api/generate-first-message", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders(),
         body: JSON.stringify({ name, description: aiPrompt }),
       });
       const json = (await res.json()) as { message?: string; error?: string };
