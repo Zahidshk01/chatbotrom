@@ -89,7 +89,7 @@ function CreatePage() {
     try {
       const res = await fetch("/api/generate-first-message", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders(),
         body: JSON.stringify({ name, description: aiPrompt }),
       });
       const json = (await res.json()) as { message?: string; error?: string };
