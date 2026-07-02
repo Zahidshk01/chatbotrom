@@ -61,7 +61,7 @@ function CreatePage() {
     try {
       const res = await fetch("/api/generate-character-image", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders(),
         body: JSON.stringify({ prompt: aiPrompt }),
       });
       const json = (await res.json()) as { image?: string; error?: string };
