@@ -485,14 +485,15 @@ function EditProfileDialog({
   const [bio, setBio] = useState(profile.bio);
   const [avatar, setAvatar] = useState(profile.avatar);
 
-  // Sync when dialog opens
-  useMemo(() => {
+  // Sync fields when dialog opens
+  useEffect(() => {
     if (open) {
       setUsername(profile.username);
       setBio(profile.bio);
       setAvatar(profile.avatar);
     }
-  }, [open, profile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   function onPickFile(file?: File) {
     if (!file) return;
