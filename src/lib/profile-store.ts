@@ -16,7 +16,7 @@ const DEFAULT_PROFILE: UserProfile = {
   stats: { following: 85, followers: 174, interactions: 4 },
 };
 
-function read(): UserProfile {
+function readFromStorage(): UserProfile {
   if (typeof window === "undefined") return DEFAULT_PROFILE;
   try {
     const raw = window.localStorage.getItem(KEY);
@@ -32,25 +32,46 @@ function read(): UserProfile {
   }
 }
 
+// Cached snapshot — required for useSyncExternalStore to avoid infinite
+// re-renders (each call must return a referentially-stable value).
+let snapshot: UserProfile = readFromStorage();
+
 const listeners = new Set<() => void>();
+
+function emit() {
+  snapshot = readFromStorage();
+  listeners.forEach((l) => l());
+}
+
 function subscribe(cb: () => void) {
   listeners.add(cb);
   const onStorage = (e: StorageEvent) => {
-    if (e.key === KEY) cb();
+    if (e.key === KEY) {
+      snapshot = readFromStorage();
+      cb();
+    }
   };
-  window.addEventListener("storage", onStorage);
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", onStorage);
+  }
   return () => {
     listeners.delete(cb);
-    window.removeEventListener("storage", onStorage);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("storage", onStorage);
+    }
   };
 }
 
 export function updateProfile(patch: Partial<UserProfile>) {
-  const next = { ...read(), ...patch };
+  const next = { ...snapshot, ...patch };
   window.localStorage.setItem(KEY, JSON.stringify(next));
-  listeners.forEach((l) => l());
+  emit();
 }
 
 export function useProfile(): UserProfile {
-  return useSyncExternalStore(subscribe, read, () => DEFAULT_PROFILE);
+  return useSyncExternalStore(
+    subscribe,
+    () => snapshot,
+    () => DEFAULT_PROFILE,
+  );
 }
