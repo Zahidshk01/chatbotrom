@@ -49,13 +49,17 @@ function HomePage() {
       const { data, error } = await (supabase as any)
         .from("characters")
         .select("*")
-        .order("id", { ascending: true });
+        .order("sort_order", { ascending: true });
 
       console.log("SUPABASE CHARACTERS:", data);
       console.log("SUPABASE ERROR:", error);
 
       if (!error && data) {
-        setCharacters(data);
+        const withImages = (data as Character[]).map((c) => ({
+          ...c,
+          image: c.image || imageById.get(c.id) || null,
+        }));
+        setCharacters(withImages);
       }
 
       setLoading(false);
