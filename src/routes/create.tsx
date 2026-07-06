@@ -44,9 +44,12 @@ function CreatePage() {
 
   function onUpload(file?: File) {
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setImage(url);
-    setShowImageMenu(false);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImage(typeof reader.result === "string" ? reader.result : null);
+      setShowImageMenu(false);
+    };
+    reader.readAsDataURL(file);
   }
 
   function openAiPrompt() {
@@ -114,11 +117,41 @@ function CreatePage() {
     if (!firstMessage) void generateFirstMessage();
   }
 
-  function finish() {
+  async function finish() {
     if (!firstMessage.trim()) return toast("Add a first message");
+    const { data: sess } = await supabase.auth.getSession();
+    const user = sess.session?.user;
+    if (!user) {
+      toast("Please sign in to save your character");
+      navigate({ to: "/auth" });
+      return;
+    }
+    const id = (globalThis.crypto?.randomUUID?.() ?? `char-${Date.now()}`);
+    const { error } = await (supabase as any).from("characters").insert({
+      id,
+      name: name.trim(),
+      image,
+      creator: user.email?.split("@")[0] ?? "you",
+      chats: "0",
+      category: "Custom",
+      height: 72,
+      tagline: aiPrompt.slice(0, 140) || `Chat with ${name}`,
+      relation: "your creation",
+      persona: aiPrompt || null,
+      first_message: firstMessage.trim(),
+      visibility,
+      owner_id: user.id,
+      sort_order: -Date.now(),
+    });
+    if (error) {
+      console.error(error);
+      toast("Couldn't save character: " + error.message);
+      return;
+    }
     toast.success(`${name} is ready to chat`);
-    navigate({ to: "/" });
+    navigate({ to: "/chat/$id", params: { id } });
   }
+
 
   return (
     <div className="safe-top px-5 pt-3 pb-28">
