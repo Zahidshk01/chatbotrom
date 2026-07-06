@@ -44,9 +44,12 @@ function CreatePage() {
 
   function onUpload(file?: File) {
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setImage(url);
-    setShowImageMenu(false);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImage(typeof reader.result === "string" ? reader.result : null);
+      setShowImageMenu(false);
+    };
+    reader.readAsDataURL(file);
   }
 
   function openAiPrompt() {
