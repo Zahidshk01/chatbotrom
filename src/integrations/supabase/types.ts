@@ -20,78 +20,39 @@ export type Database = {
           chats: string | null
           created_at: string
           creator: string | null
-          first_message: string | null
           height: number | null
           id: string
           image: string | null
           name: string
-          owner_id: string | null
-          persona: string | null
           relation: string | null
           sort_order: number
           tagline: string | null
-          visibility: string
         }
         Insert: {
           category?: string | null
           chats?: string | null
           created_at?: string
           creator?: string | null
-          first_message?: string | null
           height?: number | null
           id: string
           image?: string | null
           name: string
-          owner_id?: string | null
-          persona?: string | null
           relation?: string | null
           sort_order?: number
           tagline?: string | null
-          visibility?: string
         }
         Update: {
           category?: string | null
           chats?: string | null
           created_at?: string
           creator?: string | null
-          first_message?: string | null
           height?: number | null
           id?: string
           image?: string | null
           name?: string
-          owner_id?: string | null
-          persona?: string | null
           relation?: string | null
           sort_order?: number
           tagline?: string | null
-          visibility?: string
-        }
-        Relationships: []
-      }
-      chat_messages: {
-        Row: {
-          character_id: string
-          content: string
-          created_at: string
-          id: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          character_id: string
-          content: string
-          created_at?: string
-          id?: string
-          role: string
-          user_id: string
-        }
-        Update: {
-          character_id?: string
-          content?: string
-          created_at?: string
-          id?: string
-          role?: string
-          user_id?: string
         }
         Relationships: []
       }

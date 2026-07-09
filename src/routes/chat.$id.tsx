@@ -1,13 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { ChevronLeft, MoreVertical, Send, Sparkles, RotateCcw, Pencil, Check, X } from "lucide-react";
-import { characters as mockCharacters } from "@/lib/mock-data";
-import { supabase } from "@/integrations/supabase/client";
-import type { Character } from "@/lib/character";
+import { characters } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/chat/$id")({
   head: ({ params }) => {
-    const c = mockCharacters.find((x) => x.id === params.id);
+    const c = characters.find((x) => x.id === params.id);
     return {
       meta: [
         { title: `${c?.name ?? "Chat"} · Kender` },
@@ -22,86 +20,21 @@ type Msg = {
   id: string;
   from: "me" | "them";
   text: string;
+  variants?: string[]; // alternate replies (for "them")
+  variantIndex?: number;
 };
 
 function ChatPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const [char, setChar] = useState<Character | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  const char = characters.find((c) => c.id === id);
   const [text, setText] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
-  const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs.length]);
-
-  // Load character + user + saved messages
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const { data: sess } = await supabase.auth.getSession();
-      const uid = sess.session?.user?.id ?? null;
-      if (cancelled) return;
-      setUserId(uid);
-
-      const { data: charRow } = await (supabase as any)
-        .from("characters")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-
-      let resolved: Character | null = null;
-      if (charRow) {
-        const local = mockCharacters.find((m) => m.id === id);
-        resolved = { ...charRow, image: charRow.image || local?.image || null } as Character;
-      } else {
-        const local = mockCharacters.find((m) => m.id === id);
-        if (local) resolved = { ...local } as unknown as Character;
-      }
-      if (cancelled) return;
-      setChar(resolved);
-
-      if (uid && resolved) {
-        const { data: rows } = await (supabase as any)
-          .from("chat_messages")
-          .select("*")
-          .eq("user_id", uid)
-          .eq("character_id", id)
-          .order("created_at", { ascending: true });
-        if (!cancelled && rows) {
-          setMsgs(
-            (rows as Array<{ id: string; role: string; content: string }>).map((r) => ({
-              id: r.id,
-              from: r.role === "user" ? "me" : "them",
-              text: r.content,
-            })),
-          );
-        }
-      }
-      if (!cancelled) setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  async function persistMsg(role: "user" | "assistant", content: string) {
-    if (!userId) return;
-    await (supabase as any).from("chat_messages").insert({
-      user_id: userId,
-      character_id: id,
-      role,
-      content,
-    });
-  }
-
-  if (loading) {
-    return <div className="safe-top px-6 pt-20 text-center text-muted-foreground">Loading…</div>;
-  }
 
   if (!char) {
     return (
@@ -112,60 +45,89 @@ function ChatPage() {
     );
   }
 
-  const opener =
-    char.first_message?.trim() ||
-    openingScene(char.name, char.category ?? "", char.tagline ?? "");
-
   const send = async () => {
-    const v = text.trim();
-    if (!v || sending) return;
-    setSending(true);
+  const v = text.trim();
+  if (!v) return;
 
-    const mine: Msg = { id: crypto.randomUUID(), from: "me", text: v };
-    const nextMsgs = [...msgs, mine];
-    setMsgs(nextMsgs);
-    setText("");
-    void persistMsg("user", v);
-
-    try {
-      const apiMessages = nextMsgs.map((m) => ({
-        role: m.from === "me" ? "user" : "assistant",
-        content: m.text,
-      }));
-
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          characterName: char.name,
-          characterDescription: char.persona || char.tagline,
-          characterCategory: char.category,
-          characterRelation: char.relation,
-          messages: apiMessages,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.details || data?.error || "Chat request failed");
-      const replyText = data.reply?.trim();
-      if (!replyText) throw new Error("No reply returned");
-
-      const reply: Msg = { id: crypto.randomUUID(), from: "them", text: replyText };
-      setMsgs((m) => [...m, reply]);
-      void persistMsg("assistant", replyText);
-    } catch (err) {
-      const errorText = err instanceof Error ? err.message : "Something went wrong.";
-      setMsgs((m) => [...m, { id: crypto.randomUUID(), from: "them", text: `⚠️ ${errorText}` }]);
-    } finally {
-      setSending(false);
-    }
+  const mine: Msg = {
+    id: crypto.randomUUID(),
+    from: "me",
+    text: v,
   };
+
+  // Add user message immediately
+  const nextMsgs = [...msgs, mine];
+  setMsgs(nextMsgs);
+  setText("");
+
+  try {
+    const apiMessages = nextMsgs.map((m) => ({
+      role: m.from === "me" ? "user" : "assistant",
+      content: m.text,
+    }));
+
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        characterName: char.name,
+        characterDescription: char.tagline,
+        characterCategory: char.category,
+        characterRelation: char.relation,
+        messages: apiMessages,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data?.details || data?.error || "Chat request failed");
+    }
+
+    const replyText = data.reply?.trim();
+    if (!replyText) {
+      throw new Error("No reply returned from Qwen");
+    }
+
+    const reply: Msg = {
+      id: crypto.randomUUID(),
+      from: "them",
+      text: replyText,
+    };
+
+    setMsgs((m) => [...m, reply]);
+  } catch (err) {
+    const errorText =
+      err instanceof Error ? err.message : "Something went wrong.";
+
+    const reply: Msg = {
+      id: crypto.randomUUID(),
+      from: "them",
+      text: `⚠️ ${errorText}`,
+    };
+
+    setMsgs((m) => [...m, reply]);
+  }
+};
+
+
+  const cycleVariant = (mid: string) =>
+    setMsgs((arr) =>
+      arr.map((m) => {
+        if (m.id !== mid || !m.variants) return m;
+        const next = ((m.variantIndex ?? 0) + 1) % m.variants.length;
+        return { ...m, variantIndex: next, text: m.variants[next] };
+      }),
+    );
 
   const editMessage = (mid: string, newText: string) =>
     setMsgs((arr) => arr.map((m) => (m.id === mid ? { ...m, text: newText } : m)));
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-0">
+      {/* Header */}
       <header className="safe-top sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-background/85 px-3 py-3 backdrop-blur-xl">
         <button
           onClick={() => navigate({ to: "/" })}
@@ -183,16 +145,17 @@ function ChatPage() {
         </button>
       </header>
 
+      {/* Scroll area */}
       <div className="flex-1 overflow-y-auto px-4 pb-32 pt-4">
+        {/* Character pill */}
         <div className="mb-6 flex items-center gap-3 rounded-full bg-surface px-3 py-2">
-          {char.image && (
-            <img src={char.image} alt={char.name} className="h-10 w-10 rounded-full object-cover" />
-          )}
+          <img src={char.image} alt={char.name} className="h-10 w-10 rounded-full object-cover" />
           <div className="truncate text-base font-semibold">
             {char.name} <span className="text-muted-foreground">({char.relation})</span>
           </div>
         </div>
 
+        {/* Date divider */}
         <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
           <div className="h-px flex-1 bg-border" />
           <span>
@@ -201,15 +164,13 @@ function ChatPage() {
           <div className="h-px flex-1 bg-border" />
         </div>
 
-        <CharacterMessage image={char.image ?? ""} text={opener} />
+        {/* Opening narration as character message */}
+        <CharacterMessage
+          image={char.image}
+          text={openingScene(char.name, char.category, char.tagline)}
+        />
 
-        {!userId && (
-          <div className="mt-3 rounded-2xl bg-surface px-4 py-2.5 text-xs text-muted-foreground">
-            <Link to="/auth" className="text-primary font-semibold">Sign in</Link> to save this
-            chat so you can resume it later.
-          </div>
-        )}
-
+        {/* Messages */}
         <div className="mt-4 space-y-4">
           {msgs.map((m) =>
             m.from === "me" ? (
@@ -221,8 +182,9 @@ function ChatPage() {
             ) : (
               <CharacterMessage
                 key={m.id}
-                image={char.image ?? ""}
+                image={char.image}
                 text={m.text}
+                onRegenerate={m.variants && m.variants.length > 1 ? () => cycleVariant(m.id) : undefined}
                 onEdit={(t) => editMessage(m.id, t)}
               />
             ),
@@ -231,6 +193,7 @@ function ChatPage() {
         <div ref={endRef} />
       </div>
 
+      {/* Composer */}
       <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md border-t border-border bg-background/90 px-3 py-3 backdrop-blur-xl safe-bottom">
         <div className="flex items-end gap-2">
           <div className="flex flex-1 items-center rounded-full bg-surface px-4 py-2">
@@ -249,9 +212,8 @@ function ChatPage() {
           </div>
           <button
             onClick={send}
-            disabled={sending}
             aria-label="Send"
-            className="flex h-11 w-11 items-center justify-center rounded-full gradient-accent text-primary-foreground shadow-accent active:scale-95 disabled:opacity-60"
+            className="flex h-11 w-11 items-center justify-center rounded-full gradient-accent text-primary-foreground shadow-accent active:scale-95"
           >
             <Send className="h-5 w-5" />
           </button>
@@ -261,9 +223,12 @@ function ChatPage() {
   );
 }
 
+/* ---------- Character message with rich formatting + actions ---------- */
+
 function CharacterMessage({
   image,
   text,
+  onRegenerate,
   onEdit,
 }: {
   image: string;
@@ -278,7 +243,7 @@ function CharacterMessage({
 
   return (
     <div className="flex gap-2">
-      {image && <img src={image} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />}
+      <img src={image} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
       <div className="min-w-0 flex-1">
         {editing ? (
           <div className="max-w-full">
@@ -315,15 +280,26 @@ function CharacterMessage({
             <div className="max-w-[85%] rounded-2xl rounded-tl-md bg-surface px-4 py-3 text-sm leading-relaxed">
               <RichText text={text} />
             </div>
-            {onEdit && (
+            {(onRegenerate || onEdit) && (
               <div className="flex flex-col gap-1.5 pt-1">
-                <button
-                  onClick={() => setEditing(true)}
-                  aria-label="Edit reply"
-                  className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
+                {onEdit && (
+                  <button
+                    onClick={() => setEditing(true)}
+                    aria-label="Edit reply"
+                    className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                )}
+                {onRegenerate && (
+                  <button
+                    onClick={onRegenerate}
+                    aria-label="Try another reply"
+                    className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -333,7 +309,13 @@ function CharacterMessage({
   );
 }
 
+/**
+ * Renders text where:
+ *  - "double quoted" segments => bold (spoken dialogue)
+ *  - everything else => italic narration / thoughts
+ */
 function RichText({ text }: { text: string }) {
+  // Split keeping the quoted parts (matches either "..." or “...”)
   const parts = text.split(/("[^"]*"|“[^”]*”)/g).filter(Boolean);
   return (
     <p className="whitespace-pre-wrap">
@@ -349,22 +331,34 @@ function RichText({ text }: { text: string }) {
   );
 }
 
+/* ---------- Content generators ---------- */
+
 function openingScene(name: string, category: string, tagline: string) {
   const first = name.split(" ")[0];
   switch (category) {
     case "Romance":
-      return `${first} leans against the doorway, eyes locked on yours. "There you are. I was starting to wonder if you'd come."`;
+      return `${first} leans against the doorway, eyes locked on yours, a slow smile spreading across their face. "There you are. I was starting to wonder if you'd come."`;
     case "Horror":
-      return `${first} steps from the shadows, voice barely a whisper. "You shouldn't have come back."`;
+      return `The room grows colder as ${first} steps from the shadows, voice barely a whisper. "You shouldn't have come back."`;
     case "Fantasy":
-      return `${first} draws their blade halfway, then pauses. "Speak quickly. The forest is listening."`;
+      return `${first} draws their blade halfway, then pauses — recognition flickering in their eyes. "Speak quickly. The forest is listening."`;
     case "Anime":
       return `${first} glances up from the glowing screens, smirking. "You're late. I almost started without you."`;
     case "Adventure":
       return `${first} tosses you a comm unit. "Strap in. We launch in sixty."`;
     case "Friends":
-      return `${first} waves you over. "Took you long enough — sit, sit."`;
+      return `${first} waves you over, two warm cups already on the table. "Took you long enough — sit, sit."`;
     default:
-      return `${first} looks up as you arrive. "${tagline || "Hey. Glad you're here."}"`;
+      return `${first} looks up as you arrive, expression unreadable. "${tagline}"`;
   }
 }
+
+// function repliesFor(name: string, input: string): string[] {
+//   const first = name.split(" ")[0];
+//   const snippet = input.slice(0, 40);
+//   return [
+//     `${first} tilts their head, considering you. "${snippet}…" they echo softly. A small smile tugs at the corner of their mouth.`,
+//     `${first} crosses their arms and leans closer. "Now that's interesting. Tell me more — I want every detail."`,
+//     `${first} laughs quietly, eyes glinting. "You always know exactly what to say, don't you?"`,
+//   ];
+// }
