@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, MessageSquare, X } from "lucide-react";
-import { characters } from "@/lib/mock-data";
+import { supabase } from "@/integrations/supabase/client";
+import type { Character } from "@/lib/character";
+import { resolveImage } from "@/lib/character-images";
 
 export const Route = createFileRoute("/search")({
   head: () => ({
@@ -15,14 +17,29 @@ export const Route = createFileRoute("/search")({
 
 function SearchPage() {
   const [q, setQ] = useState("");
-  const feed = [...characters, ...characters];
-  const results = feed.filter(
+  const [items, setItems] = useState<Character[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("characters")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      if (data) {
+        setItems(
+          (data as Character[]).map((c) => ({ ...c, image: resolveImage(c.id, c.image) })),
+        );
+      }
+    })();
+  }, []);
+
+  const results = items.filter(
     (c) =>
       !q ||
       c.name.toLowerCase().includes(q.toLowerCase()) ||
-      c.creator.toLowerCase().includes(q.toLowerCase()) ||
-      c.category.toLowerCase().includes(q.toLowerCase()) ||
-      c.relation.toLowerCase().includes(q.toLowerCase()),
+      (c.creator ?? "").toLowerCase().includes(q.toLowerCase()) ||
+      (c.category ?? "").toLowerCase().includes(q.toLowerCase()) ||
+      (c.relation ?? "").toLowerCase().includes(q.toLowerCase()),
   );
 
   return (
@@ -49,15 +66,15 @@ function SearchPage() {
 
       {results.length ? (
         <div className="grid grid-cols-2 gap-1 px-1">
-          {results.map((c, i) => (
+          {results.map((c) => (
             <Link
-              key={`${c.id}-${i}`}
+              key={c.id}
               to="/chat/$id"
               params={{ id: c.id }}
               className="group relative aspect-square overflow-hidden rounded-md bg-surface"
             >
               <img
-                src={c.image}
+                src={c.image ?? "/placeholder.png"}
                 alt={c.name}
                 loading="lazy"
                 className="absolute inset-0 h-full w-full object-cover"
