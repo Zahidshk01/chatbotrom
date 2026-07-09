@@ -117,10 +117,33 @@ function CreatePage() {
     if (!firstMessage) void generateFirstMessage();
   }
 
-  function finish() {
+  async function finish() {
     if (!firstMessage.trim()) return toast("Add a first message");
+    const { data: sess } = await supabase.auth.getSession();
+    const owner_id = sess.session?.user.id ?? null;
+    const id = crypto.randomUUID();
+    const { error } = await (supabase as any).from("characters").insert({
+      id,
+      name: name.trim(),
+      image,
+      creator: sess.session?.user.email ? `@${sess.session.user.email.split("@")[0]}` : "@you",
+      chats: "0",
+      category: "Custom",
+      height: 80,
+      tagline: aiPrompt || firstMessage.slice(0, 80),
+      relation: "your creation",
+      first_message: firstMessage,
+      persona: aiPrompt,
+      visibility,
+      owner_id,
+      sort_order: -Date.now(),
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(`${name} is ready to chat`);
-    navigate({ to: "/" });
+    navigate({ to: "/chat/$id", params: { id } });
   }
 
   return (
