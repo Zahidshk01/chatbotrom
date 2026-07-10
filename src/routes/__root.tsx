@@ -154,3 +154,9 @@ function AuthGate({ children }: { children: ReactNode }) {
   if (!session && pathname !== "/auth") return null;
   return <>{children}</>;
 }
+
+function BottomNavGate() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname === "/auth") return null;
+  return <BottomNav />;
+}
