@@ -124,6 +124,7 @@ function RootComponent() {
             <Outlet />
           </AuthGate>
           <BottomNavGate />
+
           <Toaster position="top-center" theme="dark" />
         </div>
       </AuthProvider>
