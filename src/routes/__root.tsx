@@ -120,7 +120,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <div className="dark mx-auto min-h-screen max-w-md bg-background pb-24">
-          <Outlet />
+          <AuthGate>
+            <Outlet />
+          </AuthGate>
           <BottomNavGate />
           <Toaster position="top-center" theme="dark" />
         </div>
@@ -129,8 +131,25 @@ function RootComponent() {
   );
 }
 
-function BottomNavGate() {
+function AuthGate({ children }: { children: ReactNode }) {
+  const { session, loading } = useAuth();
+  const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  if (pathname === "/auth") return null;
-  return <BottomNav />;
+
+  useEffect(() => {
+    if (loading) return;
+    if (!session && pathname !== "/auth") {
+      router.navigate({ to: "/auth", replace: true });
+    }
+  }, [session, loading, pathname, router]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-white/60" />
+      </div>
+    );
+  }
+  if (!session && pathname !== "/auth") return null;
+  return <>{children}</>;
 }
