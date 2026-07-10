@@ -81,21 +81,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { title: "Kender · Chat with AI Characters" },
+      { name: "description", content: "Kender is a mobile-first AI character platform. Discover, create, and chat with immersive AI companions." },
+      { property: "og:title", content: "Kender · Chat with AI Characters" },
+      { property: "og:description", content: "Discover, create, and chat with AI characters on Kender." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
     ],
   }),
   shellComponent: RootShell,
