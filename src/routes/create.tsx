@@ -136,7 +136,7 @@ function CreatePage() {
       persona: aiPrompt,
       visibility,
       owner_id,
-      sort_order: -Date.now(),
+      sort_order: -Math.floor(Date.now() / 1000),
     });
     if (error) {
       toast.error(error.message);
