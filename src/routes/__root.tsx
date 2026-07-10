@@ -81,21 +81,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { title: "Kender · Chat with AI Characters" },
+      { name: "description", content: "Kender is a mobile-first AI character platform. Discover, create, and chat with immersive AI companions." },
+      { property: "og:title", content: "Kender · Chat with AI Characters" },
+      { property: "og:description", content: "Discover, create, and chat with AI characters on Kender." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
     ],
   }),
   shellComponent: RootShell,
@@ -125,13 +120,39 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <div className="dark mx-auto min-h-screen max-w-md bg-background pb-24">
-          <Outlet />
+          <AuthGate>
+            <Outlet />
+          </AuthGate>
           <BottomNavGate />
+
           <Toaster position="top-center" theme="dark" />
         </div>
       </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+function AuthGate({ children }: { children: ReactNode }) {
+  const { session, loading } = useAuth();
+  const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    if (loading) return;
+    if (!session && pathname !== "/auth") {
+      router.navigate({ to: "/auth", replace: true });
+    }
+  }, [session, loading, pathname, router]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-white/60" />
+      </div>
+    );
+  }
+  if (!session && pathname !== "/auth") return null;
+  return <>{children}</>;
 }
 
 function BottomNavGate() {
