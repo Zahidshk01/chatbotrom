@@ -365,6 +365,14 @@ function ProfilePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <FollowListDialog
+        open={listDialog !== null}
+        kind={listDialog}
+        onClose={() => setListDialog(null)}
+        following={following}
+        followers={followers}
+      />
     </div>
   );
 }
