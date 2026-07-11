@@ -626,3 +626,93 @@ function EditProfileDialog({
     </Dialog>
   );
 }
+
+function FollowListDialog({
+  open,
+  kind,
+  onClose,
+  following,
+  followers,
+}: {
+  open: boolean;
+  kind: "following" | "followers" | null;
+  onClose: () => void;
+  following: string[];
+  followers: string[];
+}) {
+  const list = kind === "followers" ? followers : following;
+  const title = kind === "followers" ? "Followers" : "Following";
+
+  // Build a lookup from creator handle → representative character (for avatar)
+  const byCreator = useMemo(() => {
+    const map = new Map<string, Character>();
+    for (const c of characters) {
+      const key = (c.creator ?? "").replace(/^@/, "").toLowerCase();
+      if (key && !map.has(key)) map.set(key, c);
+    }
+    return map;
+  }, []);
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            {list.length === 0
+              ? kind === "followers"
+                ? "You don't have any followers yet."
+                : "You aren't following anyone yet."
+              : `${list.length} ${list.length === 1 ? "person" : "people"}`}
+          </DialogDescription>
+        </DialogHeader>
+
+        {list.length > 0 && (
+          <div className="max-h-[60vh] space-y-2 overflow-y-auto">
+            {list.map((handle) => {
+              const clean = handle.replace(/^@/, "");
+              const char = byCreator.get(clean.toLowerCase());
+              const isFollowing = following.includes(handle);
+              return (
+                <div
+                  key={handle}
+                  className="flex items-center gap-3 rounded-xl bg-surface px-3 py-2"
+                >
+                  {char?.image ? (
+                    <img
+                      src={char.image}
+                      alt={handle}
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-sm font-bold">
+                      {clean.slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">@{clean}</p>
+                    {char && (
+                      <p className="truncate text-xs text-muted-foreground">
+                        {char.name}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => toggleFollow(handle)}
+                    className={`rounded-full px-4 py-1.5 text-xs font-semibold ${
+                      isFollowing
+                        ? "bg-surface-2 text-foreground"
+                        : "bg-primary text-primary-foreground"
+                    }`}
+                  >
+                    {isFollowing ? "Following" : "Follow"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
