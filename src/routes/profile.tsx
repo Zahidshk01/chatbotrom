@@ -369,13 +369,29 @@ function ProfilePage() {
   );
 }
 
-function Stat({ value, label }: { value: number | string; label: string }) {
-  return (
-    <div className="flex flex-col items-center">
+function Stat({
+  value,
+  label,
+  onClick,
+}: {
+  value: number | string;
+  label: string;
+  onClick?: () => void;
+}) {
+  const inner = (
+    <>
       <span className="text-lg font-bold">{value}</span>
       <span className="text-xs text-muted-foreground">{label}</span>
-    </div>
+    </>
   );
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="flex flex-col items-center active:opacity-70">
+        {inner}
+      </button>
+    );
+  }
+  return <div className="flex flex-col items-center">{inner}</div>;
 }
 
 function TabContent({
