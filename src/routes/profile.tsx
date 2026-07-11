@@ -7,6 +7,7 @@ import {
 import { characters, type Character } from "@/lib/mock-data";
 import { useSavedIds } from "@/lib/saved-store";
 import { useLikedIds } from "@/lib/liked-store";
+import { useFollowing, useFollowers, toggleFollow } from "@/lib/follow-store";
 import { useProfile, updateProfile } from "@/lib/profile-store";
 import { supabase } from "@/integrations/supabase/client";
 import {
