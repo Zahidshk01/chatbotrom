@@ -60,7 +60,7 @@ export function CharacterPost({ char }: { char: Character }) {
           <span className="truncate text-sm font-semibold">{creatorLabel}</span>
         </div>
         <button
-          onClick={toggleFollow}
+          onClick={toggleFollowClick}
           className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors ${
             following
               ? "border-border bg-surface text-muted-foreground"
