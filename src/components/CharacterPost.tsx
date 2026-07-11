@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { Character } from "@/lib/character";
 import { toggleSaved, useIsSaved } from "@/lib/saved-store";
 import { toggleLiked, useIsLiked } from "@/lib/liked-store";
+import { toggleFollow, useIsFollowing } from "@/lib/follow-store";
 
 function fmt(n: number) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
