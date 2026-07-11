@@ -21,11 +21,17 @@ function AuthPage() {
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState<null | "apple" | "google">(null);
 
-  // If already signed in, bounce home
+  // If already signed in, bounce home. Also listen for sign-in events.
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/" });
+      if (data.session) navigate({ to: "/", replace: true });
     });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION")) {
+        navigate({ to: "/", replace: true });
+      }
+    });
+    return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
   // Starfield
