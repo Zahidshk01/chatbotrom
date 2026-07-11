@@ -59,8 +59,11 @@ function AuthPage() {
     if (result.error) {
       toast.error(result.error.message ?? "Sign in failed");
       setBusy(null);
+      return;
     }
-  };
+    if (result.redirected) return; // browser is navigating away
+    // Popup flow: tokens set, go home
+    navigate({ to: "/", replace: true });
 
   const disabled = !confirmed;
 
