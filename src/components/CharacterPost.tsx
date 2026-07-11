@@ -17,7 +17,7 @@ export function CharacterPost({ char }: { char: Character }) {
   const navigate = useNavigate();
   const saved = useIsSaved(char.id);
   const liked = useIsLiked(char.id);
-  const [following, setFollowing] = useState(false);
+  const following = useIsFollowing(char.creator);
   const [likes, setLikes] = useState(() => 5000 + Math.floor(Math.random() * 40000));
   const [comments, setComments] = useState(() => 1000 + Math.floor(Math.random() * 150000));
 
