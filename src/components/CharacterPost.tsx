@@ -39,11 +39,10 @@ export function CharacterPost({ char }: { char: Character }) {
     toast.success(nowSaved ? "Saved to your profile" : "Removed from your profile");
   };
 
-  const toggleFollow = () => {
-    setFollowing((f) => {
-      toast.success(f ? `Unfollowed ${char.creator}` : `Following ${char.creator}`);
-      return !f;
-    });
+  const toggleFollowClick = () => {
+    if (!char.creator) return;
+    const nowFollowing = toggleFollow(char.creator);
+    toast.success(nowFollowing ? `Following ${char.creator}` : `Unfollowed ${char.creator}`);
   };
 
   const openChat = () => navigate({ to: "/chat/$id", params: { id: char.id } });
