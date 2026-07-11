@@ -64,6 +64,8 @@ function AuthPage() {
     if (result.redirected) return; // browser is navigating away
     // Popup flow: tokens set, go home
     navigate({ to: "/", replace: true });
+  };
+
 
   const disabled = !confirmed;
 
