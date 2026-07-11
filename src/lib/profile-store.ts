@@ -1,25 +1,32 @@
 import { useSyncExternalStore } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type UserProfile = {
   username: string;
   bio: string;
-  avatar: string; // data URL or remote URL
+  avatar: string;
   stats: { following: number; followers: number; interactions: number };
 };
 
-const KEY = "kender.profile";
+const BASE = "kender.profile";
 
 const DEFAULT_PROFILE: UserProfile = {
-  username: "@ZahidShk05",
-  bio: "Just livin as usual",
+  username: "@you",
+  bio: "",
   avatar: "",
-  stats: { following: 85, followers: 174, interactions: 4 },
+  stats: { following: 0, followers: 0, interactions: 0 },
 };
+
+let uid: string | null = null;
+
+function key() {
+  return uid ? `${BASE}:${uid}` : `${BASE}:guest`;
+}
 
 function readFromStorage(): UserProfile {
   if (typeof window === "undefined") return DEFAULT_PROFILE;
   try {
-    const raw = window.localStorage.getItem(KEY);
+    const raw = window.localStorage.getItem(key());
     if (!raw) return DEFAULT_PROFILE;
     const parsed = JSON.parse(raw) as Partial<UserProfile>;
     return {
@@ -32,10 +39,7 @@ function readFromStorage(): UserProfile {
   }
 }
 
-// Cached snapshot — required for useSyncExternalStore to avoid infinite
-// re-renders (each call must return a referentially-stable value).
-let snapshot: UserProfile = readFromStorage();
-
+let snapshot: UserProfile = DEFAULT_PROFILE;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -43,10 +47,21 @@ function emit() {
   listeners.forEach((l) => l());
 }
 
+if (typeof window !== "undefined") {
+  supabase.auth.getSession().then(({ data }) => {
+    uid = data.session?.user.id ?? null;
+    emit();
+  });
+  supabase.auth.onAuthStateChange((_e, s) => {
+    uid = s?.user.id ?? null;
+    emit();
+  });
+}
+
 function subscribe(cb: () => void) {
   listeners.add(cb);
   const onStorage = (e: StorageEvent) => {
-    if (e.key === KEY) {
+    if (e.key === key()) {
       snapshot = readFromStorage();
       cb();
     }
@@ -64,7 +79,7 @@ function subscribe(cb: () => void) {
 
 export function updateProfile(patch: Partial<UserProfile>) {
   const next = { ...snapshot, ...patch };
-  window.localStorage.setItem(KEY, JSON.stringify(next));
+  window.localStorage.setItem(key(), JSON.stringify(next));
   emit();
 }
 
