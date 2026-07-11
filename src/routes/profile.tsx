@@ -112,8 +112,8 @@ function ProfilePage() {
 
         {/* Stats */}
         <div className="mt-4 grid w-full max-w-xs grid-cols-3">
-          <Stat value={profile.stats.following} label="Following" />
-          <Stat value={profile.stats.followers} label="Followers" />
+          <Stat value={following.length} label="Following" onClick={() => setListDialog("following")} />
+          <Stat value={followers.length} label="Followers" onClick={() => setListDialog("followers")} />
           <Stat value={profile.stats.interactions} label="Interactions" />
         </div>
 
