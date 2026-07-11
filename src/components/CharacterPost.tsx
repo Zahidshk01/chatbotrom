@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { Character } from "@/lib/character";
 import { toggleSaved, useIsSaved } from "@/lib/saved-store";
 import { toggleLiked, useIsLiked } from "@/lib/liked-store";
+import { toggleFollow, useIsFollowing } from "@/lib/follow-store";
 
 function fmt(n: number) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
@@ -16,7 +17,7 @@ export function CharacterPost({ char }: { char: Character }) {
   const navigate = useNavigate();
   const saved = useIsSaved(char.id);
   const liked = useIsLiked(char.id);
-  const [following, setFollowing] = useState(false);
+  const following = useIsFollowing(char.creator);
   const [likes, setLikes] = useState(() => 5000 + Math.floor(Math.random() * 40000));
   const [comments, setComments] = useState(() => 1000 + Math.floor(Math.random() * 150000));
 
@@ -38,11 +39,10 @@ export function CharacterPost({ char }: { char: Character }) {
     toast.success(nowSaved ? "Saved to your profile" : "Removed from your profile");
   };
 
-  const toggleFollow = () => {
-    setFollowing((f) => {
-      toast.success(f ? `Unfollowed ${char.creator}` : `Following ${char.creator}`);
-      return !f;
-    });
+  const toggleFollowClick = () => {
+    if (!char.creator) return;
+    const nowFollowing = toggleFollow(char.creator);
+    toast.success(nowFollowing ? `Following ${char.creator}` : `Unfollowed ${char.creator}`);
   };
 
   const openChat = () => navigate({ to: "/chat/$id", params: { id: char.id } });
@@ -60,7 +60,7 @@ export function CharacterPost({ char }: { char: Character }) {
           <span className="truncate text-sm font-semibold">{creatorLabel}</span>
         </div>
         <button
-          onClick={toggleFollow}
+          onClick={toggleFollowClick}
           className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors ${
             following
               ? "border-border bg-surface text-muted-foreground"

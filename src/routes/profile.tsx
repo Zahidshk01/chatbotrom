@@ -7,6 +7,7 @@ import {
 import { characters, type Character } from "@/lib/mock-data";
 import { useSavedIds } from "@/lib/saved-store";
 import { useLikedIds } from "@/lib/liked-store";
+import { useFollowing, useFollowers, toggleFollow } from "@/lib/follow-store";
 import { useProfile, updateProfile } from "@/lib/profile-store";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -33,6 +34,8 @@ function ProfilePage() {
   const profile = useProfile();
   const savedIds = useSavedIds();
   const likedIds = useLikedIds();
+  const following = useFollowing();
+  const followers = useFollowers();
 
   const savedChars = useMemo(
     () => characters.filter((c) => savedIds.includes(c.id)),
@@ -49,6 +52,7 @@ function ProfilePage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [infoDialog, setInfoDialog] = useState<null | "premium" | "contact" | "terms" | "privacy" | "version">(null);
   const [confirm, setConfirm] = useState<null | "signout" | "delete">(null);
+  const [listDialog, setListDialog] = useState<null | "following" | "followers">(null);
 
   async function handleSignOut() {
     try {
@@ -108,8 +112,8 @@ function ProfilePage() {
 
         {/* Stats */}
         <div className="mt-4 grid w-full max-w-xs grid-cols-3">
-          <Stat value={profile.stats.following} label="Following" />
-          <Stat value={profile.stats.followers} label="Followers" />
+          <Stat value={following.length} label="Following" onClick={() => setListDialog("following")} />
+          <Stat value={followers.length} label="Followers" onClick={() => setListDialog("followers")} />
           <Stat value={profile.stats.interactions} label="Interactions" />
         </div>
 
@@ -361,17 +365,41 @@ function ProfilePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <FollowListDialog
+        open={listDialog !== null}
+        kind={listDialog}
+        onClose={() => setListDialog(null)}
+        following={following}
+        followers={followers}
+      />
     </div>
   );
 }
 
-function Stat({ value, label }: { value: number | string; label: string }) {
-  return (
-    <div className="flex flex-col items-center">
+function Stat({
+  value,
+  label,
+  onClick,
+}: {
+  value: number | string;
+  label: string;
+  onClick?: () => void;
+}) {
+  const inner = (
+    <>
       <span className="text-lg font-bold">{value}</span>
       <span className="text-xs text-muted-foreground">{label}</span>
-    </div>
+    </>
   );
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="flex flex-col items-center active:opacity-70">
+        {inner}
+      </button>
+    );
+  }
+  return <div className="flex flex-col items-center">{inner}</div>;
 }
 
 function TabContent({
@@ -594,6 +622,96 @@ function EditProfileDialog({
             Save
           </button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function FollowListDialog({
+  open,
+  kind,
+  onClose,
+  following,
+  followers,
+}: {
+  open: boolean;
+  kind: "following" | "followers" | null;
+  onClose: () => void;
+  following: string[];
+  followers: string[];
+}) {
+  const list = kind === "followers" ? followers : following;
+  const title = kind === "followers" ? "Followers" : "Following";
+
+  // Build a lookup from creator handle → representative character (for avatar)
+  const byCreator = useMemo(() => {
+    const map = new Map<string, Character>();
+    for (const c of characters) {
+      const key = (c.creator ?? "").replace(/^@/, "").toLowerCase();
+      if (key && !map.has(key)) map.set(key, c);
+    }
+    return map;
+  }, []);
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            {list.length === 0
+              ? kind === "followers"
+                ? "You don't have any followers yet."
+                : "You aren't following anyone yet."
+              : `${list.length} ${list.length === 1 ? "person" : "people"}`}
+          </DialogDescription>
+        </DialogHeader>
+
+        {list.length > 0 && (
+          <div className="max-h-[60vh] space-y-2 overflow-y-auto">
+            {list.map((handle) => {
+              const clean = handle.replace(/^@/, "");
+              const char = byCreator.get(clean.toLowerCase());
+              const isFollowing = following.includes(handle);
+              return (
+                <div
+                  key={handle}
+                  className="flex items-center gap-3 rounded-xl bg-surface px-3 py-2"
+                >
+                  {char?.image ? (
+                    <img
+                      src={char.image}
+                      alt={handle}
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-sm font-bold">
+                      {clean.slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">@{clean}</p>
+                    {char && (
+                      <p className="truncate text-xs text-muted-foreground">
+                        {char.name}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => toggleFollow(handle)}
+                    className={`rounded-full px-4 py-1.5 text-xs font-semibold ${
+                      isFollowing
+                        ? "bg-surface-2 text-foreground"
+                        : "bg-primary text-primary-foreground"
+                    }`}
+                  >
+                    {isFollowing ? "Following" : "Follow"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
