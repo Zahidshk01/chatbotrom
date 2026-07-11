@@ -34,6 +34,8 @@ function ProfilePage() {
   const profile = useProfile();
   const savedIds = useSavedIds();
   const likedIds = useLikedIds();
+  const following = useFollowing();
+  const followers = useFollowers();
 
   const savedChars = useMemo(
     () => characters.filter((c) => savedIds.includes(c.id)),
@@ -50,6 +52,7 @@ function ProfilePage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [infoDialog, setInfoDialog] = useState<null | "premium" | "contact" | "terms" | "privacy" | "version">(null);
   const [confirm, setConfirm] = useState<null | "signout" | "delete">(null);
+  const [listDialog, setListDialog] = useState<null | "following" | "followers">(null);
 
   async function handleSignOut() {
     try {
