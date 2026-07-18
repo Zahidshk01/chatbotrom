@@ -109,14 +109,42 @@ function ChatPage() {
     );
   }
 
-  const persistMessage = async (role: "user" | "assistant", content: string) => {
-    if (!userId) return;
-    await (supabase as any).from("chat_messages").insert({
-      user_id: userId,
-      character_id: char.id,
-      role,
-      content,
+  const persistMessage = async (role: "user" | "assistant", content: string): Promise<string | null> => {
+    if (!userId) return null;
+    const { data } = await (supabase as any)
+      .from("chat_messages")
+      .insert({
+        user_id: userId,
+        character_id: char.id,
+        role,
+        content,
+      })
+      .select("id")
+      .single();
+    return data?.id ?? null;
+  };
+
+  const requestReply = async (history: Msg[]): Promise<string> => {
+    const apiMessages = history.map((m) => ({
+      role: m.from === "me" ? "user" : "assistant",
+      content: m.text,
+    }));
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        characterName: char.name,
+        characterDescription: char.tagline,
+        characterCategory: char.category,
+        characterRelation: char.relation,
+        messages: apiMessages,
+      }),
     });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.details || data?.error || "Chat request failed");
+    const replyText = data.reply?.trim();
+    if (!replyText) throw new Error("No reply returned");
+    return replyText;
   };
 
   const send = async () => {
@@ -124,37 +152,25 @@ function ChatPage() {
     if (!v || sending) return;
     setSending(true);
 
-    const mine: Msg = { id: crypto.randomUUID(), from: "me", text: v };
+    const mineLocalId = crypto.randomUUID();
+    const mine: Msg = { id: mineLocalId, from: "me", text: v };
     const nextMsgs = [...msgs, mine];
     setMsgs(nextMsgs);
     setText("");
-    persistMessage("user", v);
+    const savedId = await persistMessage("user", v);
+    if (savedId) {
+      setMsgs((arr) => arr.map((m) => (m.id === mineLocalId ? { ...m, id: savedId } : m)));
+    }
 
     try {
-      const apiMessages = nextMsgs.map((m) => ({
-        role: m.from === "me" ? "user" : "assistant",
-        content: m.text,
-      }));
-
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          characterName: char.name,
-          characterDescription: char.tagline,
-          characterCategory: char.category,
-          characterRelation: char.relation,
-          messages: apiMessages,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.details || data?.error || "Chat request failed");
-      const replyText = data.reply?.trim();
-      if (!replyText) throw new Error("No reply returned");
-
-      const reply: Msg = { id: crypto.randomUUID(), from: "them", text: replyText };
+      const replyText = await requestReply(nextMsgs);
+      const localReplyId = crypto.randomUUID();
+      const reply: Msg = { id: localReplyId, from: "them", text: replyText, variants: [replyText], variantIndex: 0 };
       setMsgs((m) => [...m, reply]);
-      persistMessage("assistant", replyText);
+      const replyDbId = await persistMessage("assistant", replyText);
+      if (replyDbId) {
+        setMsgs((arr) => arr.map((m) => (m.id === localReplyId ? { ...m, id: replyDbId } : m)));
+      }
     } catch (err) {
       const errorText = err instanceof Error ? err.message : "Something went wrong.";
       setMsgs((m) => [...m, { id: crypto.randomUUID(), from: "them", text: `⚠️ ${errorText}` }]);
@@ -163,14 +179,59 @@ function ChatPage() {
     }
   };
 
-  const cycleVariant = (mid: string) =>
-    setMsgs((arr) =>
-      arr.map((m) => {
-        if (m.id !== mid || !m.variants) return m;
-        const next = ((m.variantIndex ?? 0) + 1) % m.variants.length;
-        return { ...m, variantIndex: next, text: m.variants[next] };
-      }),
-    );
+  const regenerate = async (mid: string) => {
+    if (sending) return;
+    const idx = msgs.findIndex((m) => m.id === mid);
+    if (idx < 0) return;
+    const target = msgs[idx];
+    if (target.from !== "them") return;
+    const variants = target.variants ?? [target.text];
+    // If we already have 3 variants, just cycle
+    if (variants.length >= 3) {
+      const next = ((target.variantIndex ?? 0) + 1) % variants.length;
+      const newText = variants[next];
+      setMsgs((arr) => arr.map((m) => (m.id === mid ? { ...m, variantIndex: next, text: newText } : m)));
+      if (!mid.startsWith("temp-")) {
+        await (supabase as any).from("chat_messages").delete().eq("id", mid);
+        const newId = await persistMessage("assistant", newText);
+        if (newId) setMsgs((arr) => arr.map((m) => (m.id === mid ? { ...m, id: newId } : m)));
+      }
+      return;
+    }
+    setSending(true);
+    try {
+      const history = msgs.slice(0, idx);
+      const replyText = await requestReply(history);
+      const newVariants = [...variants, replyText];
+      setMsgs((arr) =>
+        arr.map((m) =>
+          m.id === mid
+            ? { ...m, variants: newVariants, variantIndex: newVariants.length - 1, text: replyText }
+            : m,
+        ),
+      );
+      // Replace persisted row with new text
+      if (userId) {
+        await (supabase as any).from("chat_messages").delete().eq("id", mid);
+        const newId = await persistMessage("assistant", replyText);
+        if (newId) {
+          setMsgs((arr) => arr.map((m) => (m.id === mid ? { ...m, id: newId } : m)));
+        }
+      }
+    } catch (err) {
+      const errorText = err instanceof Error ? err.message : "Something went wrong.";
+      setMsgs((arr) => [...arr, { id: crypto.randomUUID(), from: "them", text: `⚠️ ${errorText}` }]);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const deleteMessage = async (mid: string) => {
+    setMsgs((arr) => arr.filter((m) => m.id !== mid));
+    if (userId) {
+      await (supabase as any).from("chat_messages").delete().eq("id", mid);
+    }
+  };
 
   const editMessage = (mid: string, newText: string) =>
     setMsgs((arr) => arr.map((m) => (m.id === mid ? { ...m, text: newText } : m)));
