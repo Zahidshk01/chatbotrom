@@ -48,6 +48,7 @@ function ProfilePage() {
     [likedIds],
   );
   const [myChars, setMyChars] = useState<Character[]>([]);
+  const [uid, setUid] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
