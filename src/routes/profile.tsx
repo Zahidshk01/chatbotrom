@@ -83,6 +83,8 @@ function ProfilePage() {
   const [infoDialog, setInfoDialog] = useState<null | "premium" | "contact" | "terms" | "privacy" | "version">(null);
   const [confirm, setConfirm] = useState<null | "signout" | "delete">(null);
   const [listDialog, setListDialog] = useState<null | "following" | "followers">(null);
+  const [detailChar, setDetailChar] = useState<Character | null>(null);
+
 
   async function handleSignOut() {
     try {
