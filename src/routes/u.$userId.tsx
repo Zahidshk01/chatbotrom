@@ -144,10 +144,9 @@ function UserProfilePage() {
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-2 text-sm">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" />
-          <span>Active now</span>
-        </div>
+        {profile?.bio ? (
+          <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-foreground">{profile.bio}</p>
+        ) : null}
 
         {!isSelf && !isHandle && (
           <div className="mt-4 grid grid-cols-2 gap-3">
