@@ -35,10 +35,33 @@ function UserProfilePage() {
   const [following, setFollowing] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  const isHandle = userId.startsWith("h:");
+  const handle = isHandle ? userId.slice(2) : null;
+
   useEffect(() => {
     (async () => {
       const { data: s } = await supabase.auth.getSession();
       setMe(s.session?.user.id ?? null);
+
+      if (isHandle && handle) {
+        // Synthetic profile for seeded characters (no real user account)
+        const { data: charData } = await (supabase as any)
+          .from("characters")
+          .select("id, name, image, chats")
+          .or(`creator.eq.@${handle},creator.eq.${handle}`)
+          .order("sort_order", { ascending: true });
+        const rows: any[] = charData ?? [];
+        setProfile({ username: handle, avatar_url: null });
+        setChars(rows.map((c) => ({ id: c.id, name: c.name, image: c.image || imageById.get(c.id) || null })));
+        const sum = rows.reduce((acc, c) => {
+          const raw = String(c.chats ?? "0").replace(/[^\d.]/g, "");
+          const num = parseFloat(raw) || 0;
+          const mult = /m/i.test(c.chats ?? "") ? 1_000_000 : /k/i.test(c.chats ?? "") ? 1_000 : 1;
+          return acc + num * mult;
+        }, 0);
+        setTotalChats(Math.round(sum));
+        return;
+      }
 
       const [{ data: prof }, { data: charData }, cnts, isF] = await Promise.all([
         (supabase as any).from("profiles").select("username, avatar_url").eq("id", userId).maybeSingle(),
@@ -60,7 +83,6 @@ function UserProfilePage() {
           image: c.image || imageById.get(c.id) || null,
         })),
       );
-      // Sum chats numeric-ish
       const sum = rows.reduce((acc, c) => {
         const raw = String(c.chats ?? "0").replace(/[^\d.]/g, "");
         const num = parseFloat(raw) || 0;
@@ -71,14 +93,14 @@ function UserProfilePage() {
       setCounts(cnts);
       setFollowing(isF);
     })();
-  }, [userId]);
+  }, [userId, isHandle, handle]);
 
   const onToggleFollow = async () => {
     if (!me) {
       toast.error("Sign in to follow");
       return;
     }
-    if (me === userId) return;
+    if (me === userId || isHandle) return;
     setBusy(true);
     const now = await toggleFollowUser(userId);
     setFollowing(now);
@@ -86,8 +108,9 @@ function UserProfilePage() {
     setBusy(false);
   };
 
-  const displayName = profile?.username || "user";
+  const displayName = profile?.username || (isHandle ? handle! : "user");
   const initial = displayName.charAt(0).toUpperCase();
+
   const isSelf = me === userId;
 
   return (
@@ -125,7 +148,7 @@ function UserProfilePage() {
           <span>Active now</span>
         </div>
 
-        {!isSelf && (
+        {!isSelf && !isHandle && (
           <div className="mt-4 grid grid-cols-2 gap-3">
             <button
               onClick={onToggleFollow}
