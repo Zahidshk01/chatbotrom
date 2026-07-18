@@ -18,10 +18,30 @@ async function fetchAll(): Promise<Character[]> {
     .from("characters")
     .select("*")
     .order("sort_order", { ascending: true });
-  const rows = ((data ?? []) as Character[]).map((c) => ({
+  let rows = ((data ?? []) as Character[]).map((c) => ({
     ...c,
     image: resolveImage(c.id, c.image),
   }));
+
+  const ownerIds = Array.from(new Set(rows.map((r) => r.owner_id).filter(Boolean))) as string[];
+  if (ownerIds.length > 0) {
+    const { data: profiles } = await (supabase as any)
+      .from("profiles")
+      .select("id, username, avatar_url")
+      .in("id", ownerIds);
+    const map = new Map<string, { username: string | null; avatar_url: string | null }>();
+    (profiles ?? []).forEach((p: any) => map.set(p.id, { username: p.username, avatar_url: p.avatar_url }));
+    rows = rows.map((r) => {
+      if (!r.owner_id) return r;
+      const p = map.get(r.owner_id);
+      if (!p) return r;
+      const handle = p.username
+        ? (p.username.startsWith("@") ? p.username : `@${p.username.split(" ")[0].toLowerCase()}`)
+        : r.creator;
+      return { ...r, creator: handle, creatorAvatar: p.avatar_url };
+    });
+  }
+
   notify(rows);
   return rows;
 }
