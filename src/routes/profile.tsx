@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Settings, Camera, Users as UsersIcon, ChevronRight,
   Mail, FileText, ShieldCheck, Info, LogOut, Trash2, BadgeCheck, Smile,
+  Heart, MessageCircle, Bookmark,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
