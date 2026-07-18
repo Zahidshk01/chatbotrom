@@ -83,6 +83,14 @@ function ProfilePage() {
     return () => { cancelled = true; sub.subscription.unsubscribe(); };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!uid) { setLiveCounts({ followers: 0, following: 0 }); return; }
+    getUserFollowCounts(uid).then((c) => { if (!cancelled) setLiveCounts(c); });
+    return () => { cancelled = true; };
+  }, [uid, following.length]);
+
+
   const [tab, setTab] = useState<TabKey>("characters");
   const [editOpen, setEditOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
