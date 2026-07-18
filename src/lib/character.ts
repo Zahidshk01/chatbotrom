@@ -10,6 +10,4 @@ export type Character = {
   relation: string | null;
   persona?: string | null;
   first_message?: string | null;
-  owner_id?: string | null;
-  creatorAvatar?: string | null;
 };

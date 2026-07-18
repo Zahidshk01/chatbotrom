@@ -142,10 +142,6 @@ function AuthGate({ children }: { children: ReactNode }) {
     if (!session && pathname !== "/auth") {
       router.navigate({ to: "/auth", replace: true });
     }
-    if (session) {
-      // Warm the shared characters cache once so page navigations are instant.
-      import("../lib/characters-cache").then((m) => m.primeCharacters()).catch(() => {});
-    }
   }, [session, loading, pathname, router]);
 
   if (loading) {

@@ -54,17 +54,9 @@ export function CharacterPost({ char }: { char: Character }) {
     <article className="animate-pop-in pb-4">
       <header className="flex items-center justify-between px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-3">
-          {char.creatorAvatar ? (
-            <img
-              src={char.creatorAvatar}
-              alt={creatorLabel}
-              className="h-9 w-9 shrink-0 rounded-full object-cover"
-            />
-          ) : (
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-foreground">
-              {creatorInitial}
-            </div>
-          )}
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-foreground">
+            {creatorInitial}
+          </div>
           <span className="truncate text-sm font-semibold">{creatorLabel}</span>
         </div>
         <button

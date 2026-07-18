@@ -1,7 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, Plus } from "lucide-react";
 import { CharacterPost } from "@/components/CharacterPost";
-import { useCharacters } from "@/lib/characters-cache";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { characters as localCharacters } from "@/lib/mock-data";
+
+const imageById = new Map(localCharacters.map((c) => [c.id, c.image]));
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,8 +26,48 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
+type Character = {
+  id: string;
+  name: string;
+  image: string | null;
+  creator: string | null;
+  chats: string | null;
+  category: string | null;
+  height: number | null;
+  tagline: string | null;
+  relation: string | null;
+  persona?: string | null;
+  first_message?: string | null;
+};
+
 function HomePage() {
-  const { items: characters, loading } = useCharacters();
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadCharacters() {
+      const { data, error } = await (supabase as any)
+        .from("characters")
+        .select("*")
+        .order("sort_order", { ascending: true });
+
+      console.log("SUPABASE CHARACTERS:", data);
+      console.log("SUPABASE ERROR:", error);
+
+      if (!error && data) {
+        const withImages = (data as Character[]).map((c) => ({
+          ...c,
+          image: c.image || imageById.get(c.id) || null,
+        }));
+        setCharacters(withImages);
+      }
+
+      setLoading(false);
+    }
+
+    loadCharacters();
+  }, []);
+
   const feed = characters;
 
   return (

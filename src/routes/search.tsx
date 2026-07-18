@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, MessageSquare, X } from "lucide-react";
-import { useCharacters } from "@/lib/characters-cache";
+import { supabase } from "@/integrations/supabase/client";
+import type { Character } from "@/lib/character";
+import { resolveImage } from "@/lib/character-images";
 
 export const Route = createFileRoute("/search")({
   head: () => ({
@@ -15,7 +17,21 @@ export const Route = createFileRoute("/search")({
 
 function SearchPage() {
   const [q, setQ] = useState("");
-  const { items } = useCharacters();
+  const [items, setItems] = useState<Character[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("characters")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      if (data) {
+        setItems(
+          (data as Character[]).map((c) => ({ ...c, image: resolveImage(c.id, c.image) })),
+        );
+      }
+    })();
+  }, []);
 
   const results = items.filter(
     (c) =>

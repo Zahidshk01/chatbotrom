@@ -71,13 +71,6 @@ export async function updateProfile(patch: Partial<UserProfile>) {
   await supabase
     .from("profiles")
     .upsert({ id: uid, ...dbPatch, updated_at: new Date().toISOString() });
-  // Refresh character cache so home/search reflect new username/avatar on my characters.
-  if (patch.username !== undefined || patch.avatar !== undefined) {
-    try {
-      const { invalidateCharacters } = await import("@/lib/characters-cache");
-      invalidateCharacters();
-    } catch {}
-  }
 }
 
 export function useProfile(): UserProfile {

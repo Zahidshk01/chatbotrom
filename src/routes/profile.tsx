@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Settings, Camera, Users as UsersIcon, ChevronRight,
   Mail, FileText, ShieldCheck, Info, LogOut, Trash2, BadgeCheck, Smile,
-  Heart, MessageCircle, Bookmark,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
@@ -40,47 +39,21 @@ function ProfilePage() {
   const following = useFollowing();
   const followers = useFollowers();
 
-  const [savedChars, setSavedChars] = useState<Character[]>([]);
-  const [likedChars, setLikedChars] = useState<Character[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function loadByIds(ids: string[], setter: (v: Character[]) => void) {
-      if (ids.length === 0) { setter([]); return; }
-      const { data } = await supabase
-        .from("characters")
-        .select("id,name,image,creator,chats,category,height,tagline,relation")
-        .in("id", ids);
-      if (cancelled || !data) return;
-      const map = new Map(data.map((c: any) => [c.id, c]));
-      const ordered = ids
-        .map((id) => map.get(id))
-        .filter(Boolean)
-        .map((c: any) => ({
-          id: c.id,
-          name: c.name,
-          image: c.image ?? "",
-          creator: c.creator ?? "",
-          chats: c.chats ?? "0",
-          category: c.category ?? "",
-          height: c.height ?? 64,
-          tagline: c.tagline ?? "",
-          relation: c.relation ?? "",
-        }));
-      setter(ordered);
-    }
-    loadByIds(savedIds, setSavedChars);
-    loadByIds(likedIds, setLikedChars);
-    return () => { cancelled = true; };
-  }, [savedIds, likedIds]);
+  const savedChars = useMemo(
+    () => characters.filter((c) => savedIds.includes(c.id)),
+    [savedIds],
+  );
+  const likedChars = useMemo(
+    () => characters.filter((c) => likedIds.includes(c.id)),
+    [likedIds],
+  );
   const [myChars, setMyChars] = useState<Character[]>([]);
-  const [charStats, setCharStats] = useState<Record<string, { likes: number; chats: number; saves: number }>>({});
 
   useEffect(() => {
     let cancelled = false;
     async function loadMine() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { if (!cancelled) { setMyChars([]); setCharStats({}); } return; }
+      if (!user) { if (!cancelled) setMyChars([]); return; }
       const { data, error } = await supabase
         .from("characters")
         .select("id,name,image,creator,chats,category,height,tagline,relation")
@@ -98,21 +71,6 @@ function ProfilePage() {
         tagline: c.tagline ?? "",
         relation: c.relation ?? "",
       })));
-
-      const ids = data.map((c) => c.id);
-      if (ids.length === 0) { setCharStats({}); return; }
-      const [likesRes, savesRes, msgsRes] = await Promise.all([
-        supabase.from("user_likes").select("character_id").in("character_id", ids),
-        supabase.from("user_saves").select("character_id").in("character_id", ids),
-        supabase.from("chat_messages").select("character_id").in("character_id", ids),
-      ]);
-      if (cancelled) return;
-      const stats: Record<string, { likes: number; chats: number; saves: number }> = {};
-      ids.forEach((id) => { stats[id] = { likes: 0, chats: 0, saves: 0 }; });
-      likesRes.data?.forEach((r: any) => { if (stats[r.character_id]) stats[r.character_id].likes++; });
-      savesRes.data?.forEach((r: any) => { if (stats[r.character_id]) stats[r.character_id].saves++; });
-      msgsRes.data?.forEach((r: any) => { if (stats[r.character_id]) stats[r.character_id].chats++; });
-      setCharStats(stats);
     }
     loadMine();
     const { data: sub } = supabase.auth.onAuthStateChange(() => loadMine());
@@ -229,7 +187,6 @@ function ProfilePage() {
         {tab === "characters" && (
           <TabContent
             items={myChars}
-            stats={charStats}
             emptyIcon={<UsersIcon className="h-6 w-6 text-muted-foreground" />}
             emptyTitle="Create your first character"
             action={{ label: "Create", onClick: () => navigate({ to: "/create" }) }}
@@ -481,14 +438,12 @@ function TabContent({
   emptyTitle,
   emptyHint,
   action,
-  stats,
 }: {
   items: Character[];
   emptyIcon: React.ReactNode;
   emptyTitle: string;
   emptyHint?: string;
   action?: { label: string; onClick: () => void };
-  stats?: Record<string, { likes: number; chats: number; saves: number }>;
 }) {
   const navigate = useNavigate();
   if (items.length === 0) {
@@ -510,29 +465,19 @@ function TabContent({
   }
   return (
     <div className="grid grid-cols-3 gap-2">
-      {items.map((c) => {
-        const s = stats?.[c.id];
-        return (
-          <button
-            key={c.id}
-            onClick={() => navigate({ to: "/chat/$id", params: { id: c.id } })}
-            className="group relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-2 active:scale-95"
-          >
-            <img src={c.image} alt={c.name} className="h-full w-full object-cover" />
-            {s && (
-              <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-1 bg-gradient-to-b from-black/70 to-transparent px-1.5 py-1 text-[10px] font-semibold text-white">
-                <span className="flex items-center gap-0.5"><Heart className="h-3 w-3" />{s.likes}</span>
-                <span className="flex items-center gap-0.5"><MessageCircle className="h-3 w-3" />{s.chats}</span>
-                <span className="flex items-center gap-0.5"><Bookmark className="h-3 w-3" />{s.saves}</span>
-              </div>
-            )}
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-left">
-              <p className="truncate text-xs font-semibold text-white">{c.name}</p>
-              <p className="truncate text-[10px] text-white/70">({c.relation})</p>
-            </div>
-          </button>
-        );
-      })}
+      {items.map((c) => (
+        <button
+          key={c.id}
+          onClick={() => navigate({ to: "/chat/$id", params: { id: c.id } })}
+          className="group relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-2 active:scale-95"
+        >
+          <img src={c.image} alt={c.name} className="h-full w-full object-cover" />
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-left">
+            <p className="truncate text-xs font-semibold text-white">{c.name}</p>
+            <p className="truncate text-[10px] text-white/70">({c.relation})</p>
+          </div>
+        </button>
+      ))}
     </div>
   );
 }
