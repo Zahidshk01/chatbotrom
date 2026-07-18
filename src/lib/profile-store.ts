@@ -73,7 +73,9 @@ export async function updateProfile(patch: Partial<UserProfile>) {
   await supabase
     .from("profiles")
     .upsert({ id: uid, ...dbPatch, updated_at: new Date().toISOString() });
+  invalidateOwnerProfiles([uid]);
 }
+
 
 export function useProfile(): UserProfile {
   return useSyncExternalStore(
