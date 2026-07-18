@@ -51,6 +51,8 @@ function ProfilePage() {
   );
   const [myChars, setMyChars] = useState<Character[]>([]);
   const [uid, setUid] = useState<string | null>(null);
+  const [liveCounts, setLiveCounts] = useState({ followers: 0, following: 0 });
+
 
   useEffect(() => {
     let cancelled = false;
@@ -149,7 +151,6 @@ function ProfilePage() {
         {/* Stats */}
         <div className="mt-4 grid w-full max-w-xs grid-cols-3">
           {(() => {
-            const base = uid ? baselineFollowCounts(uid) : { followers: 0, following: 0 };
             const fmt = (n: number) => {
               if (n >= 1_000_000) return (n / 1_000_000).toFixed(2).replace(/\.?0+$/, "") + "M";
               if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
@@ -157,13 +158,14 @@ function ProfilePage() {
             };
             return (
               <>
-                <Stat value={fmt(following.length + base.following)} label="Following" onClick={() => setListDialog("following")} />
-                <Stat value={fmt(followers.length + base.followers)} label="Followers" onClick={() => setListDialog("followers")} />
+                <Stat value={fmt(liveCounts.following)} label="Following" onClick={() => setListDialog("following")} />
+                <Stat value={fmt(liveCounts.followers)} label="Followers" onClick={() => setListDialog("followers")} />
                 <Stat value={profile.stats.interactions} label="Interactions" />
               </>
             );
           })()}
         </div>
+
 
         {/* Bio */}
         <p className="mt-4 text-center text-sm text-foreground/85">{profile.bio}</p>
