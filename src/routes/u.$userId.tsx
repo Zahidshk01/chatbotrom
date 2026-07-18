@@ -65,7 +65,7 @@ function UserProfilePage() {
       }
 
       const [{ data: prof }, { data: charData }, cnts, isF] = await Promise.all([
-        (supabase as any).from("profiles").select("username, avatar_url").eq("id", userId).maybeSingle(),
+        (supabase as any).from("profiles").select("username, avatar_url, bio").eq("id", userId).maybeSingle(),
         (supabase as any)
           .from("characters")
           .select("id, name, image, chats")
@@ -75,7 +75,7 @@ function UserProfilePage() {
         isFollowingUser(userId),
       ]);
 
-      setProfile(prof ?? { username: null, avatar_url: null });
+      setProfile(prof ?? { username: null, avatar_url: null, bio: null });
       const rows: any[] = charData ?? [];
       setChars(
         rows.map((c) => ({
