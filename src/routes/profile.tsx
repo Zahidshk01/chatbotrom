@@ -5,8 +5,7 @@ import {
   Mail, FileText, ShieldCheck, Info, LogOut, Trash2, BadgeCheck, Smile,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import Picker from "@emoji-mart/react";
-import emojiData from "@emoji-mart/data";
+import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import { characters, type Character } from "@/lib/mock-data";
 import { useSavedIds } from "@/lib/saved-store";
 import { useLikedIds } from "@/lib/liked-store";
