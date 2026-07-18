@@ -442,12 +442,14 @@ function TabContent({
   emptyTitle,
   emptyHint,
   action,
+  onItemClick,
 }: {
   items: Character[];
   emptyIcon: React.ReactNode;
   emptyTitle: string;
   emptyHint?: string;
   action?: { label: string; onClick: () => void };
+  onItemClick?: (c: Character) => void;
 }) {
   const navigate = useNavigate();
   if (items.length === 0) {
@@ -472,7 +474,11 @@ function TabContent({
       {items.map((c) => (
         <button
           key={c.id}
-          onClick={() => navigate({ to: "/chat/$id", params: { id: c.id } })}
+          onClick={() =>
+            onItemClick
+              ? onItemClick(c)
+              : navigate({ to: "/chat/$id", params: { id: c.id } })
+          }
           className="group relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-2 active:scale-95"
         >
           <img src={c.image} alt={c.name} className="h-full w-full object-cover" />
@@ -485,6 +491,7 @@ function TabContent({
     </div>
   );
 }
+
 
 function MenuRow({
   icon, label, onClick, right, isLast, hideChevron, labelClass,
