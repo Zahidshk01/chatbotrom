@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { toggleFollowUser, isFollowingUser, getUserFollowCounts } from "@/lib/user-follow";
 import { characters as localCharacters } from "@/lib/mock-data";
+import { avatarForHandle, bioForHandle } from "@/lib/creator-meta";
 
 export const Route = createFileRoute("/u/$userId")({
   component: UserProfilePage,
@@ -28,7 +29,7 @@ function UserProfilePage() {
   const { userId } = Route.useParams();
   const navigate = useNavigate();
   const [me, setMe] = useState<string | null>(null);
-  const [profile, setProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ username: string | null; avatar_url: string | null; bio: string | null } | null>(null);
   const [chars, setChars] = useState<CharRow[]>([]);
   const [totalChats, setTotalChats] = useState(0);
   const [counts, setCounts] = useState({ followers: 0, following: 0 });
@@ -51,7 +52,7 @@ function UserProfilePage() {
           .or(`creator.eq.@${handle},creator.eq.${handle}`)
           .order("sort_order", { ascending: true });
         const rows: any[] = charData ?? [];
-        setProfile({ username: handle, avatar_url: null });
+        setProfile({ username: handle, avatar_url: avatarForHandle(handle), bio: bioForHandle(handle) });
         setChars(rows.map((c) => ({ id: c.id, name: c.name, image: c.image || imageById.get(c.id) || null })));
         const sum = rows.reduce((acc, c) => {
           const raw = String(c.chats ?? "0").replace(/[^\d.]/g, "");
@@ -64,7 +65,7 @@ function UserProfilePage() {
       }
 
       const [{ data: prof }, { data: charData }, cnts, isF] = await Promise.all([
-        (supabase as any).from("profiles").select("username, avatar_url").eq("id", userId).maybeSingle(),
+        (supabase as any).from("profiles").select("username, avatar_url, bio").eq("id", userId).maybeSingle(),
         (supabase as any)
           .from("characters")
           .select("id, name, image, chats")
@@ -74,7 +75,7 @@ function UserProfilePage() {
         isFollowingUser(userId),
       ]);
 
-      setProfile(prof ?? { username: null, avatar_url: null });
+      setProfile(prof ?? { username: null, avatar_url: null, bio: null });
       const rows: any[] = charData ?? [];
       setChars(
         rows.map((c) => ({
@@ -143,10 +144,9 @@ function UserProfilePage() {
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-2 text-sm">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" />
-          <span>Active now</span>
-        </div>
+        {profile?.bio ? (
+          <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-foreground">{profile.bio}</p>
+        ) : null}
 
         {!isSelf && !isHandle && (
           <div className="mt-4 grid grid-cols-2 gap-3">

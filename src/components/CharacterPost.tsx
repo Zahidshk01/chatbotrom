@@ -7,6 +7,7 @@ import { toggleSaved, useIsSaved } from "@/lib/saved-store";
 import { toggleLiked, useIsLiked } from "@/lib/liked-store";
 import { toggleFollow, useIsFollowing } from "@/lib/follow-store";
 import { useOwnerProfile } from "@/lib/owner-profile";
+import { avatarForHandle } from "@/lib/creator-meta";
 
 
 function fmt(n: number) {
@@ -53,7 +54,7 @@ export function CharacterPost({ char }: { char: Character }) {
   const fallbackLabel = (char.creator ?? "unknown").replace(/^@/, "");
   const displayLabel = ownerProfile?.username || fallbackLabel;
   const creatorInitial = displayLabel.charAt(0).toUpperCase();
-  const avatarUrl = ownerProfile?.avatar_url || null;
+  const avatarUrl = ownerProfile?.avatar_url || avatarForHandle(char.creator);
 
   return (
     <article className="animate-pop-in pb-4">
