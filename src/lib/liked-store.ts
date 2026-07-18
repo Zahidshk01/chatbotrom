@@ -1,47 +1,53 @@
 import { useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const BASE = "kender:liked";
 const listeners = new Set<() => void>();
 let uid: string | null = null;
-
-function key() {
-  return uid ? `${BASE}:${uid}` : `${BASE}:guest`;
-}
-
-function read(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(localStorage.getItem(key()) || "[]");
-  } catch {
-    return [];
-  }
-}
-
 let snapshot: string[] = [];
 
 function emit() {
-  snapshot = read();
   listeners.forEach((l) => l());
+}
+
+async function loadFromDb() {
+  if (!uid) {
+    snapshot = [];
+    emit();
+    return;
+  }
+  const { data } = await supabase
+    .from("user_likes")
+    .select("character_id")
+    .eq("user_id", uid);
+  snapshot = (data ?? []).map((r) => r.character_id);
+  emit();
 }
 
 if (typeof window !== "undefined") {
   supabase.auth.getSession().then(({ data }) => {
     uid = data.session?.user.id ?? null;
-    emit();
+    loadFromDb();
   });
   supabase.auth.onAuthStateChange((_e, s) => {
     uid = s?.user.id ?? null;
-    emit();
+    loadFromDb();
   });
 }
 
-export function toggleLiked(id: string) {
-  const cur = read();
-  const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
-  localStorage.setItem(key(), JSON.stringify(next));
-  emit();
-  return next.includes(id);
+export async function toggleLiked(id: string) {
+  if (!uid) return false;
+  const isLiked = snapshot.includes(id);
+  if (isLiked) {
+    snapshot = snapshot.filter((x) => x !== id);
+    emit();
+    await supabase.from("user_likes").delete().eq("user_id", uid).eq("character_id", id);
+    return false;
+  } else {
+    snapshot = [...snapshot, id];
+    emit();
+    await supabase.from("user_likes").insert({ user_id: uid, character_id: id });
+    return true;
+  }
 }
 
 export function useLikedIds() {

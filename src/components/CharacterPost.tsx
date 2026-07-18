@@ -29,19 +29,19 @@ export function CharacterPost({ char }: { char: Character }) {
     return () => clearInterval(t);
   }, []);
 
-  const toggleLike = () => {
-    const nowLiked = toggleLiked(char.id);
+  const toggleLike = async () => {
+    const nowLiked = await toggleLiked(char.id);
     setLikes((n) => n + (nowLiked ? 1 : -1));
   };
 
-  const onSave = () => {
-    const nowSaved = toggleSaved(char.id);
+  const onSave = async () => {
+    const nowSaved = await toggleSaved(char.id);
     toast.success(nowSaved ? "Saved to your profile" : "Removed from your profile");
   };
 
-  const toggleFollowClick = () => {
+  const toggleFollowClick = async () => {
     if (!char.creator) return;
-    const nowFollowing = toggleFollow(char.creator);
+    const nowFollowing = await toggleFollow(char.creator);
     toast.success(nowFollowing ? `Following ${char.creator}` : `Unfollowed ${char.creator}`);
   };
 

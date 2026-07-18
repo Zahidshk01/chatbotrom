@@ -8,8 +8,6 @@ export type UserProfile = {
   stats: { following: number; followers: number; interactions: number };
 };
 
-const BASE = "kender.profile";
-
 const DEFAULT_PROFILE: UserProfile = {
   username: "@you",
   bio: "",
@@ -18,74 +16,69 @@ const DEFAULT_PROFILE: UserProfile = {
 };
 
 let uid: string | null = null;
-
-function key() {
-  return uid ? `${BASE}:${uid}` : `${BASE}:guest`;
-}
-
-function readFromStorage(): UserProfile {
-  if (typeof window === "undefined") return DEFAULT_PROFILE;
-  try {
-    const raw = window.localStorage.getItem(key());
-    if (!raw) return DEFAULT_PROFILE;
-    const parsed = JSON.parse(raw) as Partial<UserProfile>;
-    return {
-      ...DEFAULT_PROFILE,
-      ...parsed,
-      stats: { ...DEFAULT_PROFILE.stats, ...(parsed.stats || {}) },
-    };
-  } catch {
-    return DEFAULT_PROFILE;
-  }
-}
-
 let snapshot: UserProfile = DEFAULT_PROFILE;
 const listeners = new Set<() => void>();
 
 function emit() {
-  snapshot = readFromStorage();
   listeners.forEach((l) => l());
+}
+
+async function loadFromDb() {
+  if (!uid) {
+    snapshot = DEFAULT_PROFILE;
+    emit();
+    return;
+  }
+  const { data } = await supabase
+    .from("profiles")
+    .select("username, avatar_url, bio")
+    .eq("id", uid)
+    .maybeSingle();
+  if (data) {
+    const rawName = data.username || "";
+    snapshot = {
+      username: rawName ? (rawName.startsWith("@") ? rawName : `@${rawName.split(" ")[0].toLowerCase()}`) : "@you",
+      avatar: data.avatar_url || "",
+      bio: data.bio || "",
+      stats: { following: 0, followers: 0, interactions: 0 },
+    };
+  } else {
+    snapshot = DEFAULT_PROFILE;
+  }
+  emit();
 }
 
 if (typeof window !== "undefined") {
   supabase.auth.getSession().then(({ data }) => {
     uid = data.session?.user.id ?? null;
-    emit();
+    loadFromDb();
   });
   supabase.auth.onAuthStateChange((_e, s) => {
     uid = s?.user.id ?? null;
-    emit();
+    loadFromDb();
   });
 }
 
-function subscribe(cb: () => void) {
-  listeners.add(cb);
-  const onStorage = (e: StorageEvent) => {
-    if (e.key === key()) {
-      snapshot = readFromStorage();
-      cb();
-    }
-  };
-  if (typeof window !== "undefined") {
-    window.addEventListener("storage", onStorage);
-  }
-  return () => {
-    listeners.delete(cb);
-    if (typeof window !== "undefined") {
-      window.removeEventListener("storage", onStorage);
-    }
-  };
-}
-
-export function updateProfile(patch: Partial<UserProfile>) {
-  const next = { ...snapshot, ...patch };
-  window.localStorage.setItem(key(), JSON.stringify(next));
+export async function updateProfile(patch: Partial<UserProfile>) {
+  snapshot = { ...snapshot, ...patch };
   emit();
+  if (!uid) return;
+  const dbPatch: Record<string, unknown> = {};
+  if (patch.username !== undefined) dbPatch.username = patch.username.replace(/^@/, "");
+  if (patch.avatar !== undefined) dbPatch.avatar_url = patch.avatar;
+  if (patch.bio !== undefined) dbPatch.bio = patch.bio;
+  if (Object.keys(dbPatch).length === 0) return;
+  await supabase
+    .from("profiles")
+    .upsert({ id: uid, ...dbPatch, updated_at: new Date().toISOString() });
 }
 
 export function useProfile(): UserProfile {
   return useSyncExternalStore(
-    subscribe,
+    (l) => {
+      listeners.add(l);
+      return () => listeners.delete(l);
+    },
     () => snapshot,
     () => DEFAULT_PROFILE,
   );
