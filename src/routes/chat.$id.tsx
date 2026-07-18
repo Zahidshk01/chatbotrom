@@ -328,11 +328,13 @@ function CharacterMessage({
   text,
   onRegenerate,
   onEdit,
+  onDelete,
 }: {
   image: string;
   text: string;
   onRegenerate?: () => void;
   onEdit?: (newText: string) => void;
+  onDelete?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(text);
@@ -377,7 +379,7 @@ function CharacterMessage({
             <div className="max-w-[85%] rounded-2xl rounded-tl-md bg-surface px-4 py-3 text-sm leading-relaxed">
               <RichText text={text} />
             </div>
-            {(onRegenerate || onEdit) && (
+            {(onRegenerate || onEdit || onDelete) && (
               <div className="flex flex-col gap-1.5 pt-1">
                 {onEdit && (
                   <button
@@ -397,8 +399,76 @@ function CharacterMessage({
                     <RotateCcw className="h-4 w-4" />
                   </button>
                 )}
+                {onDelete && (
+                  <button
+                    onClick={() => {
+                      if (confirm("Delete this message?")) onDelete();
+                    }}
+                    aria-label="Delete reply"
+                    className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UserMessage({ text, onDelete }: { text: string; onDelete: () => void }) {
+  const [showDelete, setShowDelete] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const start = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setShowDelete(true), 450);
+  };
+  const cancel = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  return (
+    <div className="flex justify-end">
+      <div className="flex flex-col items-end gap-1">
+        <div
+          onTouchStart={start}
+          onTouchEnd={cancel}
+          onTouchMove={cancel}
+          onMouseDown={start}
+          onMouseUp={cancel}
+          onMouseLeave={cancel}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setShowDelete(true);
+          }}
+          className="max-w-[80%] cursor-pointer select-none rounded-2xl rounded-tr-md bg-surface px-4 py-2.5 text-sm active:opacity-80"
+        >
+          {text}
+        </div>
+        {showDelete && (
+          <div className="flex gap-1">
+            <button
+              onClick={() => {
+                setShowDelete(false);
+                onDelete();
+              }}
+              className="flex items-center gap-1 rounded-full bg-destructive/90 px-3 py-1 text-xs font-semibold text-white active:scale-95"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </button>
+            <button
+              onClick={() => setShowDelete(false)}
+              className="rounded-full bg-surface px-3 py-1 text-xs text-muted-foreground"
+            >
+              Cancel
+            </button>
           </div>
         )}
       </div>
