@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { invalidateOwnerProfiles } from "@/lib/owner-profile";
+
 
 export type UserProfile = {
   username: string;
