@@ -456,12 +456,14 @@ function TabContent({
   emptyTitle,
   emptyHint,
   action,
+  stats,
 }: {
   items: Character[];
   emptyIcon: React.ReactNode;
   emptyTitle: string;
   emptyHint?: string;
   action?: { label: string; onClick: () => void };
+  stats?: Record<string, { likes: number; chats: number; saves: number }>;
 }) {
   const navigate = useNavigate();
   if (items.length === 0) {
@@ -483,19 +485,29 @@ function TabContent({
   }
   return (
     <div className="grid grid-cols-3 gap-2">
-      {items.map((c) => (
-        <button
-          key={c.id}
-          onClick={() => navigate({ to: "/chat/$id", params: { id: c.id } })}
-          className="group relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-2 active:scale-95"
-        >
-          <img src={c.image} alt={c.name} className="h-full w-full object-cover" />
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-left">
-            <p className="truncate text-xs font-semibold text-white">{c.name}</p>
-            <p className="truncate text-[10px] text-white/70">({c.relation})</p>
-          </div>
-        </button>
-      ))}
+      {items.map((c) => {
+        const s = stats?.[c.id];
+        return (
+          <button
+            key={c.id}
+            onClick={() => navigate({ to: "/chat/$id", params: { id: c.id } })}
+            className="group relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-2 active:scale-95"
+          >
+            <img src={c.image} alt={c.name} className="h-full w-full object-cover" />
+            {s && (
+              <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-1 bg-gradient-to-b from-black/70 to-transparent px-1.5 py-1 text-[10px] font-semibold text-white">
+                <span className="flex items-center gap-0.5"><Heart className="h-3 w-3" />{s.likes}</span>
+                <span className="flex items-center gap-0.5"><MessageCircle className="h-3 w-3" />{s.chats}</span>
+                <span className="flex items-center gap-0.5"><Bookmark className="h-3 w-3" />{s.saves}</span>
+              </div>
+            )}
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-left">
+              <p className="truncate text-xs font-semibold text-white">{c.name}</p>
+              <p className="truncate text-[10px] text-white/70">({c.relation})</p>
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }
