@@ -616,14 +616,17 @@ function EditProfileDialog({
                   </button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-auto rounded-2xl border-white/10 bg-transparent p-0 shadow-none">
-                  <Picker
-                    data={emojiData}
-                    set="apple"
-                    theme="dark"
-                    previewPosition="none"
-                    skinTonePosition="none"
-                    onEmojiSelect={(emoji: { native: string }) => {
-                      if ((bio + emoji.native).length <= 160) setBio(bio + emoji.native);
+                  <EmojiPicker
+                    emojiStyle={EmojiStyle.APPLE}
+                    theme={Theme.DARK}
+                    lazyLoadEmojis
+                    searchDisabled={false}
+                    skinTonesDisabled
+                    previewConfig={{ showPreview: false }}
+                    width={320}
+                    height={400}
+                    onEmojiClick={(data) => {
+                      if ((bio + data.emoji).length <= 160) setBio(bio + data.emoji);
                     }}
                   />
                 </PopoverContent>
