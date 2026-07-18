@@ -144,6 +144,7 @@ function CreatePage() {
       return;
     }
     toast.success(`${name} is ready to chat`);
+    invalidateCharacters();
     navigate({ to: "/chat/$id", params: { id } });
   }
 
