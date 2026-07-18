@@ -5,6 +5,7 @@ import { characters as localCharacters } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Character } from "@/lib/character";
 import { resolveImage } from "@/lib/character-images";
+import { getCharacterFromCache, primeCharacters } from "@/lib/characters-cache";
 
 export const Route = createFileRoute("/chat/$id")({
   head: ({ params }) => {
