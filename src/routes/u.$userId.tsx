@@ -29,7 +29,7 @@ function UserProfilePage() {
   const { userId } = Route.useParams();
   const navigate = useNavigate();
   const [me, setMe] = useState<string | null>(null);
-  const [profile, setProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ username: string | null; avatar_url: string | null; bio: string | null } | null>(null);
   const [chars, setChars] = useState<CharRow[]>([]);
   const [totalChats, setTotalChats] = useState(0);
   const [counts, setCounts] = useState({ followers: 0, following: 0 });
