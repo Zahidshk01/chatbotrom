@@ -55,6 +55,7 @@ function AuthPage() {
     setBusy(provider);
     const result = await lovable.auth.signInWithOAuth(provider, {
       redirect_uri: window.location.origin,
+      extraParams: provider === "google" ? { prompt: "select_account" } : {},
     });
     if (result.error) {
       toast.error(result.error.message ?? "Sign in failed");
