@@ -376,41 +376,60 @@ function CharacterMessage({
             </div>
           </div>
         ) : (
-          <div className="flex items-start gap-2">
-            <div className="max-w-[85%] rounded-2xl rounded-tl-md bg-surface px-4 py-3 text-sm leading-relaxed">
-              <RichText text={text} />
+          <div>
+            <div className="flex items-start gap-2">
+              <div className="max-w-[85%] rounded-2xl rounded-tl-md bg-surface px-4 py-3 text-sm leading-relaxed">
+                <RichText text={text} />
+              </div>
+              {(onRegenerate || onEdit || onDelete) && (
+                <div className="flex flex-col gap-1.5 pt-1">
+                  {onEdit && (
+                    <button
+                      onClick={() => setEditing(true)}
+                      aria-label="Edit reply"
+                      className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                  )}
+                  {onRegenerate && (
+                    <button
+                      onClick={onRegenerate}
+                      aria-label="Try another reply"
+                      className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      onClick={() => setConfirmDelete((v) => !v)}
+                      aria-label="Delete reply"
+                      className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-            {(onRegenerate || onEdit || onDelete) && (
-              <div className="flex flex-col gap-1.5 pt-1">
-                {onEdit && (
-                  <button
-                    onClick={() => setEditing(true)}
-                    aria-label="Edit reply"
-                    className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                )}
-                {onRegenerate && (
-                  <button
-                    onClick={onRegenerate}
-                    aria-label="Try another reply"
-                    className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </button>
-                )}
-                {onDelete && (
-                  <button
-                    onClick={() => {
-                      if (confirm("Delete this message?")) onDelete();
-                    }}
-                    aria-label="Delete reply"
-                    className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
+            {confirmDelete && onDelete && (
+              <div className="ml-11 mt-1 flex gap-1">
+                <button
+                  onClick={() => {
+                    setConfirmDelete(false);
+                    onDelete();
+                  }}
+                  className="flex items-center gap-1 rounded-full bg-destructive/90 px-3 py-1 text-xs font-semibold text-white active:scale-95"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="rounded-full bg-surface px-3 py-1 text-xs text-muted-foreground"
+                >
+                  Cancel
+                </button>
               </div>
             )}
           </div>
