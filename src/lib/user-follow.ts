@@ -44,5 +44,9 @@ export async function getUserFollowCounts(userId: string) {
       .select("*", { count: "exact", head: true })
       .eq("follower_id", userId),
   ]);
-  return { followers: followers ?? 0, following: following ?? 0 };
+  const base = baselineFollowCounts(userId);
+  return {
+    followers: (followers ?? 0) + base.followers,
+    following: (following ?? 0) + base.following,
+  };
 }
