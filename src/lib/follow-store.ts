@@ -27,8 +27,7 @@ async function loadFromDb() {
     .select("handle")
     .eq("user_id", uid);
   followingSnap = (data ?? []).map((r) => r.handle);
-  // Mock: creators follow you back
-  followersSnap = [...followingSnap];
+  followersSnap = [];
   emit();
 }
 
