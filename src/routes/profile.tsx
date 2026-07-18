@@ -2,8 +2,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Settings, Camera, Users as UsersIcon, ChevronRight,
-  Mail, FileText, ShieldCheck, Info, LogOut, Trash2, BadgeCheck,
+  Mail, FileText, ShieldCheck, Info, LogOut, Trash2, BadgeCheck, Smile,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+const EMOJI_SET = [
+  "😀","😁","😂","🤣","😊","😇","🙂","😉","😍","🥰","😘","😗","😜","🤪","😎","🤩",
+  "🥳","😏","😌","😔","😢","😭","😤","😠","🤬","🤯","😳","🥺","😱","😨","🤗","🤔",
+  "🙄","😴","🤤","🤒","🤕","🤧","🥶","🥵","😷","🤠","🤡","👻","💀","👽","🤖","🎃",
+  "❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖",
+  "✨","🔥","🌟","⭐","💫","💥","💯","👀","👋","🙌","👏","🙏","💪","🫶","🤝","👍",
+  "🌸","🌹","🌺","🌻","🌷","🌈","☀️","🌙","☁️","⚡","🍀","🌊","🎵","🎶","🎧","🎮",
+  "🍕","🍔","🍟","🌮","🍩","🍪","🍰","🎂","☕","🍵","🍺","🍷","🥂","🍾","🍫","🍿",
+];
 import { characters, type Character } from "@/lib/mock-data";
 import { useSavedIds } from "@/lib/saved-store";
 import { useLikedIds } from "@/lib/liked-store";
