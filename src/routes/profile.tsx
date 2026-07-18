@@ -204,6 +204,7 @@ function ProfilePage() {
         {tab === "characters" && (
           <TabContent
             items={myChars}
+            stats={charStats}
             emptyIcon={<UsersIcon className="h-6 w-6 text-muted-foreground" />}
             emptyTitle="Create your first character"
             action={{ label: "Create", onClick: () => navigate({ to: "/create" }) }}
