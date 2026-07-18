@@ -6,6 +6,8 @@ import type { Character } from "@/lib/character";
 import { toggleSaved, useIsSaved } from "@/lib/saved-store";
 import { toggleLiked, useIsLiked } from "@/lib/liked-store";
 import { toggleFollow, useIsFollowing } from "@/lib/follow-store";
+import { useOwnerProfile } from "@/lib/owner-profile";
+
 
 function fmt(n: number) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
@@ -47,22 +49,34 @@ export function CharacterPost({ char }: { char: Character }) {
 
   const openChat = () => navigate({ to: "/chat/$id", params: { id: char.id } });
 
-  const creatorLabel = (char.creator ?? "unknown").replace(/^@/, "");
-  const creatorInitial = creatorLabel.charAt(0).toUpperCase();
+  const ownerProfile = useOwnerProfile(char.owner_id ?? null);
+  const fallbackLabel = (char.creator ?? "unknown").replace(/^@/, "");
+  const displayLabel = ownerProfile?.username || fallbackLabel;
+  const creatorInitial = displayLabel.charAt(0).toUpperCase();
+  const avatarUrl = ownerProfile?.avatar_url || null;
 
   return (
     <article className="animate-pop-in pb-4">
       <header className="flex items-center justify-between px-4 py-2.5">
         <Link
           to="/u/$userId"
-          params={{ userId: char.owner_id ?? `h:${creatorLabel}` }}
+          params={{ userId: char.owner_id ?? `h:${fallbackLabel}` }}
           className="flex min-w-0 items-center gap-3 active:opacity-70"
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-foreground">
-            {creatorInitial}
-          </div>
-          <span className="truncate text-sm font-semibold">{creatorLabel}</span>
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={displayLabel}
+              className="h-9 w-9 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-foreground">
+              {creatorInitial}
+            </div>
+          )}
+          <span className="truncate text-sm font-semibold">{displayLabel}</span>
         </Link>
+
 
         <button
           onClick={toggleFollowClick}

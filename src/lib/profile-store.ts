@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { invalidateOwnerProfiles } from "@/lib/owner-profile";
+
 
 export type UserProfile = {
   username: string;
@@ -71,7 +73,9 @@ export async function updateProfile(patch: Partial<UserProfile>) {
   await supabase
     .from("profiles")
     .upsert({ id: uid, ...dbPatch, updated_at: new Date().toISOString() });
+  invalidateOwnerProfiles([uid]);
 }
+
 
 export function useProfile(): UserProfile {
   return useSyncExternalStore(
