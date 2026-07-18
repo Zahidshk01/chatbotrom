@@ -47,7 +47,35 @@ function ProfilePage() {
     () => characters.filter((c) => likedIds.includes(c.id)),
     [likedIds],
   );
-  const myChars: Character[] = []; // no created characters yet
+  const [myChars, setMyChars] = useState<Character[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadMine() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { if (!cancelled) setMyChars([]); return; }
+      const { data, error } = await supabase
+        .from("characters")
+        .select("id,name,image,creator,chats,category,height,tagline,relation")
+        .eq("owner_id", user.id)
+        .order("sort_order", { ascending: false });
+      if (cancelled || error || !data) return;
+      setMyChars(data.map((c) => ({
+        id: c.id,
+        name: c.name,
+        image: c.image ?? "",
+        creator: c.creator ?? "@you",
+        chats: c.chats ?? "0",
+        category: c.category ?? "Original",
+        height: c.height ?? 64,
+        tagline: c.tagline ?? "",
+        relation: c.relation ?? "",
+      })));
+    }
+    loadMine();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => loadMine());
+    return () => { cancelled = true; sub.subscription.unsubscribe(); };
+  }, []);
 
   const [tab, setTab] = useState<TabKey>("characters");
   const [editOpen, setEditOpen] = useState(false);
