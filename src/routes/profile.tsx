@@ -40,14 +40,39 @@ function ProfilePage() {
   const following = useFollowing();
   const followers = useFollowers();
 
-  const savedChars = useMemo(
-    () => characters.filter((c) => savedIds.includes(c.id)),
-    [savedIds],
-  );
-  const likedChars = useMemo(
-    () => characters.filter((c) => likedIds.includes(c.id)),
-    [likedIds],
-  );
+  const [savedChars, setSavedChars] = useState<Character[]>([]);
+  const [likedChars, setLikedChars] = useState<Character[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadByIds(ids: string[], setter: (v: Character[]) => void) {
+      if (ids.length === 0) { setter([]); return; }
+      const { data } = await supabase
+        .from("characters")
+        .select("id,name,image,creator,chats,category,height,tagline,relation")
+        .in("id", ids);
+      if (cancelled || !data) return;
+      const map = new Map(data.map((c: any) => [c.id, c]));
+      const ordered = ids
+        .map((id) => map.get(id))
+        .filter(Boolean)
+        .map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          image: c.image ?? "",
+          creator: c.creator ?? "",
+          chats: c.chats ?? "0",
+          category: c.category ?? "",
+          height: c.height ?? 64,
+          tagline: c.tagline ?? "",
+          relation: c.relation ?? "",
+        }));
+      setter(ordered);
+    }
+    loadByIds(savedIds, setSavedChars);
+    loadByIds(likedIds, setLikedChars);
+    return () => { cancelled = true; };
+  }, [savedIds, likedIds]);
   const [myChars, setMyChars] = useState<Character[]>([]);
   const [charStats, setCharStats] = useState<Record<string, { likes: number; chats: number; saves: number }>>({});
 
