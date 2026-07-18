@@ -54,6 +54,7 @@ function ProfilePage() {
     let cancelled = false;
     async function loadMine() {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!cancelled) setUid(user?.id ?? null);
       if (!user) { if (!cancelled) setMyChars([]); return; }
       const { data, error } = await supabase
         .from("characters")
