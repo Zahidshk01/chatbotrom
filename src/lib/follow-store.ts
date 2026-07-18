@@ -48,13 +48,11 @@ export async function toggleFollow(rawHandle: string) {
   const isFollowing = followingSnap.includes(handle);
   if (isFollowing) {
     followingSnap = followingSnap.filter((x) => x !== handle);
-    followersSnap = followersSnap.filter((x) => x !== handle);
     emit();
     await supabase.from("user_follows").delete().eq("user_id", uid).eq("handle", handle);
     return false;
   } else {
     followingSnap = [...followingSnap, handle];
-    followersSnap = [...followersSnap, handle];
     emit();
     await supabase.from("user_follows").insert({ user_id: uid, handle });
     return true;
