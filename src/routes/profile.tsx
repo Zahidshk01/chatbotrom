@@ -12,6 +12,7 @@ import { useLikedIds } from "@/lib/liked-store";
 import { useFollowing, useFollowers, toggleFollow } from "@/lib/follow-store";
 import { useProfile, updateProfile } from "@/lib/profile-store";
 import { supabase } from "@/integrations/supabase/client";
+import { baselineFollowCounts } from "@/lib/follow-baseline";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -48,11 +49,13 @@ function ProfilePage() {
     [likedIds],
   );
   const [myChars, setMyChars] = useState<Character[]>([]);
+  const [uid, setUid] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     async function loadMine() {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!cancelled) setUid(user?.id ?? null);
       if (!user) { if (!cancelled) setMyChars([]); return; }
       const { data, error } = await supabase
         .from("characters")
@@ -144,9 +147,21 @@ function ProfilePage() {
 
         {/* Stats */}
         <div className="mt-4 grid w-full max-w-xs grid-cols-3">
-          <Stat value={following.length} label="Following" onClick={() => setListDialog("following")} />
-          <Stat value={followers.length} label="Followers" onClick={() => setListDialog("followers")} />
-          <Stat value={profile.stats.interactions} label="Interactions" />
+          {(() => {
+            const base = uid ? baselineFollowCounts(uid) : { followers: 0, following: 0 };
+            const fmt = (n: number) => {
+              if (n >= 1_000_000) return (n / 1_000_000).toFixed(2).replace(/\.?0+$/, "") + "M";
+              if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
+              return String(n);
+            };
+            return (
+              <>
+                <Stat value={fmt(following.length + base.following)} label="Following" onClick={() => setListDialog("following")} />
+                <Stat value={fmt(followers.length + base.followers)} label="Followers" onClick={() => setListDialog("followers")} />
+                <Stat value={profile.stats.interactions} label="Interactions" />
+              </>
+            );
+          })()}
         </div>
 
         {/* Bio */}

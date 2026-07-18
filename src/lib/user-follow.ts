@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { baselineFollowCounts } from "@/lib/follow-baseline";
 
 export async function isFollowingUser(targetId: string): Promise<boolean> {
   const { data: s } = await supabase.auth.getSession();
@@ -43,5 +44,9 @@ export async function getUserFollowCounts(userId: string) {
       .select("*", { count: "exact", head: true })
       .eq("follower_id", userId),
   ]);
-  return { followers: followers ?? 0, following: following ?? 0 };
+  const base = baselineFollowCounts(userId);
+  return {
+    followers: (followers ?? 0) + base.followers,
+    following: (following ?? 0) + base.following,
+  };
 }
