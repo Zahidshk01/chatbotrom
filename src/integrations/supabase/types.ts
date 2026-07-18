@@ -95,6 +95,30 @@ export type Database = {
         }
         Relationships: []
       }
+      direct_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -173,6 +197,24 @@ export type Database = {
           character_id?: string
           created_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_user_follows: {
+        Row: {
+          created_at: string
+          followed_id: string
+          follower_id: string
+        }
+        Insert: {
+          created_at?: string
+          followed_id: string
+          follower_id: string
+        }
+        Update: {
+          created_at?: string
+          followed_id?: string
+          follower_id?: string
         }
         Relationships: []
       }

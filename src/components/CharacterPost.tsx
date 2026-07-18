@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, Link } from "@tanstack/react-router";
 import { Heart, MessageCircle, Bookmark } from "lucide-react";
 import { toast } from "sonner";
 import type { Character } from "@/lib/character";
@@ -53,12 +53,25 @@ export function CharacterPost({ char }: { char: Character }) {
   return (
     <article className="animate-pop-in pb-4">
       <header className="flex items-center justify-between px-4 py-2.5">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-foreground">
-            {creatorInitial}
+        {char.owner_id ? (
+          <Link
+            to="/u/$userId"
+            params={{ userId: char.owner_id }}
+            className="flex min-w-0 items-center gap-3 active:opacity-70"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-foreground">
+              {creatorInitial}
+            </div>
+            <span className="truncate text-sm font-semibold">{creatorLabel}</span>
+          </Link>
+        ) : (
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-foreground">
+              {creatorInitial}
+            </div>
+            <span className="truncate text-sm font-semibold">{creatorLabel}</span>
           </div>
-          <span className="truncate text-sm font-semibold">{creatorLabel}</span>
-        </div>
+        )}
         <button
           onClick={toggleFollowClick}
           className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors ${
