@@ -148,7 +148,7 @@ function UserProfilePage() {
           <span>Active now</span>
         </div>
 
-        {!isSelf && (
+        {!isSelf && !isHandle && (
           <div className="mt-4 grid grid-cols-2 gap-3">
             <button
               onClick={onToggleFollow}
