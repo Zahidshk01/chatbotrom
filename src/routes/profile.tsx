@@ -192,8 +192,10 @@ function ProfilePage() {
             emptyIcon={<UsersIcon className="h-6 w-6 text-muted-foreground" />}
             emptyTitle="Create your first character"
             action={{ label: "Create", onClick: () => navigate({ to: "/create" }) }}
+            onItemClick={(c) => setDetailChar(c)}
           />
         )}
+
         {tab === "liked" && (
           <TabContent
             items={likedChars}
