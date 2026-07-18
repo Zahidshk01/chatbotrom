@@ -147,9 +147,16 @@ function ProfilePage() {
 
         {/* Stats */}
         <div className="mt-4 grid w-full max-w-xs grid-cols-3">
-          <Stat value={following.length} label="Following" onClick={() => setListDialog("following")} />
-          <Stat value={followers.length} label="Followers" onClick={() => setListDialog("followers")} />
-          <Stat value={profile.stats.interactions} label="Interactions" />
+          {(() => {
+            const base = uid ? baselineFollowCounts(uid) : { followers: 0, following: 0 };
+            return (
+              <>
+                <Stat value={following.length + base.following} label="Following" onClick={() => setListDialog("following")} />
+                <Stat value={followers.length + base.followers} label="Followers" onClick={() => setListDialog("followers")} />
+                <Stat value={profile.stats.interactions} label="Interactions" />
+              </>
+            );
+          })()}
         </div>
 
         {/* Bio */}
