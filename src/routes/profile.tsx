@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
-  Settings, Camera, Users as UsersIcon, ChevronRight,
+  Settings, Camera, Users as UsersIcon, ChevronRight, ChevronLeft,
   Mail, FileText, ShieldCheck, Info, LogOut, Trash2, BadgeCheck, Smile,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -862,7 +862,16 @@ function CharacterDetailsDialog({
         {char && (
           <>
             <DialogHeader>
-              <DialogTitle>{char.name}</DialogTitle>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onClose}
+                  aria-label="Back"
+                  className="rounded-full p-1 text-foreground/80 active:bg-surface"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <DialogTitle>{char.name}</DialogTitle>
+              </div>
               <DialogDescription>{char.tagline || char.relation || "Your character"}</DialogDescription>
             </DialogHeader>
             {char.image && (
@@ -886,10 +895,11 @@ function CharacterDetailsDialog({
               </button>
               <button
                 onClick={() => setConfirmDelete(true)}
-                className="flex-1 rounded-full bg-red-600 px-4 py-2.5 text-sm font-semibold text-white active:opacity-90"
+                className="rounded-full bg-red-600 px-4 py-2.5 text-sm font-semibold text-white active:opacity-90"
+                aria-label="Delete character"
+                title="Delete character"
               >
-                <Trash2 className="mr-1 inline h-4 w-4" />
-                Delete
+                <Trash2 className="h-4 w-4" />
               </button>
             </DialogFooter>
           </>
