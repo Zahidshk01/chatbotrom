@@ -799,3 +799,137 @@ function FollowListDialog({
     </Dialog>
   );
 }
+
+function CharacterDetailsDialog({
+  char,
+  onClose,
+  onDeleted,
+  onOpenChat,
+}: {
+  char: Character | null;
+  onClose: () => void;
+  onDeleted: (id: string) => void;
+  onOpenChat: (id: string) => void;
+}) {
+  const [stats, setStats] = useState<{ likes: number; saves: number; chats: number } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!char) { setStats(null); return; }
+    let cancelled = false;
+    (async () => {
+      const [likesRes, savesRes, chatsRes] = await Promise.all([
+        supabase.from("user_likes").select("user_id", { count: "exact", head: true }).eq("character_id", char.id),
+        supabase.from("user_saves").select("user_id", { count: "exact", head: true }).eq("character_id", char.id),
+        supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("character_id", char.id),
+      ]);
+      if (cancelled) return;
+      setStats({
+        likes: likesRes.count ?? 0,
+        saves: savesRes.count ?? 0,
+        chats: chatsRes.count ?? 0,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [char]);
+
+  async function handleDelete() {
+    if (!char) return;
+    setDeleting(true);
+    try {
+      // Best-effort cleanup of the current user's own related rows (RLS scopes to auth.uid()).
+      await Promise.all([
+        supabase.from("chat_messages").delete().eq("character_id", char.id),
+        supabase.from("user_likes").delete().eq("character_id", char.id),
+        supabase.from("user_saves").delete().eq("character_id", char.id),
+      ]);
+      const { error } = await supabase.from("characters").delete().eq("id", char.id);
+      if (error) throw error;
+      toast.success("Character deleted");
+      onDeleted(char.id);
+    } catch (e) {
+      toast.error("Could not delete character");
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  }
+
+  return (
+    <Dialog open={char !== null} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        {char && (
+          <>
+            <DialogHeader>
+              <DialogTitle>{char.name}</DialogTitle>
+              <DialogDescription>{char.tagline || char.relation || "Your character"}</DialogDescription>
+            </DialogHeader>
+            {char.image && (
+              <img
+                src={char.image}
+                alt={char.name}
+                className="aspect-[4/5] w-full rounded-2xl object-cover"
+              />
+            )}
+            <div className="grid grid-cols-3 gap-2">
+              <StatBox label="Likes" value={stats?.likes ?? "—"} />
+              <StatBox label="Chats" value={stats?.chats ?? "—"} />
+              <StatBox label="Saved" value={stats?.saves ?? "—"} />
+            </div>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <button
+                onClick={() => onOpenChat(char.id)}
+                className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+              >
+                Open chat
+              </button>
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="flex-1 rounded-full bg-red-600 px-4 py-2.5 text-sm font-semibold text-white active:opacity-90"
+              >
+                <Trash2 className="mr-1 inline h-4 w-4" />
+                Delete
+              </button>
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
+      <Dialog open={confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this character?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove the character and your chats with them. This can't be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              onClick={() => setConfirmDelete(false)}
+              className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              disabled={deleting}
+              onClick={handleDelete}
+              className="flex-1 rounded-full bg-red-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Dialog>
+  );
+}
+
+function StatBox({ value, label }: { value: number | string; label: string }) {
+  return (
+    <div className="flex flex-col items-center rounded-xl bg-surface py-3">
+      <span className="text-lg font-bold">{value}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
+    </div>
+  );
+}
+
