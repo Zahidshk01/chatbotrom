@@ -277,16 +277,15 @@ function ChatPage() {
         <div className="mt-4 space-y-4">
           {msgs.map((m) =>
             m.from === "me" ? (
-              <div key={m.id} className="flex justify-end">
-                <div className="max-w-[80%] rounded-2xl rounded-tr-md bg-surface px-4 py-2.5 text-sm">{m.text}</div>
-              </div>
+              <UserMessage key={m.id} text={m.text} onDelete={() => deleteMessage(m.id)} />
             ) : (
               <CharacterMessage
                 key={m.id}
                 image={charImage}
                 text={m.text}
-                onRegenerate={m.variants && m.variants.length > 1 ? () => cycleVariant(m.id) : undefined}
+                onRegenerate={() => regenerate(m.id)}
                 onEdit={(t) => editMessage(m.id, t)}
+                onDelete={() => deleteMessage(m.id)}
               />
             ),
           )}
