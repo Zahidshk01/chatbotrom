@@ -49,12 +49,13 @@ function ProfilePage() {
     [likedIds],
   );
   const [myChars, setMyChars] = useState<Character[]>([]);
+  const [charStats, setCharStats] = useState<Record<string, { likes: number; chats: number; saves: number }>>({});
 
   useEffect(() => {
     let cancelled = false;
     async function loadMine() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { if (!cancelled) setMyChars([]); return; }
+      if (!user) { if (!cancelled) { setMyChars([]); setCharStats({}); } return; }
       const { data, error } = await supabase
         .from("characters")
         .select("id,name,image,creator,chats,category,height,tagline,relation")
@@ -72,6 +73,21 @@ function ProfilePage() {
         tagline: c.tagline ?? "",
         relation: c.relation ?? "",
       })));
+
+      const ids = data.map((c) => c.id);
+      if (ids.length === 0) { setCharStats({}); return; }
+      const [likesRes, savesRes, msgsRes] = await Promise.all([
+        supabase.from("user_likes").select("character_id").in("character_id", ids),
+        supabase.from("user_saves").select("character_id").in("character_id", ids),
+        supabase.from("chat_messages").select("character_id").in("character_id", ids),
+      ]);
+      if (cancelled) return;
+      const stats: Record<string, { likes: number; chats: number; saves: number }> = {};
+      ids.forEach((id) => { stats[id] = { likes: 0, chats: 0, saves: 0 }; });
+      likesRes.data?.forEach((r: any) => { if (stats[r.character_id]) stats[r.character_id].likes++; });
+      savesRes.data?.forEach((r: any) => { if (stats[r.character_id]) stats[r.character_id].saves++; });
+      msgsRes.data?.forEach((r: any) => { if (stats[r.character_id]) stats[r.character_id].chats++; });
+      setCharStats(stats);
     }
     loadMine();
     const { data: sub } = supabase.auth.onAuthStateChange(() => loadMine());
