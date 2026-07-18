@@ -12,6 +12,7 @@ import { useLikedIds } from "@/lib/liked-store";
 import { useFollowing, useFollowers, toggleFollow } from "@/lib/follow-store";
 import { useProfile, updateProfile } from "@/lib/profile-store";
 import { supabase } from "@/integrations/supabase/client";
+import { baselineFollowCounts } from "@/lib/follow-baseline";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
