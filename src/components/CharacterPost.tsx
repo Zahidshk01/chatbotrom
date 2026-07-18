@@ -53,25 +53,17 @@ export function CharacterPost({ char }: { char: Character }) {
   return (
     <article className="animate-pop-in pb-4">
       <header className="flex items-center justify-between px-4 py-2.5">
-        {char.owner_id ? (
-          <Link
-            to="/u/$userId"
-            params={{ userId: char.owner_id }}
-            className="flex min-w-0 items-center gap-3 active:opacity-70"
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-foreground">
-              {creatorInitial}
-            </div>
-            <span className="truncate text-sm font-semibold">{creatorLabel}</span>
-          </Link>
-        ) : (
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-foreground">
-              {creatorInitial}
-            </div>
-            <span className="truncate text-sm font-semibold">{creatorLabel}</span>
+        <Link
+          to="/u/$userId"
+          params={{ userId: char.owner_id ?? `h:${creatorLabel}` }}
+          className="flex min-w-0 items-center gap-3 active:opacity-70"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-foreground">
+            {creatorInitial}
           </div>
-        )}
+          <span className="truncate text-sm font-semibold">{creatorLabel}</span>
+        </Link>
+
         <button
           onClick={toggleFollowClick}
           className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors ${
