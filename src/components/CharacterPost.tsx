@@ -53,7 +53,7 @@ export function CharacterPost({ char }: { char: Character }) {
   const fallbackLabel = (char.creator ?? "unknown").replace(/^@/, "");
   const displayLabel = ownerProfile?.username || fallbackLabel;
   const creatorInitial = displayLabel.charAt(0).toUpperCase();
-  const avatarUrl = ownerProfile?.avatar_url || null;
+  const avatarUrl = ownerProfile?.avatar_url || avatarForHandle(char.creator);
 
   return (
     <article className="animate-pop-in pb-4">
