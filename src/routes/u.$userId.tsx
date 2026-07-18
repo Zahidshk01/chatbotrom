@@ -52,7 +52,7 @@ function UserProfilePage() {
           .or(`creator.eq.@${handle},creator.eq.${handle}`)
           .order("sort_order", { ascending: true });
         const rows: any[] = charData ?? [];
-        setProfile({ username: handle, avatar_url: null });
+        setProfile({ username: handle, avatar_url: avatarForHandle(handle), bio: bioForHandle(handle) });
         setChars(rows.map((c) => ({ id: c.id, name: c.name, image: c.image || imageById.get(c.id) || null })));
         const sum = rows.reduce((acc, c) => {
           const raw = String(c.chats ?? "0").replace(/[^\d.]/g, "");
