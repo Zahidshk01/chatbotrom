@@ -32,6 +32,8 @@ function ChatPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const [char, setChar] = useState<Character | null>(() => {
+    const cached = getCharacterFromCache(id);
+    if (cached) return cached;
     const local = localCharacters.find((c) => c.id === id);
     return local ? (local as Character) : null;
   });
@@ -42,20 +44,31 @@ function ChatPage() {
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
-  // Load character from DB (in case it was created by user)
+  // Load character from cache/DB (in case it was created by another session)
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await (supabase as any)
-        .from("characters")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-      if (cancelled) return;
-      if (data) {
-        setChar({ ...data, image: resolveImage(data.id, data.image) } as Character);
+      const cached = getCharacterFromCache(id);
+      if (cached) {
+        setChar(cached);
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+      const all = await primeCharacters();
+      if (cancelled) return;
+      const found = all.find((c) => c.id === id);
+      if (found) setChar(found);
+      else {
+        const { data } = await (supabase as any)
+          .from("characters")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+        if (!cancelled && data) {
+          setChar({ ...data, image: resolveImage(data.id, data.image) } as Character);
+        }
+      }
+      if (!cancelled) setLoading(false);
     })();
     return () => {
       cancelled = true;
