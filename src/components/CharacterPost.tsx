@@ -7,6 +7,7 @@ import { toggleSaved, useIsSaved } from "@/lib/saved-store";
 import { toggleLiked, useIsLiked } from "@/lib/liked-store";
 import { toggleFollow, useIsFollowing } from "@/lib/follow-store";
 import { useOwnerProfile } from "@/lib/owner-profile";
+import { avatarForHandle } from "@/lib/creator-meta";
 
 
 function fmt(n: number) {
