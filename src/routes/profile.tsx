@@ -400,6 +400,19 @@ function ProfilePage() {
         </DialogContent>
       </Dialog>
 
+      <CharacterDetailsDialog
+        char={detailChar}
+        onClose={() => setDetailChar(null)}
+        onDeleted={(id) => {
+          setDetailChar(null);
+          setMyChars((prev) => prev.filter((c) => c.id !== id));
+        }}
+        onOpenChat={(id) => {
+          setDetailChar(null);
+          navigate({ to: "/chat/$id", params: { id } });
+        }}
+      />
+
       <FollowListDialog
         open={listDialog !== null}
         kind={listDialog}
@@ -407,6 +420,7 @@ function ProfilePage() {
         following={following}
         followers={followers}
       />
+
     </div>
   );
 }
