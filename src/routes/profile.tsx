@@ -616,21 +616,17 @@ function EditProfileDialog({
                     <Smile className="h-5 w-5" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-72 rounded-2xl border-white/10 bg-surface p-2">
-                  <div className="grid max-h-56 grid-cols-8 gap-1 overflow-y-auto">
-                    {EMOJI_SET.map((e) => (
-                      <button
-                        key={e}
-                        type="button"
-                        onClick={() => {
-                          if ((bio + e).length <= 160) setBio(bio + e);
-                        }}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-lg hover:bg-white/10"
-                      >
-                        {e}
-                      </button>
-                    ))}
-                  </div>
+                <PopoverContent align="end" className="w-auto rounded-2xl border-white/10 bg-transparent p-0 shadow-none">
+                  <Picker
+                    data={emojiData}
+                    set="apple"
+                    theme="dark"
+                    previewPosition="none"
+                    skinTonePosition="none"
+                    onEmojiSelect={(emoji: { native: string }) => {
+                      if ((bio + emoji.native).length <= 160) setBio(bio + emoji.native);
+                    }}
+                  />
                 </PopoverContent>
               </Popover>
             </div>
