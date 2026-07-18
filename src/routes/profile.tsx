@@ -5,8 +5,7 @@ import {
   Mail, FileText, ShieldCheck, Info, LogOut, Trash2, BadgeCheck, Smile,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import Picker from "@emoji-mart/react";
-import emojiData from "@emoji-mart/data";
+import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import { characters, type Character } from "@/lib/mock-data";
 import { useSavedIds } from "@/lib/saved-store";
 import { useLikedIds } from "@/lib/liked-store";
@@ -617,14 +616,17 @@ function EditProfileDialog({
                   </button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-auto rounded-2xl border-white/10 bg-transparent p-0 shadow-none">
-                  <Picker
-                    data={emojiData}
-                    set="apple"
-                    theme="dark"
-                    previewPosition="none"
-                    skinTonePosition="none"
-                    onEmojiSelect={(emoji: { native: string }) => {
-                      if ((bio + emoji.native).length <= 160) setBio(bio + emoji.native);
+                  <EmojiPicker
+                    emojiStyle={EmojiStyle.APPLE}
+                    theme={Theme.DARK}
+                    lazyLoadEmojis
+                    searchDisabled={false}
+                    skinTonesDisabled
+                    previewConfig={{ showPreview: false }}
+                    width={320}
+                    height={400}
+                    onEmojiClick={(data) => {
+                      if ((bio + data.emoji).length <= 160) setBio(bio + data.emoji);
                     }}
                   />
                 </PopoverContent>
