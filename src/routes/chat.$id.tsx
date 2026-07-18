@@ -198,12 +198,16 @@ function ChatPage() {
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 pb-32 pt-4">
-        <div className="mb-6 flex items-center gap-3 rounded-full bg-surface px-3 py-2">
+        <Link
+          to="/u/$userId"
+          params={{ userId: char.owner_id ? char.owner_id : `h:${(char.creator ?? char.name).replace(/^@/, "")}` }}
+          className="mb-6 flex items-center gap-3 rounded-full bg-surface px-3 py-2 active:scale-[0.98] transition"
+        >
           <img src={charImage} alt={char.name} className="h-10 w-10 rounded-full object-cover" />
           <div className="truncate text-base font-semibold">
             {char.name} <span className="text-muted-foreground">({char.relation})</span>
           </div>
-        </div>
+        </Link>
 
         <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
           <div className="h-px flex-1 bg-border" />
