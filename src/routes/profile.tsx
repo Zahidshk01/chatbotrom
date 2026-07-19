@@ -347,54 +347,6 @@ function TabContent({
 }
 
 
-function MenuRow({
-  icon, label, onClick, right, isLast, hideChevron, labelClass,
-}: {
-  icon: React.ReactNode;
-  label?: string;
-  onClick?: () => void;
-  right?: React.ReactNode;
-  isLast?: boolean;
-  hideChevron?: boolean;
-  labelClass?: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-surface-2 ${isLast ? "" : "border-b border-border/40"}`}
-    >
-      <span className="flex h-6 w-6 items-center justify-center">{icon}</span>
-      {label && (
-        <span className={`flex-1 text-sm font-semibold ${labelClass ?? ""}`}>
-          {label}
-        </span>
-      )}
-      {!label && <span className="flex-1" />}
-      {right}
-      {!hideChevron && <ChevronRight className="ml-1 h-4 w-4 text-muted-foreground" />}
-    </button>
-  );
-}
-
-function InfoDialog({
-  open, onClose, title, body,
-}: {
-  open: boolean;
-  onClose: () => void;
-  title: string;
-  body: React.ReactNode;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
-        <div className="text-sm leading-relaxed text-foreground/85">{body}</div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function EditProfileDialog({
   open, onOpenChange,
