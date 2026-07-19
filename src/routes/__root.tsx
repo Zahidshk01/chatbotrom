@@ -119,13 +119,23 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <div className="dark mx-auto min-h-screen max-w-md bg-background pb-24">
-          <AuthGate>
-            <Outlet />
-          </AuthGate>
-          <BottomNavGate />
+        <div className="dark min-h-screen bg-black">
+          <div
+            aria-hidden
+            className="pointer-events-none fixed inset-0 hidden md:block"
+            style={{
+              background:
+                "radial-gradient(1200px 600px at 20% 10%, rgba(255,77,109,0.12), transparent 60%), radial-gradient(1000px 500px at 80% 90%, rgba(120,80,220,0.10), transparent 60%), #050505",
+            }}
+          />
+          <div className="relative mx-auto min-h-screen w-full max-w-md bg-background pb-24 md:my-6 md:min-h-[calc(100vh-3rem)] md:rounded-[40px] md:border md:border-white/10 md:shadow-2xl md:shadow-black/60 md:overflow-hidden">
+            <AuthGate>
+              <Outlet />
+            </AuthGate>
+            <BottomNavGate />
 
-          <Toaster position="top-center" theme="dark" />
+            <Toaster position="top-center" theme="dark" />
+          </div>
         </div>
       </AuthProvider>
     </QueryClientProvider>
