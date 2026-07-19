@@ -82,6 +82,7 @@ function ChatPage() {
         setMsgs(
           data.map((m: any) => ({
             id: m.id,
+            db_id: m.id,
             from: m.role === "user" ? "me" : "them",
             text: m.content,
           })),
