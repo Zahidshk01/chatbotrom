@@ -33,7 +33,7 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
-const APP_VERSION = "v2.4.1";
+
 
 type TabKey = "characters" | "liked" | "saved";
 
