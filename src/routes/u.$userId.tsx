@@ -62,6 +62,7 @@ function UserProfilePage() {
           return acc + num * mult;
         }, 0);
         setTotalChats(Math.round(sum));
+        setCounts(baselineFollowCounts("h:" + handle));
         return;
       }
 
