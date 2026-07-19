@@ -332,11 +332,13 @@ function CharacterMessage({
   text,
   onRegenerate,
   onEdit,
+  onDelete,
 }: {
   image: string;
   text: string;
   onRegenerate?: () => void;
   onEdit?: (newText: string) => void;
+  onDelete?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(text);
@@ -381,7 +383,7 @@ function CharacterMessage({
             <div className="max-w-[85%] rounded-2xl rounded-tl-md bg-surface px-4 py-3 text-sm leading-relaxed">
               <RichText text={text} />
             </div>
-            {(onRegenerate || onEdit) && (
+            {(onRegenerate || onEdit || onDelete) && (
               <div className="flex flex-col gap-1.5 pt-1">
                 {onEdit && (
                   <button
@@ -395,10 +397,21 @@ function CharacterMessage({
                 {onRegenerate && (
                   <button
                     onClick={onRegenerate}
-                    aria-label="Try another reply"
+                    aria-label="Regenerate reply"
                     className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
                   >
                     <RotateCcw className="h-4 w-4" />
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={() => {
+                      if (confirm("Delete this message?")) onDelete();
+                    }}
+                    aria-label="Delete reply"
+                    className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 )}
               </div>
