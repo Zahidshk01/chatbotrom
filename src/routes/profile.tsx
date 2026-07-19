@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
-  Settings, Camera, Users as UsersIcon, ChevronRight, ChevronLeft,
-  Mail, FileText, ShieldCheck, Info, LogOut, Trash2, BadgeCheck, Smile,
+  Settings, Camera, Users as UsersIcon, ChevronLeft,
+  Trash2, BadgeCheck, Smile,
 } from "lucide-react";
+
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import { characters, type Character } from "@/lib/mock-data";
@@ -12,14 +13,13 @@ import { useLikedIds } from "@/lib/liked-store";
 import { useFollowing, useFollowers, toggleFollow } from "@/lib/follow-store";
 import { useProfile, updateProfile } from "@/lib/profile-store";
 import { supabase } from "@/integrations/supabase/client";
-import { useBlockedTargets, unblockTarget } from "@/lib/block-store";
-import { avatarForHandle } from "@/lib/creator-meta";
-
 import { getUserFollowCounts } from "@/lib/user-follow";
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
+
+
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
-const APP_VERSION = "v2.4.1";
+
 
 type TabKey = "characters" | "liked" | "saved";
 
@@ -346,54 +346,6 @@ function TabContent({
 }
 
 
-function MenuRow({
-  icon, label, onClick, right, isLast, hideChevron, labelClass,
-}: {
-  icon: React.ReactNode;
-  label?: string;
-  onClick?: () => void;
-  right?: React.ReactNode;
-  isLast?: boolean;
-  hideChevron?: boolean;
-  labelClass?: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-surface-2 ${isLast ? "" : "border-b border-border/40"}`}
-    >
-      <span className="flex h-6 w-6 items-center justify-center">{icon}</span>
-      {label && (
-        <span className={`flex-1 text-sm font-semibold ${labelClass ?? ""}`}>
-          {label}
-        </span>
-      )}
-      {!label && <span className="flex-1" />}
-      {right}
-      {!hideChevron && <ChevronRight className="ml-1 h-4 w-4 text-muted-foreground" />}
-    </button>
-  );
-}
-
-function InfoDialog({
-  open, onClose, title, body,
-}: {
-  open: boolean;
-  onClose: () => void;
-  title: string;
-  body: React.ReactNode;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
-        <div className="text-sm leading-relaxed text-foreground/85">{body}</div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function EditProfileDialog({
   open, onOpenChange,
@@ -778,64 +730,6 @@ function StatBox({ value, label }: { value: number | string; label: string }) {
     <div className="flex flex-col items-center rounded-xl bg-surface py-3">
       <span className="text-lg font-bold">{value}</span>
       <span className="text-xs text-muted-foreground">{label}</span>
-    </div>
-  );
-}
-
-function BlockedUsersSection() {
-  const blocked = useBlockedTargets();
-  const [profiles, setProfiles] = useState<Record<string, { username: string | null; avatar_url: string | null }>>({});
-
-  useEffect(() => {
-    const uuids = blocked.filter((t) => !t.startsWith("h:"));
-    if (uuids.length === 0) return;
-    (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url")
-        .in("id", uuids);
-      const map: Record<string, { username: string | null; avatar_url: string | null }> = {};
-      (data ?? []).forEach((p: any) => {
-        map[p.id] = { username: p.username, avatar_url: p.avatar_url };
-      });
-      setProfiles(map);
-    })();
-  }, [blocked.join(",")]);
-
-  return (
-    <div className="space-y-3">
-      <div className="text-sm font-semibold">Blocked users</div>
-      {blocked.length === 0 ? (
-        <p className="text-sm text-muted-foreground">You haven't blocked anyone.</p>
-      ) : (
-        <div className="max-h-80 space-y-2 overflow-y-auto">
-          {blocked.map((t) => {
-            const isHandle = t.startsWith("h:");
-            const handle = isHandle ? t.slice(2) : null;
-            const p = !isHandle ? profiles[t] : null;
-            const name = isHandle ? `@${handle}` : p?.username || "user";
-            const avatar = isHandle ? avatarForHandle(handle!) : p?.avatar_url || "";
-            return (
-              <div key={t} className="flex items-center gap-3 rounded-xl bg-surface px-3 py-2">
-                {avatar ? (
-                  <img src={avatar} alt={name} className="h-9 w-9 rounded-full object-cover" />
-                ) : (
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-background text-sm font-bold">
-                    {name.charAt(name.startsWith("@") ? 1 : 0).toUpperCase()}
-                  </div>
-                )}
-                <div className="flex-1 truncate text-sm">{name}</div>
-                <button
-                  onClick={() => unblockTarget(t)}
-                  className="rounded-full bg-background px-3 py-1.5 text-xs font-semibold"
-                >
-                  Unblock
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
