@@ -4,6 +4,7 @@ import { CharacterPost } from "@/components/CharacterPost";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { characters as localCharacters } from "@/lib/mock-data";
+import { useBlockedTargets } from "@/lib/block-store";
 
 const imageById = new Map(localCharacters.map((c) => [c.id, c.image]));
 
