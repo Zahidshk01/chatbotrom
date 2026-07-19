@@ -146,6 +146,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_blocks: {
+        Row: {
+          blocked_target: string
+          blocker_id: string
+          created_at: string
+        }
+        Insert: {
+          blocked_target: string
+          blocker_id: string
+          created_at?: string
+        }
+        Update: {
+          blocked_target?: string
+          blocker_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       user_follows: {
         Row: {
           created_at: string
@@ -179,6 +197,33 @@ export type Database = {
           character_id?: string
           created_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reported_target: string
+          reporter_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reported_target: string
+          reporter_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reported_target?: string
+          reporter_id?: string
         }
         Relationships: []
       }

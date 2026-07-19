@@ -4,6 +4,7 @@ import { CharacterPost } from "@/components/CharacterPost";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { characters as localCharacters } from "@/lib/mock-data";
+import { useBlockedTargets } from "@/lib/block-store";
 
 const imageById = new Map(localCharacters.map((c) => [c.id, c.image]));
 
@@ -44,6 +45,7 @@ type Character = {
 function HomePage() {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
+  const blocked = useBlockedTargets();
 
   useEffect(() => {
     async function loadCharacters() {
@@ -51,9 +53,6 @@ function HomePage() {
         .from("characters")
         .select("*")
         .order("sort_order", { ascending: true });
-
-      console.log("SUPABASE CHARACTERS:", data);
-      console.log("SUPABASE ERROR:", error);
 
       if (!error && data) {
         const withImages = (data as Character[]).map((c) => ({
@@ -69,7 +68,12 @@ function HomePage() {
     loadCharacters();
   }, []);
 
-  const feed = characters;
+  const feed = characters.filter((c) => {
+    if (c.owner_id && blocked.includes(c.owner_id)) return false;
+    const handle = (c.creator ?? "").replace(/^@/, "");
+    if (handle && blocked.includes(`h:${handle}`)) return false;
+    return true;
+  });
 
   return (
     <div className="safe-top">

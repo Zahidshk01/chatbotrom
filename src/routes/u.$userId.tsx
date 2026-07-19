@@ -1,12 +1,17 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, MoreVertical } from "lucide-react";
+import { ArrowLeft, MoreVertical, Flag, Ban } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { toggleFollowUser, isFollowingUser, getUserFollowCounts } from "@/lib/user-follow";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { avatarForHandle, bioForHandle } from "@/lib/creator-meta";
 import { baselineFollowCounts } from "@/lib/follow-baseline";
+import { blockTarget, reportTarget, useBlockedTargets } from "@/lib/block-store";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/u/$userId")({
   component: UserProfilePage,
@@ -115,6 +120,39 @@ function UserProfilePage() {
   const initial = displayName.charAt(0).toUpperCase();
 
   const isSelf = me === userId;
+  const targetKey = isHandle ? `h:${handle}` : userId;
+  const blocked = useBlockedTargets();
+
+  const [reportOpen, setReportOpen] = useState(false);
+  const [confirmBlock, setConfirmBlock] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
+
+  // If already blocked, redirect away
+  useEffect(() => {
+    if (!isSelf && blocked.includes(targetKey)) {
+      navigate({ to: "/" });
+    }
+  }, [blocked, targetKey, isSelf, navigate]);
+
+  const onBlock = async () => {
+    await blockTarget(targetKey);
+    setConfirmBlock(false);
+    toast.success(`Blocked ${displayName}`);
+    navigate({ to: "/" });
+  };
+
+  const onSubmitReport = async () => {
+    if (!reportReason) {
+      toast.error("Pick a reason");
+      return;
+    }
+    await reportTarget(targetKey, reportReason, reportDetails || undefined);
+    setReportOpen(false);
+    setReportReason("");
+    setReportDetails("");
+    toast.success("Report submitted. Thank you.");
+  };
 
   return (
     <div className="min-h-dvh bg-background pb-24">
@@ -125,10 +163,103 @@ function UserProfilePage() {
           </button>
           <h1 className="text-lg font-semibold">{displayName}</h1>
         </div>
-        <button className="flex h-9 w-9 items-center justify-center rounded-full bg-surface active:scale-95" aria-label="More">
-          <MoreVertical className="h-5 w-5" />
-        </button>
+        {!isSelf ? (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex h-9 w-9 items-center justify-center rounded-full bg-surface active:scale-95" aria-label="More">
+                <MoreVertical className="h-5 w-5" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-44 p-1">
+              <button
+                onClick={() => setReportOpen(true)}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm active:bg-surface"
+              >
+                <Flag className="h-4 w-4" /> Report
+              </button>
+              <button
+                onClick={() => setConfirmBlock(true)}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-orange-400 active:bg-surface"
+              >
+                <Ban className="h-4 w-4" /> Block
+              </button>
+            </PopoverContent>
+          </Popover>
+        ) : (
+          <div className="h-9 w-9" />
+        )}
       </header>
+
+      {/* Report dialog */}
+      <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Report {displayName}</DialogTitle>
+            <DialogDescription>Help us understand what's wrong.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {["Spam", "Harassment", "Inappropriate content", "Impersonation", "Other"].map((r) => (
+              <label key={r} className="flex items-center gap-3 rounded-xl bg-surface px-3 py-2.5 text-sm">
+                <input
+                  type="radio"
+                  name="reason"
+                  value={r}
+                  checked={reportReason === r}
+                  onChange={() => setReportReason(r)}
+                />
+                {r}
+              </label>
+            ))}
+            <textarea
+              value={reportDetails}
+              onChange={(e) => setReportDetails(e.target.value)}
+              placeholder="Additional details (optional)"
+              className="min-h-[80px] w-full rounded-xl bg-surface px-3 py-2 text-sm outline-none"
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              onClick={() => setReportOpen(false)}
+              className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onSubmitReport}
+              className="flex-1 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              Submit
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Block confirmation */}
+      <Dialog open={confirmBlock} onOpenChange={setConfirmBlock}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Block {displayName}?</DialogTitle>
+            <DialogDescription>
+              You won't see their profile or characters. You can unblock from Settings.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              onClick={() => setConfirmBlock(false)}
+              className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onBlock}
+              className="flex-1 rounded-full bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white"
+            >
+              Block
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       <section className="px-4 pt-2">
         <div className="flex items-center gap-4">
