@@ -1,12 +1,17 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, MoreVertical } from "lucide-react";
+import { ArrowLeft, MoreVertical, Flag, Ban } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { toggleFollowUser, isFollowingUser, getUserFollowCounts } from "@/lib/user-follow";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { avatarForHandle, bioForHandle } from "@/lib/creator-meta";
 import { baselineFollowCounts } from "@/lib/follow-baseline";
+import { blockTarget, reportTarget, useBlockedTargets } from "@/lib/block-store";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/u/$userId")({
   component: UserProfilePage,
