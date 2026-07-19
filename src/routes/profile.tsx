@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Settings, Camera, Users as UsersIcon, ChevronRight, ChevronLeft,
-  Mail, FileText, ShieldCheck, Info, LogOut, Trash2, BadgeCheck, Smile,
+  Trash2, BadgeCheck, Smile,
 } from "lucide-react";
+
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import { characters, type Character } from "@/lib/mock-data";
