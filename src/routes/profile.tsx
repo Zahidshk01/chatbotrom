@@ -5,6 +5,7 @@ import {
   Trash2, BadgeCheck, Smile,
 } from "lucide-react";
 
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import { characters, type Character } from "@/lib/mock-data";
 import { useSavedIds } from "@/lib/saved-store";
@@ -15,8 +16,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { getUserFollowCounts } from "@/lib/user-follow";
 
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
+
 
 import { toast } from "sonner";
 
