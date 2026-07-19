@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
-  Settings, Camera, Users as UsersIcon, ChevronRight, ChevronLeft,
+  Settings, Camera, Users as UsersIcon, ChevronLeft,
   Trash2, BadgeCheck, Smile,
 } from "lucide-react";
 
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import { characters, type Character } from "@/lib/mock-data";
 import { useSavedIds } from "@/lib/saved-store";
@@ -13,14 +12,12 @@ import { useLikedIds } from "@/lib/liked-store";
 import { useFollowing, useFollowers, toggleFollow } from "@/lib/follow-store";
 import { useProfile, updateProfile } from "@/lib/profile-store";
 import { supabase } from "@/integrations/supabase/client";
-import { useBlockedTargets, unblockTarget } from "@/lib/block-store";
-import { avatarForHandle } from "@/lib/creator-meta";
-
 import { getUserFollowCounts } from "@/lib/user-follow";
 
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({
