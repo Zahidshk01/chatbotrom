@@ -303,15 +303,9 @@ function ProfilePage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Settings</DialogTitle>
-            <DialogDescription>
-              Manage your account preferences.
-            </DialogDescription>
+            <DialogDescription>Manage your account preferences.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 text-sm">
-            <p className="text-muted-foreground">
-              Notification, appearance, and privacy preferences are coming soon.
-            </p>
-          </div>
+          <BlockedUsersSection />
         </DialogContent>
       </Dialog>
 
