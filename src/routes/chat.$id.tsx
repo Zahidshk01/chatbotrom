@@ -345,6 +345,7 @@ function CharacterMessage({
   onDelete?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [draft, setDraft] = useState(text);
   useEffect(() => setDraft(text), [text]);
 
