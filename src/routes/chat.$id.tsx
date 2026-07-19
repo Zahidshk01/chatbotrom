@@ -278,9 +278,7 @@ function ChatPage() {
               <UserMessage
                 key={m.id}
                 text={m.text}
-                onDelete={() => {
-                  if (confirm("Delete this message?")) deleteMessage(m.id);
-                }}
+                onDelete={() => deleteMessage(m.id)}
               />
             ) : (
               <CharacterMessage
