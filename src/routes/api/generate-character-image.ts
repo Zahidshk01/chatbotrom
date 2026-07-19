@@ -64,49 +64,73 @@ export const Route = createFileRoute("/api/generate-character-image")({
         }
         const { prompt } = parsed.data;
 
-        const key = process.env.FAL_API_KEY;
+        const key = process.env.MODELSLAB_API_KEY;
         if (!key) {
-          console.error("[generate-character-image] Missing FAL_API_KEY");
+          console.error("[generate-character-image] Missing MODELSLAB_API_KEY");
           return new Response(
             JSON.stringify({ error: "AI generation is not configured." }),
             { status: 500, headers: { "Content-Type": "application/json" } }
           );
         }
 
-        const fullPrompt = `Anime-style character portrait, vibrant colors, cel-shaded, high detail, expressive eyes, clean lineart, studio anime aesthetic. Subject: ${prompt}`;
+        const fullPrompt = `anime-style character portrait, vibrant colors, cel-shaded, high detail, expressive eyes, clean lineart, studio anime aesthetic, ${prompt}`;
 
-        const upstream = await fetch("https://fal.run/fal-ai/flux/schnell", {
+        const upstream = await fetch("https://modelslab.com/api/v3/dreambooth", {
           method: "POST",
-          headers: {
-            Authorization: `Key ${key}`,
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            key,
+            model_id: "anything-v5",
             prompt: fullPrompt,
-            image_size: "square_hd",
-            num_inference_steps: 4,
-            num_images: 1,
-            enable_safety_checker: true,
+            negative_prompt: "lowres, bad anatomy, bad hands, blurry, worst quality",
+            width: "512",
+            height: "512",
+            samples: "1",
+            num_inference_steps: "30",
+            guidance_scale: 7.5,
+            safety_checker: "yes",
+            enhance_prompt: "yes",
           }),
         });
 
         if (!upstream.ok) {
           const text = await upstream.text();
-          console.error(
-            "[generate-character-image] Upstream error",
-            upstream.status,
-            text
+          console.error("[generate-character-image] Upstream error", upstream.status, text);
+          return new Response(
+            JSON.stringify({ error: "Image generation failed. Please try again." }),
+            { status: upstream.status, headers: { "Content-Type": "application/json" } }
           );
-          let clientMsg = "Image generation failed. Please try again.";
-          if (upstream.status === 429) clientMsg = "AI service is busy. Please try again shortly.";
-          else if (/exhausted balance|user is locked/i.test(text))
-            clientMsg = "fal.ai balance exhausted. Top up at fal.ai/dashboard/billing.";
-          else if (upstream.status === 401 || upstream.status === 403)
-            clientMsg = "AI service authentication failed.";
-          return new Response(JSON.stringify({ error: clientMsg }), {
-            status: upstream.status,
+        }
+
+        const data = (await upstream.json()) as {
+          status?: string;
+          output?: string[];
+          future_links?: string[];
+          message?: string;
+          messege?: string;
+        };
+
+        if (data.status === "error") {
+          console.error("[generate-character-image] ModelsLab error", data);
+          const msg = data.message || data.messege || "Image generation failed.";
+          return new Response(JSON.stringify({ error: msg }), {
+            status: 500,
             headers: { "Content-Type": "application/json" },
           });
+        }
+
+        const url = data.output?.[0] || data.future_links?.[0];
+        if (!url) {
+          console.error("[generate-character-image] No image returned", data);
+          return new Response(
+            JSON.stringify({ error: "Image generation failed. Please try again." }),
+            { status: 500, headers: { "Content-Type": "application/json" } }
+          );
+        }
+        return new Response(JSON.stringify({ image: url }), {
+          headers: { "Content-Type": "application/json" },
+        });
+
         }
 
         const data = (await upstream.json()) as {
