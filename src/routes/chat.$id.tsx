@@ -270,7 +270,7 @@ function ChatPage() {
           <div className="h-px flex-1 bg-border" />
         </div>
 
-        <CharacterMessage image={charImage} text={opening} />
+        <CharacterMessage image={charImage} text={opening} ownerId={char.owner_id ? char.owner_id : `h:${(char.creator ?? char.name).replace(/^@/, "")}`} />
 
         <div className="mt-4 space-y-4">
           {(() => {
