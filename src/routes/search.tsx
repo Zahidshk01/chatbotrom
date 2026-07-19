@@ -35,14 +35,18 @@ function SearchPage() {
     })();
   }, []);
 
-  const results = items.filter(
-    (c) =>
+  const results = items.filter((c) => {
+    if (c.owner_id && blocked.includes(c.owner_id)) return false;
+    const handle = (c.creator ?? "").replace(/^@/, "");
+    if (handle && blocked.includes(`h:${handle}`)) return false;
+    return (
       !q ||
       c.name.toLowerCase().includes(q.toLowerCase()) ||
       (c.creator ?? "").toLowerCase().includes(q.toLowerCase()) ||
       (c.category ?? "").toLowerCase().includes(q.toLowerCase()) ||
-      (c.relation ?? "").toLowerCase().includes(q.toLowerCase()),
-  );
+      (c.relation ?? "").toLowerCase().includes(q.toLowerCase())
+    );
+  });
 
   return (
     <div className="safe-top">
