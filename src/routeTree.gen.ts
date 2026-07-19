@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -23,6 +24,11 @@ import { Route as ApiGenerateFirstMessageRouteImport } from './routes/api/genera
 import { Route as ApiGenerateCharacterImageRouteImport } from './routes/api/generate-character-image'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-character-image': typeof ApiGenerateCharacterImageRoute
   '/api/generate-first-message': typeof ApiGenerateFirstMessageRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-character-image': typeof ApiGenerateCharacterImageRoute
   '/api/generate-first-message': typeof ApiGenerateFirstMessageRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-character-image': typeof ApiGenerateCharacterImageRoute
   '/api/generate-first-message': typeof ApiGenerateFirstMessageRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/search'
+    | '/settings'
     | '/api/chat'
     | '/api/generate-character-image'
     | '/api/generate-first-message'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/search'
+    | '/settings'
     | '/api/chat'
     | '/api/generate-character-image'
     | '/api/generate-first-message'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/search'
+    | '/settings'
     | '/api/chat'
     | '/api/generate-character-image'
     | '/api/generate-first-message'
@@ -192,6 +204,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
+  SettingsRoute: typeof SettingsRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateCharacterImageRoute: typeof ApiGenerateCharacterImageRoute
   ApiGenerateFirstMessageRoute: typeof ApiGenerateFirstMessageRoute
@@ -202,6 +215,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
@@ -304,6 +324,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
+  SettingsRoute: SettingsRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateCharacterImageRoute: ApiGenerateCharacterImageRoute,
   ApiGenerateFirstMessageRoute: ApiGenerateFirstMessageRoute,
