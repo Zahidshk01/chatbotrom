@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, MoreVertical, Send, Sparkles, RotateCcw, Pencil, Check, X } from "lucide-react";
+import { ChevronLeft, MoreVertical, Send, Sparkles, RotateCcw, Pencil, Check, X, Trash2 } from "lucide-react";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Character } from "@/lib/character";
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/chat/$id")({
 
 type Msg = {
   id: string;
+  db_id?: string;
   from: "me" | "them";
   text: string;
   variants?: string[];
@@ -81,6 +82,7 @@ function ChatPage() {
         setMsgs(
           data.map((m: any) => ({
             id: m.id,
+            db_id: m.id,
             from: m.role === "user" ? "me" : "them",
             text: m.content,
           })),
@@ -109,14 +111,53 @@ function ChatPage() {
     );
   }
 
-  const persistMessage = async (role: "user" | "assistant", content: string) => {
+  const persistMessage = async (role: "user" | "assistant", content: string): Promise<string | undefined> => {
     if (!userId) return;
-    await (supabase as any).from("chat_messages").insert({
+    const { data } = await (supabase as any).from("chat_messages").insert({
       user_id: userId,
       character_id: char.id,
       role,
       content,
+    }).select("id").single();
+    return data?.id as string | undefined;
+  };
+
+  const updateMessageContent = async (dbId: string | undefined, content: string) => {
+    if (!dbId) return;
+    await (supabase as any).from("chat_messages").update({ content }).eq("id", dbId);
+  };
+
+  const deleteFromDb = async (dbId: string | undefined) => {
+    if (!dbId) return;
+    await (supabase as any).from("chat_messages").delete().eq("id", dbId);
+  };
+
+  const requestReply = async (history: Msg[]): Promise<string> => {
+    const apiMessages = history.map((m) => ({
+      role: m.from === "me" ? "user" : "assistant",
+      content: m.text,
+    }));
+    const { data: sess } = await supabase.auth.getSession();
+    const token = sess.session?.access_token;
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        characterName: char.name,
+        characterDescription: char.tagline,
+        characterCategory: char.category,
+        characterRelation: char.relation,
+        messages: apiMessages,
+      }),
     });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.details || data?.error || "Chat request failed");
+    const replyText = data.reply?.trim();
+    if (!replyText) throw new Error("No reply returned");
+    return replyText;
   };
 
   const send = async () => {
@@ -124,42 +165,22 @@ function ChatPage() {
     if (!v || sending) return;
     setSending(true);
 
-    const mine: Msg = { id: crypto.randomUUID(), from: "me", text: v };
+    const localId = crypto.randomUUID();
+    const mine: Msg = { id: localId, from: "me", text: v };
     const nextMsgs = [...msgs, mine];
     setMsgs(nextMsgs);
     setText("");
-    persistMessage("user", v);
+    persistMessage("user", v).then((dbId) => {
+      if (dbId) setMsgs((arr) => arr.map((m) => (m.id === localId ? { ...m, db_id: dbId } : m)));
+    });
 
     try {
-      const apiMessages = nextMsgs.map((m) => ({
-        role: m.from === "me" ? "user" : "assistant",
-        content: m.text,
-      }));
-
-      const { data: sess } = await supabase.auth.getSession();
-      const token = sess.session?.access_token;
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          characterName: char.name,
-          characterDescription: char.tagline,
-          characterCategory: char.category,
-          characterRelation: char.relation,
-          messages: apiMessages,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.details || data?.error || "Chat request failed");
-      const replyText = data.reply?.trim();
-      if (!replyText) throw new Error("No reply returned");
-
-      const reply: Msg = { id: crypto.randomUUID(), from: "them", text: replyText };
+      const replyText = await requestReply(nextMsgs);
+      const replyLocalId = crypto.randomUUID();
+      const reply: Msg = { id: replyLocalId, from: "them", text: replyText };
       setMsgs((m) => [...m, reply]);
-      persistMessage("assistant", replyText);
+      const dbId = await persistMessage("assistant", replyText);
+      if (dbId) setMsgs((arr) => arr.map((m) => (m.id === replyLocalId ? { ...m, db_id: dbId } : m)));
     } catch (err) {
       const errorText = err instanceof Error ? err.message : "Something went wrong.";
       setMsgs((m) => [...m, { id: crypto.randomUUID(), from: "them", text: `⚠️ ${errorText}` }]);
@@ -168,17 +189,46 @@ function ChatPage() {
     }
   };
 
-  const cycleVariant = (mid: string) =>
-    setMsgs((arr) =>
-      arr.map((m) => {
-        if (m.id !== mid || !m.variants) return m;
-        const next = ((m.variantIndex ?? 0) + 1) % m.variants.length;
-        return { ...m, variantIndex: next, text: m.variants[next] };
-      }),
-    );
+  const regenerate = async (mid: string) => {
+    const idx = msgs.findIndex((m) => m.id === mid);
+    if (idx < 0) return;
+    const target = msgs[idx];
+    if (target.from !== "them") return;
+    const existing = target.variants && target.variants.length > 0 ? target.variants : [target.text];
+    if (existing.length >= 3) {
+      // cycle through existing variants
+      const next = ((target.variantIndex ?? 0) + 1) % existing.length;
+      const newText = existing[next];
+      setMsgs((arr) => arr.map((m) => (m.id === mid ? { ...m, variants: existing, variantIndex: next, text: newText } : m)));
+      updateMessageContent(target.db_id, newText);
+      return;
+    }
+    try {
+      const history = msgs.slice(0, idx);
+      const replyText = await requestReply(history);
+      const nextVariants = [...existing, replyText];
+      const newIndex = nextVariants.length - 1;
+      setMsgs((arr) =>
+        arr.map((m) => (m.id === mid ? { ...m, variants: nextVariants, variantIndex: newIndex, text: replyText } : m)),
+      );
+      updateMessageContent(target.db_id, replyText);
+    } catch (err) {
+      const errorText = err instanceof Error ? err.message : "Regenerate failed.";
+      setMsgs((arr) => arr.map((m) => (m.id === mid ? { ...m, text: `⚠️ ${errorText}` } : m)));
+    }
+  };
 
-  const editMessage = (mid: string, newText: string) =>
+  const editMessage = (mid: string, newText: string) => {
     setMsgs((arr) => arr.map((m) => (m.id === mid ? { ...m, text: newText } : m)));
+    const target = msgs.find((m) => m.id === mid);
+    if (target) updateMessageContent(target.db_id, newText);
+  };
+
+  const deleteMessage = (mid: string) => {
+    const target = msgs.find((m) => m.id === mid);
+    setMsgs((arr) => arr.filter((m) => m.id !== mid));
+    if (target) deleteFromDb(target.db_id);
+  };
 
   const opening = char.first_message || openingScene(char.name, char.category ?? "", char.tagline ?? "");
   const charImage = char.image || "/placeholder.png";
@@ -225,16 +275,19 @@ function ChatPage() {
         <div className="mt-4 space-y-4">
           {msgs.map((m) =>
             m.from === "me" ? (
-              <div key={m.id} className="flex justify-end">
-                <div className="max-w-[80%] rounded-2xl rounded-tr-md bg-surface px-4 py-2.5 text-sm">{m.text}</div>
-              </div>
+              <UserMessage
+                key={m.id}
+                text={m.text}
+                onDelete={() => deleteMessage(m.id)}
+              />
             ) : (
               <CharacterMessage
                 key={m.id}
                 image={charImage}
                 text={m.text}
-                onRegenerate={m.variants && m.variants.length > 1 ? () => cycleVariant(m.id) : undefined}
+                onRegenerate={() => regenerate(m.id)}
                 onEdit={(t) => editMessage(m.id, t)}
+                onDelete={() => deleteMessage(m.id)}
               />
             ),
           )}
@@ -277,11 +330,13 @@ function CharacterMessage({
   text,
   onRegenerate,
   onEdit,
+  onDelete,
 }: {
   image: string;
   text: string;
   onRegenerate?: () => void;
   onEdit?: (newText: string) => void;
+  onDelete?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(text);
@@ -326,7 +381,7 @@ function CharacterMessage({
             <div className="max-w-[85%] rounded-2xl rounded-tl-md bg-surface px-4 py-3 text-sm leading-relaxed">
               <RichText text={text} />
             </div>
-            {(onRegenerate || onEdit) && (
+            {(onRegenerate || onEdit || onDelete) && (
               <div className="flex flex-col gap-1.5 pt-1">
                 {onEdit && (
                   <button
@@ -340,14 +395,76 @@ function CharacterMessage({
                 {onRegenerate && (
                   <button
                     onClick={onRegenerate}
-                    aria-label="Try another reply"
+                    aria-label="Regenerate reply"
                     className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
                   >
                     <RotateCcw className="h-4 w-4" />
                   </button>
                 )}
+                {onDelete && (
+                  <button
+                    onClick={() => {
+                      if (confirm("Delete this message?")) onDelete();
+                    }}
+                    aria-label="Delete reply"
+                    className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UserMessage({ text, onDelete }: { text: string; onDelete: () => void }) {
+  const [showDelete, setShowDelete] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const start = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setShowDelete(true), 500);
+  };
+  const cancel = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  };
+  return (
+    <div className="flex justify-end">
+      <div className="flex flex-col items-end gap-1">
+        <div
+          onMouseDown={start}
+          onMouseUp={cancel}
+          onMouseLeave={cancel}
+          onTouchStart={start}
+          onTouchEnd={cancel}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setShowDelete(true);
+          }}
+          className="max-w-[80%] cursor-pointer select-none rounded-2xl rounded-tr-md bg-surface px-4 py-2.5 text-sm active:opacity-80"
+        >
+          {text}
+        </div>
+        {showDelete && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                onDelete();
+                setShowDelete(false);
+              }}
+              className="flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </button>
+            <button
+              onClick={() => setShowDelete(false)}
+              className="flex items-center gap-1 rounded-full bg-surface px-3 py-1 text-xs"
+            >
+              <X className="h-3.5 w-3.5" /> Cancel
+            </button>
           </div>
         )}
       </div>
