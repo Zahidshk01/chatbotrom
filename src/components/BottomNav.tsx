@@ -24,7 +24,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/85 backdrop-blur-xl safe-bottom"
+      className="fixed bottom-0 left-1/2 z-50 w-full max-w-md -translate-x-1/2 border-t border-border bg-background/85 backdrop-blur-xl safe-bottom md:bottom-6 md:rounded-b-[40px]"
       aria-label="Primary"
     >
       <ul className="mx-auto flex max-w-md items-center justify-around px-2 pt-2 pb-2">

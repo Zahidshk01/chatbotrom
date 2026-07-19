@@ -282,7 +282,7 @@ function CreatePage() {
             </div>
           </section>
 
-          <div className="fixed inset-x-0 bottom-20 px-5">
+          <div className="fixed inset-x-0 bottom-20 left-1/2 w-full max-w-md -translate-x-1/2 px-5">
             <button
               onClick={goToFirstMessage}
               disabled={!image || !name.trim()}
@@ -347,7 +347,7 @@ function CreatePage() {
             </div>
           </div>
 
-          <div className="fixed inset-x-0 bottom-16 flex flex-col items-center gap-3 px-5">
+          <div className="fixed inset-x-0 bottom-16 left-1/2 flex w-full max-w-md -translate-x-1/2 flex-col items-center gap-3 px-5">
             <button
               onClick={finish}
               disabled={!firstMessage.trim() || generatingFirst}

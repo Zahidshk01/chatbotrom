@@ -302,7 +302,7 @@ function ChatPage() {
         <div ref={endRef} />
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md border-t border-border bg-background/90 px-3 py-3 backdrop-blur-xl safe-bottom">
+      <div className="fixed inset-x-0 bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-border bg-background/90 px-3 py-3 backdrop-blur-xl safe-bottom md:bottom-6 md:rounded-b-[40px]">
         <div className="flex items-end gap-2">
           <div className="flex flex-1 items-center rounded-full bg-surface px-4 py-2">
             <input
