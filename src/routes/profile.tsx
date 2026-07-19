@@ -105,12 +105,19 @@ function ProfilePage() {
     return () => { cancelled = true; sub.subscription.unsubscribe(); };
   }, []);
 
+  const [refetchTick, setRefetchTick] = useState(0);
+  useEffect(() => {
+    const h = () => setRefetchTick((n) => n + 1);
+    window.addEventListener("kender:follows-changed", h);
+    return () => window.removeEventListener("kender:follows-changed", h);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     if (!uid) { setLiveCounts({ followers: 0, following: 0 }); return; }
     getUserFollowCounts(uid).then((c) => { if (!cancelled) setLiveCounts(c); });
     return () => { cancelled = true; };
-  }, [uid, following.length]);
+  }, [uid, following.length, refetchTick]);
 
 
   const [tab, setTab] = useState<TabKey>("characters");
