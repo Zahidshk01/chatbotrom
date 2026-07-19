@@ -4,6 +4,7 @@ import { ArrowLeft, MoreVertical, Flag, Ban } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { toggleFollowUser, isFollowingUser, getUserFollowCounts } from "@/lib/user-follow";
+import { refreshFollows } from "@/lib/follow-store";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { avatarForHandle, bioForHandle } from "@/lib/creator-meta";
 import { baselineFollowCounts } from "@/lib/follow-baseline";
