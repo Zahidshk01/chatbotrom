@@ -334,12 +334,14 @@ function ChatPage() {
 function CharacterMessage({
   image,
   text,
+  ownerId,
   onRegenerate,
   onEdit,
   onDelete,
 }: {
   image: string;
   text: string;
+  ownerId?: string;
   onRegenerate?: () => void;
   onEdit?: (newText: string) => void;
   onDelete?: () => void;
@@ -349,9 +351,19 @@ function CharacterMessage({
   const [draft, setDraft] = useState(text);
   useEffect(() => setDraft(text), [text]);
 
+  const avatar = (
+    <img src={image} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+  );
+
   return (
     <div className="flex gap-2">
-      <img src={image} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+      {ownerId ? (
+        <Link to="/u/$userId" params={{ userId: ownerId }} className="shrink-0 active:scale-95">
+          {avatar}
+        </Link>
+      ) : (
+        avatar
+      )}
       <div className="min-w-0 flex-1">
         {editing ? (
           <div className="max-w-full">
