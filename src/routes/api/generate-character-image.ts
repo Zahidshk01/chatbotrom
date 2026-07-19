@@ -88,10 +88,9 @@ export const Route = createFileRoute("/api/generate-character-image")({
             samples: "1",
             num_inference_steps: "30",
             guidance_scale: 7.5,
-            safety_checker: "yes",
+            safety_checker: "no",
+            safety_checker_type: "no",
             enhance_prompt: "yes",
-          }),
-        });
 
         if (!upstream.ok) {
           const text = await upstream.text();
