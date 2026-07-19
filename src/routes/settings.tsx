@@ -216,7 +216,7 @@ function BlockedList() {
     <ul className="max-h-80 space-y-2 overflow-y-auto">
       {blocked.map((handle) => (
         <li key={handle} className="flex items-center gap-3 rounded-xl bg-surface-2 p-2">
-          <img src={avatarForHandle(handle)} alt={handle} className="h-9 w-9 rounded-full object-cover" />
+          <img src={avatarForHandle(handle) ?? undefined} alt={handle} className="h-9 w-9 rounded-full bg-surface object-cover" />
           <span className="flex-1 text-sm">{handle}</span>
           <button
             onClick={() => unblockTarget(handle)}
