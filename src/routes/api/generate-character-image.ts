@@ -124,11 +124,7 @@ export const Route = createFileRoute("/api/generate-character-image")({
           headers: { "Content-Type": "application/json" },
         });
 
-        }
-        return new Response(
-          JSON.stringify({ image: `data:image/png;base64,${b64}` }),
-          { headers: { "Content-Type": "application/json" } },
-        );
+
       },
     },
   },
