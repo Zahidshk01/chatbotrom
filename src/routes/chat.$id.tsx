@@ -273,24 +273,30 @@ function ChatPage() {
         <CharacterMessage image={charImage} text={opening} />
 
         <div className="mt-4 space-y-4">
-          {msgs.map((m) =>
-            m.from === "me" ? (
-              <UserMessage
-                key={m.id}
-                text={m.text}
-                onDelete={() => deleteMessage(m.id)}
-              />
-            ) : (
-              <CharacterMessage
-                key={m.id}
-                image={charImage}
-                text={m.text}
-                onRegenerate={() => regenerate(m.id)}
-                onEdit={(t) => editMessage(m.id, t)}
-                onDelete={() => deleteMessage(m.id)}
-              />
-            ),
-          )}
+          {(() => {
+            let lastThemIdx = -1;
+            for (let i = msgs.length - 1; i >= 0; i--) {
+              if (msgs[i].from === "them") { lastThemIdx = i; break; }
+            }
+            return msgs.map((m, i) =>
+              m.from === "me" ? (
+                <UserMessage
+                  key={m.id}
+                  text={m.text}
+                  onDelete={() => deleteMessage(m.id)}
+                />
+              ) : (
+                <CharacterMessage
+                  key={m.id}
+                  image={charImage}
+                  text={m.text}
+                  onRegenerate={i === lastThemIdx ? () => regenerate(m.id) : undefined}
+                  onEdit={i === lastThemIdx ? (t) => editMessage(m.id, t) : undefined}
+                  onDelete={i === lastThemIdx ? () => deleteMessage(m.id) : undefined}
+                />
+              ),
+            );
+          })()}
         </div>
         <div ref={endRef} />
       </div>
