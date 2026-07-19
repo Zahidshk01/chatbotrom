@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as ChatsRouteImport } from './routes/chats'
@@ -37,6 +38,11 @@ const SearchRoute = SearchRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PremiumRoute = PremiumRouteImport.update({
+  id: '/premium',
+  path: '/premium',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/chats': typeof ChatsRoute
   '/create': typeof CreateRoute
   '/notifications': typeof NotificationsRoute
+  '/premium': typeof PremiumRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/chats': typeof ChatsRoute
   '/create': typeof CreateRoute
   '/notifications': typeof NotificationsRoute
+  '/premium': typeof PremiumRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/chats': typeof ChatsRoute
   '/create': typeof CreateRoute
   '/notifications': typeof NotificationsRoute
+  '/premium': typeof PremiumRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/create'
     | '/notifications'
+    | '/premium'
     | '/profile'
     | '/search'
     | '/settings'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/create'
     | '/notifications'
+    | '/premium'
     | '/profile'
     | '/search'
     | '/settings'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/create'
     | '/notifications'
+    | '/premium'
     | '/profile'
     | '/search'
     | '/settings'
@@ -202,6 +214,7 @@ export interface RootRouteChildren {
   ChatsRoute: typeof ChatsRoute
   CreateRoute: typeof CreateRoute
   NotificationsRoute: typeof NotificationsRoute
+  PremiumRoute: typeof PremiumRoute
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
@@ -234,6 +247,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/premium': {
+      id: '/premium'
+      path: '/premium'
+      fullPath: '/premium'
+      preLoaderRoute: typeof PremiumRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -322,6 +342,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatsRoute: ChatsRoute,
   CreateRoute: CreateRoute,
   NotificationsRoute: NotificationsRoute,
+  PremiumRoute: PremiumRoute,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,

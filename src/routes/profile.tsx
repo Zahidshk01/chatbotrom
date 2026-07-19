@@ -133,7 +133,7 @@ function ProfilePage() {
       {/* Top bar with settings icon */}
       <div className="flex items-center justify-end px-4 pt-3">
         <button
-          onClick={() => setSettingsOpen(true)}
+          onClick={() => navigate({ to: "/settings" })}
           aria-label="Settings"
           className="rounded-full p-2 text-foreground/90 active:bg-surface"
         >
