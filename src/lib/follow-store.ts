@@ -31,6 +31,10 @@ async function loadFromDb() {
   emit();
 }
 
+export async function refreshFollows() {
+  await loadFromDb();
+}
+
 if (typeof window !== "undefined") {
   supabase.auth.getSession().then(({ data }) => {
     uid = data.session?.user.id ?? null;
