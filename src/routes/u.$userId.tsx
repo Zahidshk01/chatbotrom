@@ -114,6 +114,7 @@ function UserProfilePage() {
     const now = await toggleFollowUser(userId);
     setFollowing(now);
     setCounts((c) => ({ ...c, followers: c.followers + (now ? 1 : -1) }));
+    await refreshFollows();
     setBusy(false);
   };
 
