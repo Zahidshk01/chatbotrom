@@ -1,0 +1,4 @@
+DELETE FROM public.chat_messages WHERE character_id IN (SELECT id FROM public.characters WHERE owner_id IS NULL OR owner_id <> 'a81bfd53-7055-4d84-affa-400a20e86440');
+DELETE FROM public.user_likes WHERE character_id IN (SELECT id FROM public.characters WHERE owner_id IS NULL OR owner_id <> 'a81bfd53-7055-4d84-affa-400a20e86440');
+DELETE FROM public.user_saves WHERE character_id IN (SELECT id FROM public.characters WHERE owner_id IS NULL OR owner_id <> 'a81bfd53-7055-4d84-affa-400a20e86440');
+DELETE FROM public.characters WHERE owner_id IS NULL OR owner_id <> 'a81bfd53-7055-4d84-affa-400a20e86440';
