@@ -423,6 +423,57 @@ function CharacterMessage({
   );
 }
 
+function UserMessage({ text, onDelete }: { text: string; onDelete: () => void }) {
+  const [showDelete, setShowDelete] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const start = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setShowDelete(true), 500);
+  };
+  const cancel = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  };
+  return (
+    <div className="flex justify-end">
+      <div className="flex flex-col items-end gap-1">
+        <div
+          onMouseDown={start}
+          onMouseUp={cancel}
+          onMouseLeave={cancel}
+          onTouchStart={start}
+          onTouchEnd={cancel}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setShowDelete(true);
+          }}
+          className="max-w-[80%] cursor-pointer select-none rounded-2xl rounded-tr-md bg-surface px-4 py-2.5 text-sm active:opacity-80"
+        >
+          {text}
+        </div>
+        {showDelete && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                onDelete();
+                setShowDelete(false);
+              }}
+              className="flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </button>
+            <button
+              onClick={() => setShowDelete(false)}
+              className="flex items-center gap-1 rounded-full bg-surface px-3 py-1 text-xs"
+            >
+              <X className="h-3.5 w-3.5" /> Cancel
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function RichText({ text }: { text: string }) {
   const parts = text.split(/("[^"]*"|“[^”]*”)/g).filter(Boolean);
   return (
