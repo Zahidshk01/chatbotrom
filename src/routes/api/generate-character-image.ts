@@ -97,12 +97,12 @@ export const Route = createFileRoute("/api/generate-character-image")({
             upstream.status,
             text
           );
-          const clientMsg =
-            upstream.status === 429
-              ? "AI service is busy. Please try again shortly."
-              : upstream.status === 401 || upstream.status === 403
-                ? "AI service authentication failed."
-                : "Image generation failed. Please try again.";
+          let clientMsg = "Image generation failed. Please try again.";
+          if (upstream.status === 429) clientMsg = "AI service is busy. Please try again shortly.";
+          else if (/exhausted balance|user is locked/i.test(text))
+            clientMsg = "fal.ai balance exhausted. Top up at fal.ai/dashboard/billing.";
+          else if (upstream.status === 401 || upstream.status === 403)
+            clientMsg = "AI service authentication failed.";
           return new Response(JSON.stringify({ error: clientMsg }), {
             status: upstream.status,
             headers: { "Content-Type": "application/json" },
