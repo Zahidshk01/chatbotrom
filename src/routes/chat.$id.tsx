@@ -410,9 +410,7 @@ function CharacterMessage({
                 )}
                 {onDelete && (
                   <button
-                    onClick={() => {
-                      if (confirm("Delete this message?")) onDelete();
-                    }}
+                    onClick={() => setConfirmDelete(true)}
                     aria-label="Delete reply"
                     className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
                   >
@@ -421,6 +419,25 @@ function CharacterMessage({
                 )}
               </div>
             )}
+          </div>
+        )}
+        {confirmDelete && onDelete && (
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() => {
+                onDelete();
+                setConfirmDelete(false);
+              }}
+              className="flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </button>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              className="flex items-center gap-1 rounded-full bg-surface px-3 py-1 text-xs"
+            >
+              <X className="h-3.5 w-3.5" /> Cancel
+            </button>
           </div>
         )}
       </div>
