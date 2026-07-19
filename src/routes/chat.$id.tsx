@@ -21,6 +21,7 @@ export const Route = createFileRoute("/chat/$id")({
 
 type Msg = {
   id: string;
+  db_id?: string;
   from: "me" | "them";
   text: string;
   variants?: string[];
