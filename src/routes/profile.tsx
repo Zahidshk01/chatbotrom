@@ -44,14 +44,33 @@ function ProfilePage() {
   const following = useFollowing();
   const followers = useFollowers();
 
-  const savedChars = useMemo(
-    () => characters.filter((c) => savedIds.includes(c.id)),
-    [savedIds],
-  );
-  const likedChars = useMemo(
-    () => characters.filter((c) => likedIds.includes(c.id)),
-    [likedIds],
-  );
+  const [savedChars, setSavedChars] = useState<Character[]>([]);
+  const [likedChars, setLikedChars] = useState<Character[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadByIds(ids: string[], setter: (v: Character[]) => void) {
+      if (ids.length === 0) { setter([]); return; }
+      const { data } = await supabase
+        .from("characters")
+        .select("id,name,image,creator,chats,category,height,tagline,relation")
+        .in("id", ids);
+      if (cancelled) return;
+      const rows = (data ?? []).map((c) => ({
+        id: c.id, name: c.name, image: c.image ?? "",
+        creator: c.creator ?? "", chats: c.chats ?? "0",
+        category: c.category ?? "Original", height: c.height ?? 64,
+        tagline: c.tagline ?? "", relation: c.relation ?? "",
+      }));
+      // fallback to local mock for any missing (e.g. deleted)
+      const found = new Set(rows.map((r) => r.id));
+      const extras = characters.filter((c) => ids.includes(c.id) && !found.has(c.id));
+      setter([...rows, ...extras]);
+    }
+    loadByIds(savedIds, setSavedChars);
+    loadByIds(likedIds, setLikedChars);
+    return () => { cancelled = true; };
+  }, [savedIds, likedIds]);
   const [myChars, setMyChars] = useState<Character[]>([]);
   const [uid, setUid] = useState<string | null>(null);
   const [liveCounts, setLiveCounts] = useState({ followers: 0, following: 0 });
