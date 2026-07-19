@@ -31,6 +31,7 @@ export async function toggleFollowUser(targetId: string): Promise<boolean> {
   if (!uid || uid === targetId) return false;
   const currently = await isFollowingUser(targetId);
   const handle = await handleForUser(targetId);
+  let result: boolean;
   if (currently) {
     await (supabase as any)
       .from("user_user_follows")
@@ -40,18 +41,23 @@ export async function toggleFollowUser(targetId: string): Promise<boolean> {
     if (handle) {
       await supabase.from("user_follows").delete().eq("user_id", uid).eq("handle", handle);
     }
-    return false;
+    result = false;
+  } else {
+    await (supabase as any)
+      .from("user_user_follows")
+      .insert({ follower_id: uid, followed_id: targetId });
+    if (handle) {
+      await supabase.from("user_follows").upsert(
+        { user_id: uid, handle },
+        { onConflict: "user_id,handle" } as any,
+      );
+    }
+    result = true;
   }
-  await (supabase as any)
-    .from("user_user_follows")
-    .insert({ follower_id: uid, followed_id: targetId });
-  if (handle) {
-    await supabase.from("user_follows").upsert(
-      { user_id: uid, handle },
-      { onConflict: "user_id,handle" } as any,
-    );
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("kender:follows-changed"));
   }
-  return true;
+  return result;
 }
 
 export async function getUserFollowCounts(userId: string) {
