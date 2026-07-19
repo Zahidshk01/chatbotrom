@@ -131,23 +131,6 @@ export const Route = createFileRoute("/api/generate-character-image")({
           headers: { "Content-Type": "application/json" },
         });
 
-        }
-
-        const data = (await upstream.json()) as {
-          images?: { url?: string }[];
-        };
-        const url = data.images?.[0]?.url;
-        if (!url) {
-          console.error("[generate-character-image] No image returned");
-          return new Response(
-            JSON.stringify({ error: "Image generation failed. Please try again." }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
-          );
-        }
-        return new Response(JSON.stringify({ image: url }), {
-          headers: { "Content-Type": "application/json" },
-        });
-
 
       },
     },
