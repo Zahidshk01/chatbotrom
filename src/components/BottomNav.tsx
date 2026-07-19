@@ -14,7 +14,12 @@ const items: Item[] = [
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  if (pathname.startsWith("/chat/") || pathname.startsWith("/dm/")) return null;
+  if (
+    pathname.startsWith("/chat/") ||
+    pathname.startsWith("/dm/") ||
+    pathname === "/settings" ||
+    pathname === "/premium"
+  ) return null;
 
 
   return (
