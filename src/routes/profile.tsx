@@ -12,6 +12,9 @@ import { useLikedIds } from "@/lib/liked-store";
 import { useFollowing, useFollowers, toggleFollow } from "@/lib/follow-store";
 import { useProfile, updateProfile } from "@/lib/profile-store";
 import { supabase } from "@/integrations/supabase/client";
+import { useBlockedTargets, unblockTarget } from "@/lib/block-store";
+import { avatarForHandle } from "@/lib/creator-meta";
+import { Link } from "@tanstack/react-router";
 import { getUserFollowCounts } from "@/lib/user-follow";
 
 import {
