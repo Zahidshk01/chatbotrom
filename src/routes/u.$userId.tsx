@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { toggleFollowUser, isFollowingUser, getUserFollowCounts } from "@/lib/user-follow";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { avatarForHandle, bioForHandle } from "@/lib/creator-meta";
+import { baselineFollowCounts } from "@/lib/follow-baseline";
 
 export const Route = createFileRoute("/u/$userId")({
   component: UserProfilePage,
