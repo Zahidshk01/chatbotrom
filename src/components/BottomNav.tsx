@@ -24,10 +24,11 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-1/2 z-50 w-full max-w-md -translate-x-1/2 border-t border-border bg-background/85 backdrop-blur-xl safe-bottom md:bottom-6 md:rounded-b-[40px]"
+      className="fixed bottom-0 left-0 z-50 w-full border-t border-border bg-background/85 backdrop-blur-xl safe-bottom"
       aria-label="Primary"
     >
-      <ul className="mx-auto flex max-w-md items-center justify-around px-2 pt-2 pb-2">
+      <ul className="mx-auto flex w-full items-center justify-around px-4 pt-3 pb-3">
+
         {items.map(({ to, label, icon: Icon, accent }) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
           if (accent) {
