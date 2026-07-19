@@ -270,7 +270,7 @@ function ChatPage() {
           <div className="h-px flex-1 bg-border" />
         </div>
 
-        <CharacterMessage image={charImage} text={opening} />
+        <CharacterMessage image={charImage} text={opening} ownerId={char.owner_id ? char.owner_id : `h:${(char.creator ?? char.name).replace(/^@/, "")}`} />
 
         <div className="mt-4 space-y-4">
           {(() => {
@@ -290,6 +290,7 @@ function ChatPage() {
                   key={m.id}
                   image={charImage}
                   text={m.text}
+                  ownerId={char.owner_id ? char.owner_id : `h:${(char.creator ?? char.name).replace(/^@/, "")}`}
                   onRegenerate={i === lastThemIdx ? () => regenerate(m.id) : undefined}
                   onEdit={i === lastThemIdx ? (t) => editMessage(m.id, t) : undefined}
                   onDelete={i === lastThemIdx ? () => deleteMessage(m.id) : undefined}
@@ -334,12 +335,14 @@ function ChatPage() {
 function CharacterMessage({
   image,
   text,
+  ownerId,
   onRegenerate,
   onEdit,
   onDelete,
 }: {
   image: string;
   text: string;
+  ownerId?: string;
   onRegenerate?: () => void;
   onEdit?: (newText: string) => void;
   onDelete?: () => void;
@@ -349,9 +352,19 @@ function CharacterMessage({
   const [draft, setDraft] = useState(text);
   useEffect(() => setDraft(text), [text]);
 
+  const avatar = (
+    <img src={image} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+  );
+
   return (
     <div className="flex gap-2">
-      <img src={image} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+      {ownerId ? (
+        <Link to="/u/$userId" params={{ userId: ownerId }} className="shrink-0 active:scale-95">
+          {avatar}
+        </Link>
+      ) : (
+        avatar
+      )}
       <div className="min-w-0 flex-1">
         {editing ? (
           <div className="max-w-full">
