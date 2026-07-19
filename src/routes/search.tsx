@@ -4,6 +4,7 @@ import { Search, MessageSquare, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Character } from "@/lib/character";
 import { resolveImage } from "@/lib/character-images";
+import { useBlockedTargets } from "@/lib/block-store";
 
 export const Route = createFileRoute("/search")({
   head: () => ({
