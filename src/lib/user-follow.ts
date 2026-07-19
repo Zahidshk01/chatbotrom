@@ -14,22 +14,43 @@ export async function isFollowingUser(targetId: string): Promise<boolean> {
   return !!data;
 }
 
+async function handleForUser(targetId: string): Promise<string | null> {
+  const { data } = await (supabase as any)
+    .from("profiles")
+    .select("username")
+    .eq("id", targetId)
+    .maybeSingle();
+  const u = data?.username as string | undefined;
+  if (!u) return null;
+  return u.startsWith("@") ? u : `@${u}`;
+}
+
 export async function toggleFollowUser(targetId: string): Promise<boolean> {
   const { data: s } = await supabase.auth.getSession();
   const uid = s.session?.user.id;
   if (!uid || uid === targetId) return false;
   const currently = await isFollowingUser(targetId);
+  const handle = await handleForUser(targetId);
   if (currently) {
     await (supabase as any)
       .from("user_user_follows")
       .delete()
       .eq("follower_id", uid)
       .eq("followed_id", targetId);
+    if (handle) {
+      await supabase.from("user_follows").delete().eq("user_id", uid).eq("handle", handle);
+    }
     return false;
   }
   await (supabase as any)
     .from("user_user_follows")
     .insert({ follower_id: uid, followed_id: targetId });
+  if (handle) {
+    await supabase.from("user_follows").upsert(
+      { user_id: uid, handle },
+      { onConflict: "user_id,handle" } as any,
+    );
+  }
   return true;
 }
 
