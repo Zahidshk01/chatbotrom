@@ -282,7 +282,7 @@ function CreatePage() {
             </div>
           </section>
 
-          <div className="fixed inset-x-0 bottom-20 px-5">
+          <div className="fixed inset-x-0 bottom-20 left-1/2 w-full max-w-md -translate-x-1/2 px-5">
             <button
               onClick={goToFirstMessage}
               disabled={!image || !name.trim()}
