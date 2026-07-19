@@ -91,6 +91,10 @@ export const Route = createFileRoute("/api/generate-character-image")({
             safety_checker: "no",
             safety_checker_type: "no",
             enhance_prompt: "yes",
+          }),
+        });
+
+
 
         if (!upstream.ok) {
           const text = await upstream.text();
