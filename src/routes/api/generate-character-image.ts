@@ -64,35 +64,31 @@ export const Route = createFileRoute("/api/generate-character-image")({
         }
         const { prompt } = parsed.data;
 
-        const key = process.env.LOVABLE_API_KEY;
+        const key = process.env.FAL_API_KEY;
         if (!key) {
-          console.error("[generate-character-image] Missing LOVABLE_API_KEY");
+          console.error("[generate-character-image] Missing FAL_API_KEY");
           return new Response(
             JSON.stringify({ error: "AI generation is not configured." }),
-            {
-              status: 500,
-              headers: { "Content-Type": "application/json" },
-            }
+            { status: 500, headers: { "Content-Type": "application/json" } }
           );
         }
 
         const fullPrompt = `Anime-style character portrait, vibrant colors, cel-shaded, high detail, expressive eyes, clean lineart, studio anime aesthetic. Subject: ${prompt}`;
 
-        const upstream = await fetch(
-          "https://ai.gateway.lovable.dev/v1/images/generations",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${key}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "google/gemini-3.1-flash-image-preview",
-              messages: [{ role: "user", content: fullPrompt }],
-              modalities: ["image", "text"],
-            }),
+        const upstream = await fetch("https://fal.run/fal-ai/flux/schnell", {
+          method: "POST",
+          headers: {
+            Authorization: `Key ${key}`,
+            "Content-Type": "application/json",
           },
-        );
+          body: JSON.stringify({
+            prompt: fullPrompt,
+            image_size: "square_hd",
+            num_inference_steps: 4,
+            num_images: 1,
+            enable_safety_checker: true,
+          }),
+        });
 
         if (!upstream.ok) {
           const text = await upstream.text();
@@ -104,27 +100,30 @@ export const Route = createFileRoute("/api/generate-character-image")({
           const clientMsg =
             upstream.status === 429
               ? "AI service is busy. Please try again shortly."
-              : upstream.status === 402
-                ? "AI credits exhausted. Please try again later."
+              : upstream.status === 401 || upstream.status === 403
+                ? "AI service authentication failed."
                 : "Image generation failed. Please try again.";
           return new Response(JSON.stringify({ error: clientMsg }), {
             status: upstream.status,
             headers: { "Content-Type": "application/json" },
           });
         }
+
         const data = (await upstream.json()) as {
-          data?: { b64_json?: string }[];
+          images?: { url?: string }[];
         };
-        const b64 = data.data?.[0]?.b64_json;
-        if (!b64) {
+        const url = data.images?.[0]?.url;
+        if (!url) {
           console.error("[generate-character-image] No image returned");
           return new Response(
             JSON.stringify({ error: "Image generation failed. Please try again." }),
-            {
-              status: 500,
-              headers: { "Content-Type": "application/json" },
-            }
+            { status: 500, headers: { "Content-Type": "application/json" } }
           );
+        }
+        return new Response(JSON.stringify({ image: url }), {
+          headers: { "Content-Type": "application/json" },
+        });
+
         }
         return new Response(
           JSON.stringify({ image: `data:image/png;base64,${b64}` }),
