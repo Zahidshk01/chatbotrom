@@ -96,31 +96,9 @@ function ProfilePage() {
 
   const [tab, setTab] = useState<TabKey>("characters");
   const [editOpen, setEditOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [infoDialog, setInfoDialog] = useState<null | "premium" | "contact" | "terms" | "privacy" | "version">(null);
-  const [confirm, setConfirm] = useState<null | "signout" | "delete">(null);
   const [listDialog, setListDialog] = useState<null | "following" | "followers">(null);
   const [detailChar, setDetailChar] = useState<Character | null>(null);
 
-
-  async function handleSignOut() {
-    try {
-      await supabase.auth.signOut();
-    } catch { /* ignore */ }
-    toast("Signed out");
-    navigate({ to: "/" });
-  }
-
-  async function handleDelete() {
-    try {
-      await supabase.auth.signOut();
-    } catch { /* ignore */ }
-    localStorage.removeItem("kender.profile");
-    localStorage.removeItem("kender.saved");
-    localStorage.removeItem("kender.liked");
-    toast("Account deleted");
-    navigate({ to: "/" });
-  }
 
   const tabItems: { key: TabKey; label: string }[] = [
     { key: "characters", label: "Characters" },
