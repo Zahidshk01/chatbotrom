@@ -273,24 +273,30 @@ function ChatPage() {
         <CharacterMessage image={charImage} text={opening} />
 
         <div className="mt-4 space-y-4">
-          {msgs.map((m) =>
-            m.from === "me" ? (
-              <UserMessage
-                key={m.id}
-                text={m.text}
-                onDelete={() => deleteMessage(m.id)}
-              />
-            ) : (
-              <CharacterMessage
-                key={m.id}
-                image={charImage}
-                text={m.text}
-                onRegenerate={() => regenerate(m.id)}
-                onEdit={(t) => editMessage(m.id, t)}
-                onDelete={() => deleteMessage(m.id)}
-              />
-            ),
-          )}
+          {(() => {
+            let lastThemIdx = -1;
+            for (let i = msgs.length - 1; i >= 0; i--) {
+              if (msgs[i].from === "them") { lastThemIdx = i; break; }
+            }
+            return msgs.map((m, i) =>
+              m.from === "me" ? (
+                <UserMessage
+                  key={m.id}
+                  text={m.text}
+                  onDelete={() => deleteMessage(m.id)}
+                />
+              ) : (
+                <CharacterMessage
+                  key={m.id}
+                  image={charImage}
+                  text={m.text}
+                  onRegenerate={i === lastThemIdx ? () => regenerate(m.id) : undefined}
+                  onEdit={i === lastThemIdx ? (t) => editMessage(m.id, t) : undefined}
+                  onDelete={i === lastThemIdx ? () => deleteMessage(m.id) : undefined}
+                />
+              ),
+            );
+          })()}
         </div>
         <div ref={endRef} />
       </div>
@@ -339,6 +345,7 @@ function CharacterMessage({
   onDelete?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [draft, setDraft] = useState(text);
   useEffect(() => setDraft(text), [text]);
 
@@ -403,9 +410,7 @@ function CharacterMessage({
                 )}
                 {onDelete && (
                   <button
-                    onClick={() => {
-                      if (confirm("Delete this message?")) onDelete();
-                    }}
+                    onClick={() => setConfirmDelete(true)}
                     aria-label="Delete reply"
                     className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-muted-foreground active:scale-95"
                   >
@@ -414,6 +419,25 @@ function CharacterMessage({
                 )}
               </div>
             )}
+          </div>
+        )}
+        {confirmDelete && onDelete && (
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() => {
+                onDelete();
+                setConfirmDelete(false);
+              }}
+              className="flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </button>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              className="flex items-center gap-1 rounded-full bg-surface px-3 py-1 text-xs"
+            >
+              <X className="h-3.5 w-3.5" /> Cancel
+            </button>
           </div>
         )}
       </div>
