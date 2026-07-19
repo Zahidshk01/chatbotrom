@@ -290,6 +290,7 @@ function ChatPage() {
                   key={m.id}
                   image={charImage}
                   text={m.text}
+                  ownerId={char.owner_id ? char.owner_id : `h:${(char.creator ?? char.name).replace(/^@/, "")}`}
                   onRegenerate={i === lastThemIdx ? () => regenerate(m.id) : undefined}
                   onEdit={i === lastThemIdx ? (t) => editMessage(m.id, t) : undefined}
                   onDelete={i === lastThemIdx ? () => deleteMessage(m.id) : undefined}
