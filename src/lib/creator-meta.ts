@@ -1,4 +1,9 @@
 import { characters } from "@/lib/mock-data";
+import midnightMuseAvatar from "@/assets/creator-midnight_muse.jpg";
+import shadowinkAvatar from "@/assets/creator-shadowink.jpg";
+import velvetdreamsAvatar from "@/assets/creator-velvetdreams.jpg";
+import crimsonpactAvatar from "@/assets/creator-crimsonpact.jpg";
+import noiretalesAvatar from "@/assets/creator-noiretales.jpg";
 
 /** Normalize a handle to a bare form without leading '@'. */
 export function normalizeHandle(h: string | null | undefined): string {
@@ -6,23 +11,23 @@ export function normalizeHandle(h: string | null | undefined): string {
   return h.replace(/^@/, "").toLowerCase();
 }
 
-/** Extra avatars for creator handles that don't come from local mock-data (seeded DB characters). */
-const extraAvatars: Record<string, string> = {
-  midnight_muse: "/characters/bianca.jpg",
-  shadowink: "/characters/julia.jpg",
-  velvetdreams: "/characters/evelyn_perfect.jpg",
-  crimsonpact: "/characters/dante.jpg",
-  noiretales: "/characters/zayn.jpg",
+/**
+ * Dedicated profile avatars per creator handle. Distinct from any character
+ * image so a creator's profile picture isn't just a mirror of their character.
+ */
+const handleAvatars: Record<string, string> = {
+  midnight_muse: midnightMuseAvatar,
+  shadowink: shadowinkAvatar,
+  velvetdreams: velvetdreamsAvatar,
+  crimsonpact: crimsonpactAvatar,
+  noiretales: noiretalesAvatar,
 };
 
-/** Map of creator handle → representative avatar image (first character image). */
-const handleToAvatar = new Map<string, string>();
+/** handle → avatar. Dedicated avatars win; falls back to a character image only if none is set. */
+const handleToAvatar = new Map<string, string>(Object.entries(handleAvatars));
 for (const c of characters) {
   const h = normalizeHandle(c.creator);
   if (h && !handleToAvatar.has(h)) handleToAvatar.set(h, c.image);
-}
-for (const [h, url] of Object.entries(extraAvatars)) {
-  if (!handleToAvatar.has(h)) handleToAvatar.set(h, url);
 }
 
 export function avatarForHandle(handle: string | null | undefined): string | null {
