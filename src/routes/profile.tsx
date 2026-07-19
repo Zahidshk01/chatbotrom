@@ -96,31 +96,9 @@ function ProfilePage() {
 
   const [tab, setTab] = useState<TabKey>("characters");
   const [editOpen, setEditOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [infoDialog, setInfoDialog] = useState<null | "premium" | "contact" | "terms" | "privacy" | "version">(null);
-  const [confirm, setConfirm] = useState<null | "signout" | "delete">(null);
   const [listDialog, setListDialog] = useState<null | "following" | "followers">(null);
   const [detailChar, setDetailChar] = useState<Character | null>(null);
 
-
-  async function handleSignOut() {
-    try {
-      await supabase.auth.signOut();
-    } catch { /* ignore */ }
-    toast("Signed out");
-    navigate({ to: "/" });
-  }
-
-  async function handleDelete() {
-    try {
-      await supabase.auth.signOut();
-    } catch { /* ignore */ }
-    localStorage.removeItem("kender.profile");
-    localStorage.removeItem("kender.saved");
-    localStorage.removeItem("kender.liked");
-    toast("Account deleted");
-    navigate({ to: "/" });
-  }
 
   const tabItems: { key: TabKey; label: string }[] = [
     { key: "characters", label: "Characters" },
@@ -133,7 +111,7 @@ function ProfilePage() {
       {/* Top bar with settings icon */}
       <div className="flex items-center justify-end px-4 pt-3">
         <button
-          onClick={() => setSettingsOpen(true)}
+          onClick={() => navigate({ to: "/settings" })}
           aria-label="Settings"
           className="rounded-full p-2 text-foreground/90 active:bg-surface"
         >
@@ -243,185 +221,23 @@ function ProfilePage() {
         )}
       </div>
 
-      {/* Menu card 1 */}
+      {/* Get Premium banner */}
       <div className="mx-4 mt-8 overflow-hidden rounded-2xl bg-surface">
-        <MenuRow
-          icon={<BadgeCheck className="h-5 w-5 text-amber-400" />}
-          onClick={() => setInfoDialog("premium")}
-          right={
-            <span className="rounded-full bg-gradient-to-r from-amber-400 to-amber-600 px-3 py-1 text-xs font-bold text-black">
-              Get Premium
-            </span>
-          }
-        />
-        <MenuRow
-          icon={<Mail className="h-5 w-5 text-foreground/80" />}
-          label="Contact Us"
-          onClick={() => setInfoDialog("contact")}
-        />
-        <MenuRow
-          icon={<FileText className="h-5 w-5 text-foreground/80" />}
-          label="Terms of Service"
-          onClick={() => setInfoDialog("terms")}
-        />
-        <MenuRow
-          icon={<ShieldCheck className="h-5 w-5 text-foreground/80" />}
-          label="Privacy Policy"
-          onClick={() => setInfoDialog("privacy")}
-          isLast
-        />
-      </div>
-
-      {/* Menu card 2 */}
-      <div className="mx-4 mt-4 overflow-hidden rounded-2xl bg-surface">
-        <MenuRow
-          icon={<Info className="h-5 w-5 text-foreground/80" />}
-          label="App Version"
-          onClick={() => setInfoDialog("version")}
-          right={<span className="text-xs text-muted-foreground">{APP_VERSION}</span>}
-          hideChevron
-        />
-        <MenuRow
-          icon={<LogOut className="h-5 w-5 text-orange-400" />}
-          label="Sign Out"
-          labelClass="text-orange-400"
-          onClick={() => setConfirm("signout")}
-          hideChevron
-        />
-        <MenuRow
-          icon={<Trash2 className="h-5 w-5 text-orange-400" />}
-          label="Delete Account"
-          labelClass="text-orange-400"
-          onClick={() => setConfirm("delete")}
-          hideChevron
-          isLast
-        />
+        <button
+          onClick={() => navigate({ to: "/premium" })}
+          className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-surface-2"
+        >
+          <BadgeCheck className="h-5 w-5 text-amber-400" />
+          <span className="flex-1 text-sm font-medium">Upgrade to Pro</span>
+          <span className="rounded-full bg-gradient-to-r from-amber-400 to-amber-600 px-3 py-1 text-xs font-bold text-black">
+            Get Premium
+          </span>
+        </button>
       </div>
 
       {/* Edit profile dialog */}
       <EditProfileDialog open={editOpen} onOpenChange={setEditOpen} />
 
-      {/* Settings dialog (gear icon) */}
-      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Settings</DialogTitle>
-            <DialogDescription>Manage your account preferences.</DialogDescription>
-          </DialogHeader>
-          <BlockedUsersSection />
-        </DialogContent>
-      </Dialog>
-
-      {/* Info dialogs */}
-      <InfoDialog
-        open={infoDialog === "premium"}
-        onClose={() => setInfoDialog(null)}
-        title="Get Premium"
-        body={
-          <>
-            <p>Unlock everything Kender has to offer:</p>
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-foreground/80">
-              <li>Unlimited chats</li>
-              <li>Priority AI responses</li>
-              <li>Advanced character creation</li>
-              <li>No ads</li>
-            </ul>
-          </>
-        }
-      />
-      <InfoDialog
-        open={infoDialog === "contact"}
-        onClose={() => setInfoDialog(null)}
-        title="Contact Us"
-        body={
-          <p>
-            Questions, feedback or issues? Email us at{" "}
-            <a href="mailto:support@kender.app" className="text-primary underline">
-              support@kender.app
-            </a>
-            .
-          </p>
-        }
-      />
-      <InfoDialog
-        open={infoDialog === "terms"}
-        onClose={() => setInfoDialog(null)}
-        title="Terms of Service"
-        body={
-          <p>
-            By using Kender you agree to use the app respectfully. Characters are
-            fictional. Do not share content that violates laws or the rights of
-            others. Full terms coming soon.
-          </p>
-        }
-      />
-      <InfoDialog
-        open={infoDialog === "privacy"}
-        onClose={() => setInfoDialog(null)}
-        title="Privacy Policy"
-        body={
-          <p>
-            We respect your privacy. Your chats and characters stay yours. We only
-            store the data required to run your account. Full policy coming soon.
-          </p>
-        }
-      />
-      <InfoDialog
-        open={infoDialog === "version"}
-        onClose={() => setInfoDialog(null)}
-        title="App Version"
-        body={<p>Kender {APP_VERSION}</p>}
-      />
-
-      {/* Confirmations */}
-      <Dialog open={confirm === "signout"} onOpenChange={(o) => !o && setConfirm(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Sign out?</DialogTitle>
-            <DialogDescription>You'll need to sign back in to chat.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <button
-              onClick={() => setConfirm(null)}
-              className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => { setConfirm(null); handleSignOut(); }}
-              className="flex-1 rounded-full bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white"
-            >
-              Sign out
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={confirm === "delete"} onOpenChange={(o) => !o && setConfirm(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete your account?</DialogTitle>
-            <DialogDescription>
-              This clears your profile, saved and liked characters on this device.
-              This action can't be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <button
-              onClick={() => setConfirm(null)}
-              className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => { setConfirm(null); handleDelete(); }}
-              className="flex-1 rounded-full bg-red-600 px-4 py-2.5 text-sm font-semibold text-white"
-            >
-              Delete
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <CharacterDetailsDialog
         char={detailChar}
