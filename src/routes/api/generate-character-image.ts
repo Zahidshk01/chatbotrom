@@ -73,7 +73,7 @@ export const Route = createFileRoute("/api/generate-character-image")({
           );
         }
 
-        const fullPrompt = `anime-style character portrait, vibrant colors, cel-shaded, high detail, expressive eyes, clean lineart, studio anime aesthetic, ${prompt}`;
+        const fullPrompt = `Anime-style character portrait only. Vibrant colors, cel-shaded, high detail, expressive eyes, clean lineart, studio anime aesthetic. Do not render photorealistic, 3D, or live-action styles. ${prompt}`;
 
         const upstream = await fetch("https://modelslab.com/api/v3/dreambooth", {
           method: "POST",
@@ -82,7 +82,7 @@ export const Route = createFileRoute("/api/generate-character-image")({
             key,
             model_id: "anything-v5",
             prompt: fullPrompt,
-            negative_prompt: "lowres, bad anatomy, bad hands, blurry, worst quality",
+            negative_prompt: "lowres, bad anatomy, bad hands, blurry, worst quality, photorealistic, realistic, 3d render, live action, photographic, hyperrealistic, western cartoon",
             width: "512",
             height: "512",
             samples: "1",
