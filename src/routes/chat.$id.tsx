@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, MoreVertical, Send, Sparkles, RotateCcw, Pencil, Check, X, Trash2 } from "lucide-react";
+import { ChevronLeft, MoreVertical, Send, Sparkles, RotateCcw, Pencil, Check, X, Trash2, Lock } from "lucide-react";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Character } from "@/lib/character";
@@ -260,8 +260,13 @@ function ChatPage() {
           className="mb-6 flex items-center gap-3 rounded-full bg-surface px-3 py-2 active:scale-[0.98] transition"
         >
           <img src={charImage} alt={char.name} className="h-10 w-10 rounded-full object-cover" />
-          <div className="truncate text-base font-semibold">
-            {char.name} <span className="text-muted-foreground">({char.relation})</span>
+          <div className="flex min-w-0 flex-1 items-center gap-2 truncate text-base font-semibold">
+            <span className="truncate">{char.name} <span className="text-muted-foreground">({char.relation})</span></span>
+            {char.visibility === "private" && (
+              <span className="flex shrink-0 items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                <Lock className="h-3 w-3" /> Private
+              </span>
+            )}
           </div>
         </Link>
 
