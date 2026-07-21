@@ -1,66 +1,54 @@
-# Restructure & Cleanup Plan
+# Export Lovable Cloud data → Import into your own Supabase project
 
-Goal: make the app easier to change later by organizing code into clear feature folders, tightening the Supabase schema, and removing dead code — without changing any user-facing behavior.
+## What I'll do (build step)
 
-## 1. Frontend structure
+Export every user-data table from Lovable Cloud to CSV files in `/mnt/documents/kender-export/` so you can download them. I'll skip system tables (`auth.*`, `storage.*`) — those are managed by Supabase itself and can't be moved by CSV.
 
-Move from a flat `src/lib` + `src/routes` layout into feature folders. Each feature owns its data hooks, stores, and UI helpers.
+Tables to export (in dependency order so imports work later):
 
-```text
-src/
-  features/
-    auth/           # session, AuthGate, sign-in helpers
-    characters/     # create, list, details dialog, chat-count
-    chat/           # character chat, message store, regenerate logic
-    dm/             # 1:1 direct messages
-    profile/        # own profile, stats, owner-profile hook
-    social/         # follows, blocks, reports, follow lists
-    premium/        # subscription page + banner
-  components/ui/    # shadcn (unchanged)
-  components/common/# BottomNav, Stat, dialogs shared across features
-  integrations/supabase/  # generated (untouched)
-  routes/           # thin route files that import from features/*
-  lib/              # only truly cross-cutting utils (format, cn, hash)
-```
+1. `profiles`
+2. `characters`
+3. `chat_messages`
+4. `direct_messages`
+5. `user_follows`
+6. `user_user_follows`
+7. `user_likes`
+8. `user_saves`
+9. `user_blocks`
+10. `user_reports`
+11. `push_subscriptions`
+12. `notifications_state`
 
-Route files become thin: they wire params + call feature hooks/components. All Supabase queries live in `features/<name>/api.ts` (client) or `features/<name>/*.functions.ts` (server fn).
+Each becomes a `.csv` with headers. I'll also generate a `schema.sql` file containing the `CREATE TABLE`, `GRANT`, RLS policies, and helper functions (`handle_new_user`, `check_chat_rate_limit`) so you can recreate the schema in your Supabase project before importing rows.
 
-## 2. Dead code removal
+You'll get a downloadable bundle listed in chat via artifact links.
 
-Sweep and delete:
-- Unused mock JSON in `src/lib/mock-data.ts` (kept only what seeds baselines).
-- Old local-only stores replaced by Supabase (`saved-store`, `liked-store` legacy paths, unused follow baseline helpers).
-- Unused API routes and old image-gen providers left over from the FLUX → ModelsLab → Gemini migration.
-- Unused imports, dialogs, and props flagged by `tsgo` + `knip`.
+## Step-by-step: import into your own Supabase account
 
-## 3. Supabase structure
+**Important caveat first:** Rows in `profiles`, `characters`, `chat_messages`, etc. reference user IDs from `auth.users` in Lovable Cloud. Those user IDs won't exist in your new Supabase project until the same users sign up there (or you use the Supabase Admin API to create them with matching UUIDs). Without matching `auth.users` rows, foreign keys will fail. Options:
 
-Current tables are fine but inconsistent. Normalize in one migration:
+- **Option A (recommended, clean start):** Import only `characters` that you want to keep as seed data, re-map `creator_id` to your new user id after you sign up in the new project. Skip chat/follow/like history.
+- **Option B (full migration):** Use Supabase's Admin API to recreate each `auth.users` row with the exact same UUID, then import everything. This requires service-role access to your new project.
 
-- Rename `user_user_follows` → `user_follows_v2` is avoided; instead consolidate: keep **one** follows table (`user_follows`, user↔user only) and drop the legacy handle-based follow table if unused.
-- Add missing indexes: `chat_messages(chat_id, created_at)`, `direct_messages(sender_id, recipient_id, created_at)`, `user_likes(character_id)`, `user_saves(character_id)`, `characters(owner_id, created_at)`.
-- Add `updated_at` + trigger on `characters`, `profiles`, `chat_messages` where missing.
-- Verify RLS + GRANTs on every table follow the standard block (authenticated CRUD scoped to `auth.uid()`, service_role full, anon only where needed for public reads).
-- Add a `has_role` pattern only if we later need admin — not now.
+### Steps
 
-## 4. Server functions
+1. **Create your Supabase project** at supabase.com (if not already done).
+2. **Recreate the schema:** Open the SQL Editor in your new Supabase dashboard → paste the contents of `schema.sql` → Run. This creates tables, grants, RLS, and functions.
+3. **(Option B only) Recreate users:** For each unique `id` in your exported `profiles.csv`, call `POST /auth/v1/admin/users` on your new project with `{ "id": "<same-uuid>", "email": "<email>", "email_confirm": true }` using the service role key. Script this in Node/Python — I can generate the script if you go this route.
+4. **Import CSVs in order** (matches the numbered list above). In Supabase dashboard: Table Editor → pick table → Insert → Import data from CSV → upload the file. Import `profiles` first, then `characters`, then the rest.
+5. **Update your app's env vars** (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`) to point at your new project if you want the Kender app to use it. Note: this disconnects the app from Lovable Cloud — Lovable-managed features (edge functions, secrets like `OPENROUTER_API_KEY`, cron jobs) won't automatically move.
+6. **Verify** by running `SELECT count(*) FROM public.characters;` etc. in your new project's SQL editor.
 
-- Move all `*.functions.ts` under `src/features/<name>/` next to their consumers.
-- Any file importing `client.server` becomes `*.server.ts` and is loaded via `await import()` inside handlers.
-- Consolidate image generation into one `features/characters/image.functions.ts` with a single provider switch.
+## Technical notes
 
-## 5. Verification
+- CSVs use `COPY ... TO STDOUT WITH CSV HEADER` — standard Postgres format Supabase's importer accepts natively.
+- `auth.users` and `storage.objects` are **not exported**. Supabase does not allow direct writes to `auth.users` via SQL; use the Admin API.
+- After you confirm the plan, I'll produce the files and post download links. Then tell me whether you want Option A or B, and I'll tailor the next steps (including generating a user-recreation script for Option B).
 
-After each phase: run typecheck, load Home / Profile / Chat / DM / Create, confirm counts, follows, chats, and image generation still work. No behavior changes shipped.
+## Deliverables
 
-## Rollout order
+- `/mnt/documents/kender-export/schema.sql`
+- `/mnt/documents/kender-export/<table>.csv` × 12
+- Artifact links posted in chat for download.
 
-1. Supabase migration (indexes + drop unused tables/columns).
-2. Move files into `features/*`, update imports, delete dead code.
-3. Route files slimmed down.
-4. Typecheck + manual smoke test.
-
-## Confirm before I start
-
-- OK to **drop** any Supabase table/column that no code references? (I'll list them before dropping.)
-- Keep the current image-gen provider (Gemini) as the only one and remove FLUX/ModelsLab code paths?
+Approve and I'll run the export.
