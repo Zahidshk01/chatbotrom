@@ -488,3 +488,19 @@ function UserFollowListDialog({
     </Dialog>
   );
 }
+
+function CharChatBadge({ id }: { id: string }) {
+  const n = useChatCount(id);
+  const f = (v: number) =>
+    v >= 1_000_000 ? (v / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M"
+    : v >= 1_000 ? (v / 1_000).toFixed(1).replace(/\.0$/, "") + "K"
+    : String(v);
+  return (
+    <span className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-background/70 px-1.5 py-1 text-[11px] font-semibold text-foreground backdrop-blur-md">
+      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+      {f(n)}
+    </span>
+  );
+}
