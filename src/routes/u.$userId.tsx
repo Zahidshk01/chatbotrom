@@ -4,7 +4,7 @@ import { ArrowLeft, MoreVertical, Flag, Ban } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { toggleFollowUser, isFollowingUser, getUserFollowCounts } from "@/lib/user-follow";
-import { refreshFollows } from "@/lib/follow-store";
+import { refreshFollows, toggleFollow, useIsFollowing } from "@/lib/follow-store";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { avatarForHandle, bioForHandle } from "@/lib/creator-meta";
 import { baselineFollowCounts } from "@/lib/follow-baseline";
@@ -104,12 +104,22 @@ function UserProfilePage() {
     })();
   }, [userId, isHandle, handle]);
 
+  const handleFollowingState = useIsFollowing(handle ?? null);
+
   const onToggleFollow = async () => {
     if (!me) {
       toast.error("Sign in to follow");
       return;
     }
-    if (me === userId || isHandle) return;
+    if (isHandle) {
+      if (!handle) return;
+      setBusy(true);
+      const nowFollowing = await toggleFollow(handle);
+      setCounts((c) => ({ ...c, followers: c.followers + (nowFollowing ? 1 : -1) }));
+      setBusy(false);
+      return;
+    }
+    if (me === userId) return;
     setBusy(true);
     const now = await toggleFollowUser(userId);
     setFollowing(now);
@@ -283,30 +293,32 @@ function UserProfilePage() {
           <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-foreground">{profile.bio}</p>
         ) : null}
 
-        {!isSelf && !isHandle && (
-          <div className="mt-4 grid grid-cols-2 gap-3">
+        {!isSelf && (
+          <div className={`mt-4 grid gap-3 ${isHandle ? "grid-cols-1" : "grid-cols-2"}`}>
             <button
               onClick={onToggleFollow}
               disabled={busy}
               className={`h-11 rounded-2xl text-sm font-semibold transition-colors active:scale-[0.98] ${
-                following ? "bg-surface text-foreground" : "bg-surface text-foreground"
+                (isHandle ? handleFollowingState : following)
+                  ? "bg-surface text-foreground"
+                  : "bg-primary text-primary-foreground"
               }`}
             >
-              {following ? "Following" : "Follow"}
+              {(isHandle ? handleFollowingState : following) ? "Following" : "Follow"}
             </button>
-            <button
-              onClick={() => navigate({ to: "/dm/$userId", params: { userId } })}
-              className="h-11 rounded-2xl bg-surface text-sm font-semibold active:scale-[0.98]"
-            >
-              Message
-            </button>
+            {!isHandle && (
+              <button
+                onClick={() => navigate({ to: "/dm/$userId", params: { userId } })}
+                className="h-11 rounded-2xl bg-surface text-sm font-semibold active:scale-[0.98]"
+              >
+                Message
+              </button>
+            )}
           </div>
         )}
       </section>
 
-      <div className="mt-6 text-center text-sm font-semibold tracking-wide text-muted-foreground">
-        CHAT AI
-      </div>
+
 
       <section className="mt-3 grid grid-cols-2 gap-0.5">
         {chars.map((c) => (
