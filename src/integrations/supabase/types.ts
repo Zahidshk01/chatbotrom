@@ -95,6 +95,24 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_rate_limits: {
+        Row: {
+          bucket_key: string
+          count: number
+          window_start: string
+        }
+        Insert: {
+          bucket_key: string
+          count?: number
+          window_start?: string
+        }
+        Update: {
+          bucket_key?: string
+          count?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
       direct_messages: {
         Row: {
           content: string
@@ -268,7 +286,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_chat_rate_limit: {
+        Args: { _key: string; _limit: number; _window_seconds: number }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,42 +1,105 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 
-async function requireAuth(request: Request): Promise<Response | null> {
+type AuthResult = { userId: string } | { errorResponse: Response };
+
+async function requireAuth(request: Request): Promise<AuthResult> {
   const authHeader = request.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    return {
+      errorResponse: new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }),
+    };
   }
   const token = authHeader.slice("Bearer ".length);
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) {
-    return new Response(JSON.stringify({ error: "Server misconfigured" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return {
+      errorResponse: new Response(
+        JSON.stringify({ error: "Server misconfigured" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      ),
+    };
   }
   const supabase = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
   });
   const { data, error } = await supabase.auth.getClaims(token);
-  if (error || !data?.claims?.sub) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+  const userId = data?.claims?.sub;
+  if (error || !userId) {
+    return {
+      errorResponse: new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }),
+    };
   }
-  return null;
+  return { userId };
+}
+
+function getClientIp(request: Request): string {
+  const fwd = request.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  return (
+    request.headers.get("cf-connecting-ip") ||
+    request.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
+
+async function checkRateLimit(
+  key: string,
+  limit: number,
+  windowSeconds: number
+): Promise<boolean> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.rpc("check_chat_rate_limit", {
+      _key: key,
+      _limit: limit,
+      _window_seconds: windowSeconds,
+    });
+    if (error) {
+      console.error("[chat] rate limit RPC error", error);
+      return true; // fail open so a DB blip doesn't break chat
+    }
+    return data === true;
+  } catch (e) {
+    console.error("[chat] rate limit exception", e);
+    return true;
+  }
 }
 
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const authFail = await requireAuth(request);
-        if (authFail) return authFail;
+        const auth = await requireAuth(request);
+        if ("errorResponse" in auth) return auth.errorResponse;
+
+        const ip = getClientIp(request);
+        const [userOk, ipOk] = await Promise.all([
+          checkRateLimit(`u:${auth.userId}`, 20, 60),
+          checkRateLimit(`ip:${ip}`, 60, 60),
+        ]);
+        if (!userOk || !ipOk) {
+          return new Response(
+            JSON.stringify({
+              error: "You're sending messages too fast. Please slow down and try again in a moment.",
+            }),
+            {
+              status: 429,
+              headers: {
+                "Content-Type": "application/json",
+                "Retry-After": "30",
+              },
+            }
+          );
+        }
+
 
         try {
           const {

@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.check_chat_rate_limit(TEXT, INTEGER, INTEGER) FROM anon, authenticated, PUBLIC;
