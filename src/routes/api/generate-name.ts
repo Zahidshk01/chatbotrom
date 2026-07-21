@@ -62,7 +62,7 @@ export const Route = createFileRoute("/api/generate-name")({
             headers: { "Content-Type": "application/json" },
           });
         }
-        const { image, description, category } = parsed.data;
+        const { image, description, category, mode } = parsed.data;
 
         const key = process.env.LOVABLE_API_KEY;
         if (!key) {
