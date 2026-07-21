@@ -1,10 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, MoreVertical, Send, Sparkles, RotateCcw, Pencil, Check, X, Trash2, Lock } from "lucide-react";
+import { ChevronLeft, MoreVertical, Send, RotateCcw, Pencil, Check, X, Trash2, Lock, Flag, Ban, Share2, RefreshCw } from "lucide-react";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Character } from "@/lib/character";
 import { resolveImage } from "@/lib/character-images";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { blockTarget, reportTarget } from "@/lib/block-store";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/chat/$id")({
   head: ({ params }) => {
