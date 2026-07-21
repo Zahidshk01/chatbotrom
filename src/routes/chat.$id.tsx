@@ -44,6 +44,11 @@ function ChatPage() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [confirmBlock, setConfirmBlock] = useState(false);
+  const [confirmRestart, setConfirmRestart] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
   // Load character from DB (in case it was created by user)
