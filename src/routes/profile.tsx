@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Settings, Camera, Users as UsersIcon, ChevronLeft,
@@ -803,7 +803,7 @@ function fmtCount(n: number) {
   return String(n);
 }
 
-function StatBox({ value, label, icon }: { value: number | string; label: string; icon?: React.ReactNode }) {
+function StatBox({ value, label, icon }: { value: number | string; label: string; icon?: ReactNode }) {
   return (
     <div className="flex flex-col items-center rounded-2xl bg-surface py-3 ring-1 ring-border/40">
       {icon && <span className="mb-1 text-muted-foreground">{icon}</span>}
