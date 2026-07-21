@@ -104,12 +104,22 @@ function UserProfilePage() {
     })();
   }, [userId, isHandle, handle]);
 
+  const handleFollowingState = useIsFollowing(handle ?? null);
+
   const onToggleFollow = async () => {
     if (!me) {
       toast.error("Sign in to follow");
       return;
     }
-    if (me === userId || isHandle) return;
+    if (isHandle) {
+      if (!handle) return;
+      setBusy(true);
+      const nowFollowing = await toggleFollow(handle);
+      setCounts((c) => ({ ...c, followers: c.followers + (nowFollowing ? 1 : -1) }));
+      setBusy(false);
+      return;
+    }
+    if (me === userId) return;
     setBusy(true);
     const now = await toggleFollowUser(userId);
     setFollowing(now);
