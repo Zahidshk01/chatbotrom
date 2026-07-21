@@ -23,15 +23,8 @@ export function CharacterPost({ char }: { char: Character }) {
   const liked = useIsLiked(char.id);
   const following = useIsFollowing(char.creator);
   const [likes, setLikes] = useState(() => 5000 + Math.floor(Math.random() * 40000));
-  const [comments, setComments] = useState(() => 1000 + Math.floor(Math.random() * 150000));
+  const comments = useChatCount(char.id);
 
-  // Live-updating comment count (real-time feel)
-  useEffect(() => {
-    const t = setInterval(() => {
-      setComments((c) => c + Math.floor(Math.random() * 3) + 1);
-    }, 4000 + Math.random() * 4000);
-    return () => clearInterval(t);
-  }, []);
 
   const toggleLike = async () => {
     const nowLiked = await toggleLiked(char.id);
