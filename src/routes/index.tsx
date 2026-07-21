@@ -52,6 +52,7 @@ function HomePage() {
       const { data, error } = await (supabase as any)
         .from("characters")
         .select("*")
+        .eq("visibility", "public")
         .order("sort_order", { ascending: true });
 
       if (!error && data) {
