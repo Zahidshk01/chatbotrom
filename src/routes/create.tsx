@@ -282,27 +282,6 @@ function CreatePage() {
                 placeholder="Add a name for your Chat AI"
                 className="w-full bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
               />
-              <div className="mt-3 flex flex-wrap gap-1.5 border-t border-border pt-2.5">
-                {([
-                  { id: "mixed", label: "Mixed" },
-                  { id: "scenario", label: "Scenario" },
-                  { id: "label", label: "Relationship" },
-                  { id: "name", label: "Name" },
-                ] as const).map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setNameMode(m.id)}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                      nameMode === m.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-background text-muted-foreground"
-                    }`}
-                  >
-                    {m.label}
-                  </button>
-                ))}
-              </div>
               <div className="mt-2 flex justify-end gap-5 pt-1 text-sm text-muted-foreground">
                 <button
                   onClick={generateName}
