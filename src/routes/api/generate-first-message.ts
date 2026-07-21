@@ -5,7 +5,7 @@ import { z } from "zod";
 const schema = z.object({
   name: z.string().trim().max(200).optional(),
   description: z.string().trim().max(1000).optional(),
-  image: z.string().trim().max(2_000_000).optional(),
+  image: z.string().trim().max(15_000_000).optional(),
 });
 
 async function requireAuth(request: Request): Promise<Response | null> {

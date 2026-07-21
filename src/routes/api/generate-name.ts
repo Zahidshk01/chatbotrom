@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 const schema = z.object({
-  image: z.string().trim().min(1).max(2_000_000).optional(),
+  image: z.string().trim().min(1).max(15_000_000).optional(),
   description: z.string().trim().max(1000).optional(),
 });
 
