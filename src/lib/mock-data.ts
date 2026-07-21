@@ -35,6 +35,7 @@ export type Character = {
   height: number; // tailwind h-* scale
   tagline: string;
   relation: string; // shown in brackets next to name — who they are to you / topic
+  visibility?: string | null;
 };
 
 export const categories = [
