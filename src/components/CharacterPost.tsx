@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { Heart, MessageCircle, Bookmark } from "lucide-react";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { toggleLiked, useIsLiked } from "@/lib/liked-store";
 import { toggleFollow, useIsFollowing } from "@/lib/follow-store";
 import { useOwnerProfile } from "@/lib/owner-profile";
 import { avatarForHandle } from "@/lib/creator-meta";
+import { useChatCount } from "@/lib/chat-counts";
 
 
 function fmt(n: number) {
