@@ -64,9 +64,9 @@ export const Route = createFileRoute("/api/generate-character-image")({
         }
         const { prompt } = parsed.data;
 
-        const key = process.env.MODELSLAB_API_KEY;
+        const key = process.env.LOVABLE_API_KEY;
         if (!key) {
-          console.error("[generate-character-image] Missing MODELSLAB_API_KEY");
+          console.error("[generate-character-image] Missing LOVABLE_API_KEY");
           return new Response(
             JSON.stringify({ error: "AI generation is not configured." }),
             { status: 500, headers: { "Content-Type": "application/json" } }
@@ -75,30 +75,34 @@ export const Route = createFileRoute("/api/generate-character-image")({
 
         const fullPrompt = `Anime-style character portrait only. Vibrant colors, cel-shaded, high detail, expressive eyes, clean lineart, studio anime aesthetic. Do not render photorealistic, 3D, or live-action styles. ${prompt}`;
 
-        const upstream = await fetch("https://modelslab.com/api/v3/dreambooth", {
+        const upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${key}`,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
-            key,
-            model_id: "anything-v5",
-            prompt: fullPrompt,
-            negative_prompt: "lowres, bad anatomy, bad hands, blurry, worst quality, photorealistic, realistic, 3d render, live action, photographic, hyperrealistic, western cartoon",
-            width: "512",
-            height: "512",
-            samples: "1",
-            num_inference_steps: "30",
-            guidance_scale: 7.5,
-            safety_checker: "no",
-            safety_checker_type: "no",
-            enhance_prompt: "yes",
+            model: "google/gemini-2.5-flash-image",
+            messages: [{ role: "user", content: fullPrompt }],
+            modalities: ["image", "text"],
           }),
         });
-
-
 
         if (!upstream.ok) {
           const text = await upstream.text();
           console.error("[generate-character-image] Upstream error", upstream.status, text);
+          if (upstream.status === 429) {
+            return new Response(
+              JSON.stringify({ error: "Rate limit reached. Please try again in a moment." }),
+              { status: 429, headers: { "Content-Type": "application/json" } }
+            );
+          }
+          if (upstream.status === 402) {
+            return new Response(
+              JSON.stringify({ error: "AI credits exhausted. Please add credits in workspace settings." }),
+              { status: 402, headers: { "Content-Type": "application/json" } }
+            );
+          }
           return new Response(
             JSON.stringify({ error: "Image generation failed. Please try again." }),
             { status: upstream.status, headers: { "Content-Type": "application/json" } }
@@ -106,44 +110,22 @@ export const Route = createFileRoute("/api/generate-character-image")({
         }
 
         const data = (await upstream.json()) as {
-          status?: string;
-          output?: string[];
-          future_links?: string[];
-          message?: string;
-          messege?: string;
+          data?: Array<{ b64_json?: string }>;
         };
 
-        if (data.status === "error") {
-          console.error("[generate-character-image] ModelsLab error", data);
-          const msg = data.message || data.messege || "Image generation failed.";
-          const isQuota = /limit|quota|subscription|upgrade|credit/i.test(msg);
-          return new Response(
-            JSON.stringify({
-              error: isQuota
-                ? "AI image quota exceeded on the provider. Please try again later."
-                : msg,
-            }),
-            {
-              status: isQuota ? 429 : 502,
-              headers: { "Content-Type": "application/json" },
-            }
-          );
-        }
-
-
-        const url = data.output?.[0] || data.future_links?.[0];
-        if (!url) {
+        const b64 = data.data?.[0]?.b64_json;
+        if (!b64) {
           console.error("[generate-character-image] No image returned", data);
           return new Response(
             JSON.stringify({ error: "Image generation failed. Please try again." }),
             { status: 500, headers: { "Content-Type": "application/json" } }
           );
         }
-        return new Response(JSON.stringify({ image: url }), {
-          headers: { "Content-Type": "application/json" },
-        });
 
-
+        return new Response(
+          JSON.stringify({ image: `data:image/png;base64,${b64}` }),
+          { headers: { "Content-Type": "application/json" } }
+        );
       },
     },
   },
