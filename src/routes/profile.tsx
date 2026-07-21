@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Settings, Camera, Users as UsersIcon, ChevronLeft,
-  Trash2, BadgeCheck, Smile, Lock,
+  Trash2, BadgeCheck, Smile, Lock, Heart, MessageCircle, Bookmark,
 } from "lucide-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -14,7 +14,7 @@ import { useFollowing, useFollowers, toggleFollow } from "@/lib/follow-store";
 import { useProfile, updateProfile } from "@/lib/profile-store";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserFollowCounts } from "@/lib/user-follow";
-import { useChatCount, baseChatCount } from "@/lib/chat-counts";
+import { useChatCount, useLikeCount, useSaveCount, baseChatCount } from "@/lib/chat-counts";
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -797,11 +797,18 @@ function CharacterDetailsDialog({
   );
 }
 
-function StatBox({ value, label }: { value: number | string; label: string }) {
+function fmtCount(n: number) {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(n);
+}
+
+function StatBox({ value, label, icon }: { value: number | string; label: string; icon?: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center rounded-xl bg-surface py-3">
-      <span className="text-lg font-bold">{value}</span>
-      <span className="text-xs text-muted-foreground">{label}</span>
+    <div className="flex flex-col items-center rounded-2xl bg-surface py-3 ring-1 ring-border/40">
+      {icon && <span className="mb-1 text-muted-foreground">{icon}</span>}
+      <span className="text-base font-bold tabular-nums">{value}</span>
+      <span className="mt-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
     </div>
   );
 }
