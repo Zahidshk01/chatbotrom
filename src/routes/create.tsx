@@ -27,6 +27,16 @@ const nameSamples = [
   "Rhea Hollow", "Jett Marlowe", "Aria Wraith", "Cassian Vale",
 ];
 
+const CATEGORIES = [
+  { id: "family", label: "Family" },
+  { id: "friends", label: "Friends" },
+  { id: "group", label: "Group" },
+  { id: "school", label: "School" },
+  { id: "relationships", label: "Relationships" },
+  { id: "others", label: "Others (18+)" },
+] as const;
+type CategoryId = typeof CATEGORIES[number]["id"];
+
 function CreatePage() {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -42,6 +52,7 @@ function CreatePage() {
   const [firstMessage, setFirstMessage] = useState("");
   const [editingFirst, setEditingFirst] = useState(false);
   const [generatingFirst, setGeneratingFirst] = useState(false);
+  const [category, setCategory] = useState<CategoryId>("friends");
 
   function onUpload(file?: File) {
     if (!file) return;
@@ -66,7 +77,7 @@ function CreatePage() {
       const res = await fetch("/api/generate-character-image", {
         method: "POST",
         headers: await authHeaders(),
-        body: JSON.stringify({ prompt: aiPrompt }),
+        body: JSON.stringify({ prompt: aiPrompt, category }),
       });
       const json = (await res.json()) as {
         image?: string;
@@ -161,7 +172,7 @@ function CreatePage() {
       image,
       creator: sess.session?.user.email ? `@${sess.session.user.email.split("@")[0]}` : "@you",
       chats: "0",
-      category: "Custom",
+      category: category === "others" ? "18+" : CATEGORIES.find((c) => c.id === category)!.label,
       height: 80,
       tagline: aiPrompt || firstMessage.slice(0, 80),
       relation: "your creation",
@@ -283,6 +294,34 @@ function CreatePage() {
                 </button>
               </div>
             </div>
+          </section>
+
+          <section className="mt-6">
+            <label className="mb-2 block text-sm font-semibold">Category</label>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIES.map((c) => {
+                const active = category === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCategory(c.id)}
+                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-surface text-muted-foreground"
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {category === "others"
+                ? "Mature 18+ style — sensual, cinematic anime."
+                : "Wholesome anime style, appropriate for this category."}
+            </p>
           </section>
 
           <section className="mt-6">
