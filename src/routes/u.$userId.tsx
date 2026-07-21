@@ -400,11 +400,104 @@ function UserProfilePage() {
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="text-center">
+function Stat({
+  value,
+  label,
+  onClick,
+}: {
+  value: string;
+  label: string;
+  onClick?: () => void;
+}) {
+  const inner = (
+    <>
       <div className="text-xl font-bold">{value}</div>
       <div className="text-[10px] font-medium tracking-wider text-muted-foreground">{label}</div>
-    </div>
+    </>
+  );
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="rounded-lg px-2 py-1 text-center active:bg-surface">
+        {inner}
+      </button>
+    );
+  }
+  return <div className="text-center">{inner}</div>;
+}
+
+function UserFollowListDialog({
+  open,
+  kind,
+  userId,
+  onClose,
+}: {
+  open: boolean;
+  kind: "followers" | "following" | null;
+  userId: string;
+  onClose: () => void;
+}) {
+  const [entries, setEntries] = useState<FollowListEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!open || !kind) return;
+    let cancelled = false;
+    setLoading(true);
+    const p = kind === "followers" ? getFollowersOfUser(userId) : getFollowingOfUser(userId);
+    p.then((rows) => {
+      if (!cancelled) setEntries(rows);
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [open, kind, userId]);
+
+  const title = kind === "followers" ? "Followers" : "Following";
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            {loading
+              ? "Loading…"
+              : entries.length === 0
+                ? kind === "followers"
+                  ? "No followers yet."
+                  : "Not following anyone yet."
+                : `${entries.length} ${entries.length === 1 ? "person" : "people"}`}
+          </DialogDescription>
+        </DialogHeader>
+        {!loading && entries.length > 0 && (
+          <div className="max-h-[60vh] space-y-2 overflow-y-auto">
+            {entries.map((e) => (
+              <button
+                key={e.id}
+                onClick={() => {
+                  onClose();
+                  navigate({ to: "/u/$userId", params: { userId: e.id } });
+                }}
+                className="flex w-full items-center gap-3 rounded-xl bg-surface px-3 py-2 text-left active:bg-surface"
+              >
+                {e.avatar_url ? (
+                  <img src={e.avatar_url} alt={e.username} className="h-10 w-10 rounded-full object-cover" />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-sm font-bold">
+                    {e.username.replace(/^@/, "").slice(0, 1).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">
+                    {e.username.startsWith("@") ? e.username : `@${e.username}`}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
