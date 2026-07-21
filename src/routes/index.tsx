@@ -79,7 +79,7 @@ function HomePage() {
   return (
     <div className="safe-top">
       <header className="sticky top-0 z-20 flex items-center justify-center border-b border-border/60 bg-background/80 px-4 py-3 backdrop-blur-xl">
-        <h1 className="text-xl font-bold tracking-tight text-white">KENDER</h1>
+        <h1 className="text-lg font-bold tracking-[0.2em] text-white">KENDER</h1>
         <div className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-2">
           <Link
             to="/create"
