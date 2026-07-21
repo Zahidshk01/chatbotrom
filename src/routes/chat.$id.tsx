@@ -706,7 +706,7 @@ function UserMessage({ text, onDelete }: { text: string; onDelete: () => void })
             e.preventDefault();
             setShowDelete(true);
           }}
-          className="max-w-[80%] cursor-pointer select-none rounded-2xl rounded-tr-md bg-surface px-4 py-2.5 text-sm active:opacity-80"
+          className="max-w-[80%] cursor-pointer select-none rounded-2xl rounded-br-md gradient-accent text-primary-foreground shadow-accent px-4 py-2.5 text-sm font-medium active:opacity-90"
         >
           {text}
         </div>
