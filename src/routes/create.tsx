@@ -35,6 +35,7 @@ function CreatePage() {
   const [showImageMenu, setShowImageMenu] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [name, setName] = useState("");
+  const [generatingName, setGeneratingName] = useState(false);
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [promptOpen, setPromptOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
@@ -92,8 +93,31 @@ function CreatePage() {
     }
   }
 
-  function generateName() {
-    setName(nameSamples[Math.floor(Math.random() * nameSamples.length)]);
+  async function generateName() {
+    if (!image) {
+      setName(nameSamples[Math.floor(Math.random() * nameSamples.length)]);
+      return;
+    }
+    setGeneratingName(true);
+    try {
+      const res = await fetch("/api/generate-name", {
+        method: "POST",
+        headers: await authHeaders(),
+        body: JSON.stringify({ image, description: aiPrompt }),
+      });
+      const json = (await res.json()) as { name?: string; error?: string };
+      if (!res.ok || !json.name) {
+        if (res.status === 429) toast("Rate limit hit. Try again in a moment.");
+        else if (res.status === 402) toast("Out of AI credits. Add funds to continue.");
+        else toast(json.error || "Couldn't generate name");
+      } else {
+        setName(json.name);
+      }
+    } catch {
+      toast("Network error generating name");
+    } finally {
+      setGeneratingName(false);
+    }
   }
 
   async function generateFirstMessage() {
@@ -102,7 +126,7 @@ function CreatePage() {
       const res = await fetch("/api/generate-first-message", {
         method: "POST",
         headers: await authHeaders(),
-        body: JSON.stringify({ name, description: aiPrompt }),
+        body: JSON.stringify({ name, description: aiPrompt, image }),
       });
       const json = (await res.json()) as { message?: string; error?: string };
       if (!res.ok || !json.message) {
