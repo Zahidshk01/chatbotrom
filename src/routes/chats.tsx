@@ -1,9 +1,19 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Search, Trash2, MessageCircle } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { Search, Trash2, MessageCircle, X, CheckCircle2, Circle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { resolveImage } from "@/lib/character-images";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/chats")({
   head: () => ({
@@ -35,8 +45,13 @@ function timeAgo(iso: string) {
 }
 
 function ChatsPage() {
+  const navigate = useNavigate();
   const [chats, setChats] = useState<ChatRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirm, setConfirm] = useState<null | "selected" | "all">(null);
+  const pressTimer = useRef<number | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -74,7 +89,6 @@ function ChatsPage() {
       .in("id", ids);
     const charMap = new Map<string, { name: string; image: string | null }>();
     (chars ?? []).forEach((c: any) => charMap.set(c.id, { name: c.name, image: c.image }));
-    // fallback to local mock characters
     localCharacters.forEach((c) => {
       if (!charMap.has(c.id)) charMap.set(c.id, { name: c.name, image: c.image });
     });
@@ -98,32 +112,112 @@ function ChatsPage() {
     load();
   }, []);
 
-  const clearAll = async () => {
+  const exitSelect = () => {
+    setSelectMode(false);
+    setSelected(new Set());
+  };
+
+  const toggle = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const startLongPress = (id: string) => {
+    if (selectMode) return;
+    if (pressTimer.current) window.clearTimeout(pressTimer.current);
+    pressTimer.current = window.setTimeout(() => {
+      setSelectMode(true);
+      setSelected(new Set([id]));
+    }, 380);
+  };
+
+  const cancelLongPress = () => {
+    if (pressTimer.current) {
+      window.clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  };
+
+  const selectAll = () => setSelected(new Set(chats.map((c) => c.characterId)));
+
+  const deleteSelected = async () => {
+    const { data: sess } = await supabase.auth.getSession();
+    const uid = sess.session?.user.id;
+    if (!uid || selected.size === 0) return;
+    const ids = Array.from(selected);
+    await (supabase as any)
+      .from("chat_messages")
+      .delete()
+      .eq("user_id", uid)
+      .in("character_id", ids);
+    setChats((prev) => prev.filter((c) => !selected.has(c.characterId)));
+    exitSelect();
+  };
+
+  const deleteAll = async () => {
     const { data: sess } = await supabase.auth.getSession();
     const uid = sess.session?.user.id;
     if (!uid) return;
     await (supabase as any).from("chat_messages").delete().eq("user_id", uid);
     setChats([]);
+    exitSelect();
   };
 
   const empty = !loading && chats.length === 0;
+  const allSelected = selected.size === chats.length && chats.length > 0;
 
   return (
     <div className="safe-top">
       <header className="flex items-center justify-between px-4 pt-4 pb-2">
-        <h1 className="text-2xl font-bold tracking-tight">Chats</h1>
-        <div className="flex items-center gap-2">
-          <button aria-label="Search chats" className="flex h-10 w-10 items-center justify-center rounded-full bg-surface">
-            <Search className="h-5 w-5" />
-          </button>
-          <button
-            aria-label="Delete all"
-            onClick={clearAll}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-surface"
-          >
-            <Trash2 className="h-5 w-5" />
-          </button>
-        </div>
+        {selectMode ? (
+          <>
+            <div className="flex items-center gap-3">
+              <button aria-label="Cancel" onClick={exitSelect} className="flex h-10 w-10 items-center justify-center rounded-full bg-surface">
+                <X className="h-5 w-5" />
+              </button>
+              <h1 className="text-lg font-semibold">
+                {selected.size === 0 ? "Select chats" : `${selected.size} selected`}
+              </h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={allSelected ? () => setSelected(new Set()) : selectAll}
+                className="rounded-full bg-surface px-3 py-2 text-xs font-semibold"
+              >
+                {allSelected ? "Clear" : "Select all"}
+              </button>
+              <button
+                aria-label="Delete selected"
+                disabled={selected.size === 0}
+                onClick={() => setConfirm("selected")}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <h1 className="text-2xl font-bold tracking-tight">Chats</h1>
+            <div className="flex items-center gap-2">
+              <button aria-label="Search chats" className="flex h-10 w-10 items-center justify-center rounded-full bg-surface">
+                <Search className="h-5 w-5" />
+              </button>
+              <button
+                aria-label="Select chats"
+                disabled={chats.length === 0}
+                onClick={() => setSelectMode(true)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-surface disabled:opacity-40"
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </div>
+          </>
+        )}
       </header>
 
       {loading ? (
@@ -140,27 +234,93 @@ function ChatsPage() {
           </Link>
         </div>
       ) : (
-        <ul className="px-2">
-          {chats.map((c) => (
-            <li key={c.characterId}>
-              <Link
-                to="/chat/$id"
-                params={{ id: c.characterId }}
-                className="flex w-full items-center gap-3 rounded-[20px] px-3 py-3 text-left active:bg-surface"
+        <>
+          <ul className="px-2 pb-4">
+            {chats.map((c) => {
+              const isSel = selected.has(c.characterId);
+              return (
+                <li key={c.characterId}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectMode) toggle(c.characterId);
+                      else navigate({ to: "/chat/$id", params: { id: c.characterId } });
+                    }}
+                    onPointerDown={() => startLongPress(c.characterId)}
+                    onPointerUp={cancelLongPress}
+                    onPointerLeave={cancelLongPress}
+                    onPointerCancel={cancelLongPress}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className={`flex w-full items-center gap-3 rounded-[20px] px-3 py-3 text-left active:bg-surface ${
+                      isSel ? "bg-surface" : ""
+                    }`}
+                  >
+                    {selectMode && (
+                      <span className="shrink-0">
+                        {isSel ? (
+                          <CheckCircle2 className="h-6 w-6 text-primary" />
+                        ) : (
+                          <Circle className="h-6 w-6 text-muted-foreground" />
+                        )}
+                      </span>
+                    )}
+                    <img
+                      src={c.image}
+                      alt={c.name}
+                      loading="lazy"
+                      className="h-14 w-14 shrink-0 rounded-full object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-sm font-semibold">{c.name}</span>
+                        <span className="shrink-0 text-[11px] text-muted-foreground">{c.time}</span>
+                      </div>
+                      <div className="mt-0.5 truncate text-sm text-muted-foreground">{c.last}</div>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          {selectMode && (
+            <div className="fixed inset-x-0 bottom-20 z-30 flex justify-center px-4">
+              <button
+                onClick={() => setConfirm("all")}
+                className="rounded-full bg-surface px-5 py-2.5 text-xs font-semibold text-muted-foreground shadow-lg"
               >
-                <img src={c.image} alt={c.name} loading="lazy" className="h-14 w-14 shrink-0 rounded-full object-cover" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-semibold">{c.name}</span>
-                    <span className="shrink-0 text-[11px] text-muted-foreground">{c.time}</span>
-                  </div>
-                  <div className="mt-0.5 truncate text-sm text-muted-foreground">{c.last}</div>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                Delete all conversations
+              </button>
+            </div>
+          )}
+        </>
       )}
+
+      <AlertDialog open={confirm !== null} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirm === "all" ? "Delete all conversations?" : `Delete ${selected.size} conversation${selected.size === 1 ? "" : "s"}?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the messages from your account. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (confirm === "all") await deleteAll();
+                else await deleteSelected();
+                setConfirm(null);
+              }}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
