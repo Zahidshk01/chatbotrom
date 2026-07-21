@@ -52,6 +52,7 @@ function CreatePage() {
   const [firstMessage, setFirstMessage] = useState("");
   const [editingFirst, setEditingFirst] = useState(false);
   const [generatingFirst, setGeneratingFirst] = useState(false);
+  const [category, setCategory] = useState<CategoryId>("friends");
 
   function onUpload(file?: File) {
     if (!file) return;
