@@ -8,7 +8,7 @@ import { toggleLiked, useIsLiked } from "@/lib/liked-store";
 import { toggleFollow, useIsFollowing } from "@/lib/follow-store";
 import { useOwnerProfile } from "@/lib/owner-profile";
 import { avatarForHandle } from "@/lib/creator-meta";
-import { useChatCount } from "@/lib/chat-counts";
+import { useChatCount, baseLikeCount } from "@/lib/chat-counts";
 
 
 function fmt(n: number) {
@@ -22,13 +22,14 @@ export function CharacterPost({ char }: { char: Character }) {
   const saved = useIsSaved(char.id);
   const liked = useIsLiked(char.id);
   const following = useIsFollowing(char.creator);
-  const [likes, setLikes] = useState(() => 5000 + Math.floor(Math.random() * 40000));
+  const [likeDelta, setLikeDelta] = useState(0);
+  const likes = baseLikeCount(char.id) + likeDelta;
   const comments = useChatCount(char.id);
 
 
   const toggleLike = async () => {
     const nowLiked = await toggleLiked(char.id);
-    setLikes((n) => n + (nowLiked ? 1 : -1));
+    setLikeDelta((n) => n + (nowLiked ? 1 : -1));
   };
 
   const onSave = async () => {
