@@ -27,6 +27,16 @@ const nameSamples = [
   "Rhea Hollow", "Jett Marlowe", "Aria Wraith", "Cassian Vale",
 ];
 
+const CATEGORIES = [
+  { id: "family", label: "Family" },
+  { id: "friends", label: "Friends" },
+  { id: "group", label: "Group" },
+  { id: "school", label: "School" },
+  { id: "relationships", label: "Relationships" },
+  { id: "others", label: "Others (18+)" },
+] as const;
+type CategoryId = typeof CATEGORIES[number]["id"];
+
 function CreatePage() {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
