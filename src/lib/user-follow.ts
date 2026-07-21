@@ -66,10 +66,12 @@ export async function getUserFollowCounts(userId: string) {
       .from("user_user_follows")
       .select("*", { count: "exact", head: true })
       .eq("followed_id", userId),
+    // Count handle-based follows (mirrored for user-to-user follows too),
+    // so following goes up/down whether the target is a real account or a seeded handle.
     (supabase as any)
-      .from("user_user_follows")
+      .from("user_follows")
       .select("*", { count: "exact", head: true })
-      .eq("follower_id", userId),
+      .eq("user_id", userId),
   ]);
   const base = baselineFollowCounts(userId);
   return {
