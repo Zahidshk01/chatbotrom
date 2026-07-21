@@ -67,14 +67,23 @@ function CreatePage() {
         headers: await authHeaders(),
         body: JSON.stringify({ prompt: aiPrompt }),
       });
-      const json = (await res.json()) as { image?: string; error?: string };
+      const json = (await res.json()) as {
+        image?: string;
+        error?: string;
+        modelLabel?: string;
+        fellBack?: boolean;
+      };
       if (!res.ok || !json.image) {
         if (res.status === 429) toast("Rate limit hit. Try again in a moment.");
         else if (res.status === 402) toast("Out of AI credits. Add funds to continue.");
         else toast(json.error || "Couldn't generate image");
       } else {
         setImage(json.image);
-        toast("Anime portrait generated");
+        if (json.fellBack && json.modelLabel) {
+          toast(`Switched to ${json.modelLabel} — primary model unavailable`);
+        } else {
+          toast("Anime portrait generated");
+        }
       }
     } catch {
       toast("Network error generating image");
