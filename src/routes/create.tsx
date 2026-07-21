@@ -78,6 +78,7 @@ function CreatePage() {
         method: "POST",
         headers: await authHeaders(),
         body: JSON.stringify({ prompt: aiPrompt, category }),
+      });
       const json = (await res.json()) as {
         image?: string;
         error?: string;
