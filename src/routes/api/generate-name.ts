@@ -73,14 +73,14 @@ export const Route = createFileRoute("/api/generate-name")({
 
         const catKey = (category || "").toLowerCase();
         const categoryHints: Record<string, string> = {
-          family: "Examples: Family on Vacation, Family Having Dinner, Sunday Morning Pancakes, Backyard BBQ Day, Movie Night with Family, Road Trip Memories, Grandma's Birthday, Cozy Winter Evening.",
-          friends: "Examples: Best Friends Sleepover, Late Night Coffee Run, Beach Day With Friends, Rooftop Hangout, Study Session Chaos, Karaoke Night Out.",
-          group: "Examples: Squad on Tour, Rival Gang Meetup, Adventuring Party, Rooftop Crew, Weekend Getaway Group.",
-          school: "Examples: After School Rooftop, Library Study Buddy, Class President Drama, Rainy Day Classroom, Cultural Festival Prep, Cherry Blossom Walk Home.",
-          relationships: "Examples: First Date Café, Rainy Umbrella Moment, Late Night Confession, Anniversary Dinner, Long Distance Reunion.",
-          others: "Examples: Midnight Encounter, Forbidden Rendezvous, Silk & Shadows, After Hours Suite.",
+          family: "Examples: Mom Cooking Sunday Dinner, Dad Teaching Me to Drive, Little Sister Wants to Play, Big Brother Home from College, Grandma Sharing Old Photos, Family Packing for Vacation.",
+          friends: "Examples: Best Friend Sneaks Into My Room, Friends Planning a Road Trip, Bestie Crying After a Breakup, Friend Dares Me at 2AM, Childhood Friend Reappears.",
+          group: "Examples: Squad Planning a Heist, Band Rehearsing Before the Show, Rival Gang Blocks the Alley, Study Group Pulls an All-Nighter.",
+          school: "Examples: Classmate Passes Me a Note, Senpai Waits After Class, Student Council President Confronts Me, Rainy Walk Home With Rival, Library Tutor Session.",
+          relationships: "Examples: Girlfriend Waiting on the Rooftop, Boyfriend Surprises Me at Work, Long Distance Video Call at Midnight, First Date Nervous Café Meetup, Ex Shows Up in the Rain.",
+          others: "Examples: Mysterious Stranger in a Hotel Bar, Late Night Rooftop Confession, Forbidden Rendezvous Backstage, Bodyguard Off Duty.",
         };
-        const hint = categoryHints[catKey] ?? "Examples: Quiet Afternoon, Neon City Night, Rainy Rooftop Moment.";
+        const hint = categoryHints[catKey] ?? "Examples: Roommate Locks Me Out, Stranger Offers a Ride Home, Coworker Stays Late With Me.";
 
         const userContent: Array<
           | { type: "text"; text: string }
@@ -88,9 +88,9 @@ export const Route = createFileRoute("/api/generate-name")({
         > = [
           {
             type: "text",
-            text: `Look at the image and invent a short evocative TITLE (2-5 words, Title Case) that describes the SCENE / VIBE / MOMENT shown — not a personal name. It should fit the category "${category ?? "General"}". ${hint}${
-              description ? ` Extra vibe: ${description}.` : ""
-            } Reply with ONLY the title — no quotes, no punctuation at the end, no explanation.`,
+            text: `Look at the image and invent a short SCENARIO TITLE (3-7 words, Title Case) describing what's happening — what the character(s) are doing right now or about to do — like a roleplay chapter title. It should read like a situation (e.g. "Girlfriend Waiting on the Rooftop", "Little Sister Wants to Play", "Best Friend Sneaks Into My Room"), NOT a personal name and NOT just a vibe/aesthetic phrase. Infer the relationship (friend, girlfriend, boyfriend, best friend, sister, brother, mom, dad, senpai, stranger, etc.) from the image when possible. It should fit the category "${category ?? "General"}". ${hint}${
+              description ? ` Extra context: ${description}.` : ""
+            } Reply with ONLY the scenario title — no quotes, no trailing punctuation, no explanation.`,
           },
         ];
         if (image) userContent.push({ type: "image_url", image_url: { url: image } });
@@ -108,7 +108,7 @@ export const Route = createFileRoute("/api/generate-name")({
                 {
                   role: "system",
                   content:
-                    "You title anime/roleplay scenes. Output just a short scene title (2-5 words, Title Case) describing the moment/vibe shown — no personal names unless clearly a solo portrait, no markdown, no quotes, no commentary.",
+                    "You write short roleplay SCENARIO titles (3-7 words, Title Case). Every title must describe a situation — who the character is to the user (friend, girlfriend, boyfriend, best friend, sister, brother, mom, dad, senpai, stranger, etc.) plus what they are doing or about to do. Never output a bare personal name. Never output a pure aesthetic/vibe phrase without an action or relationship. No markdown, no quotes, no commentary — just the title.",
                 },
                 { role: "user", content: userContent },
               ],
