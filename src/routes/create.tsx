@@ -115,7 +115,7 @@ function CreatePage() {
       const res = await fetch("/api/generate-name", {
         method: "POST",
         headers: await authHeaders(),
-        body: JSON.stringify({ image, description: aiPrompt, category }),
+        body: JSON.stringify({ image, description: aiPrompt, category, mode: nameMode }),
       });
       const json = (await res.json()) as { name?: string; error?: string };
       if (!res.ok || !json.name) {
