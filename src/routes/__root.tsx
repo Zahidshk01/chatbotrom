@@ -144,6 +144,13 @@ function AuthGate({ children }: { children: ReactNode }) {
     }
   }, [session, loading, pathname, router]);
 
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    import("@/lib/push").then(({ ensurePushSubscription }) => {
+      ensurePushSubscription().catch(() => {});
+    });
+  }, [session?.user?.id]);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
