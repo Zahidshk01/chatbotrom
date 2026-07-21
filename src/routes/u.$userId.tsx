@@ -296,17 +296,18 @@ function UserProfilePage() {
             </div>
           )}
           <div className="flex flex-1 items-center justify-around">
-            <Stat value={fmt(totalChats)} label="CHATS" />
-            <Stat
-              value={fmt(counts.following)}
-              label="FOLLOWING"
-              onClick={isHandle ? undefined : () => setListDialog("following")}
-            />
             <Stat
               value={fmt(counts.followers)}
               label="FOLLOWERS"
               onClick={isHandle ? undefined : () => setListDialog("followers")}
             />
+            <Stat
+              value={fmt(counts.following)}
+              label="FOLLOWING"
+              onClick={isHandle ? undefined : () => setListDialog("following")}
+            />
+            <Stat value={fmt(totalChats)} label="CHATS" />
+
           </div>
         </div>
 
