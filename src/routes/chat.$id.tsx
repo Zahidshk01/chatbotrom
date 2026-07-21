@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, MoreVertical, Send, RotateCcw, Pencil, Check, X, Trash2, Lock, Flag, Ban, Share2, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronDown, MoreVertical, Send, RotateCcw, Pencil, Check, X, Trash2, Lock, Flag, Ban, Share2, RefreshCw } from "lucide-react";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Character } from "@/lib/character";
@@ -50,6 +50,19 @@ function ChatPage() {
   const [reportReason, setReportReason] = useState("");
   const [reportDetails, setReportDetails] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showScrollDown, setShowScrollDown] = useState(false);
+
+  const onScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollDown(distanceFromBottom > 300);
+  };
+
+  const scrollToBottom = () => {
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  };
 
   // Load character from DB (in case it was created by user)
   useEffect(() => {
@@ -352,7 +365,7 @@ function ChatPage() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-32 pt-4">
+      <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-4 pb-32 pt-4">
         <Link
           to="/u/$userId"
           params={{ userId: char.owner_id ? char.owner_id : `h:${(char.creator ?? char.name).replace(/^@/, "")}` }}
@@ -406,6 +419,17 @@ function ChatPage() {
         </div>
         <div ref={endRef} />
       </div>
+
+      {showScrollDown && (
+        <button
+          onClick={scrollToBottom}
+          aria-label="Scroll to latest"
+          className="fixed left-1/2 z-40 -translate-x-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-surface/90 text-foreground shadow-lg backdrop-blur-xl border border-border active:scale-95"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 88px)" }}
+        >
+          <ChevronDown className="h-5 w-5" />
+        </button>
+      )}
 
       <div className="fixed inset-x-0 bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-border bg-background/90 px-3 py-3 backdrop-blur-xl safe-bottom md:bottom-6 md:rounded-b-[40px]">
         <div className="flex items-end gap-2">

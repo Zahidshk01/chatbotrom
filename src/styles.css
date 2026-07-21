@@ -88,9 +88,13 @@
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
   }
-  /* Hide scrollbars on horizontal scrollers */
+  /* Hide native scrollbars globally — mobile-first aesthetic */
+  html, body { scrollbar-width: none; -ms-overflow-style: none; }
+  html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  *::-webkit-scrollbar { width: 0; height: 0; display: none; }
+  * { scrollbar-width: none; }
 }
 
 @layer utilities {
