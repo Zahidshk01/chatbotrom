@@ -430,6 +430,102 @@ function ChatPage() {
           </button>
         </div>
       </div>
+
+      {/* Report dialog */}
+      <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Report {char.name}</DialogTitle>
+            <DialogDescription>Help us understand what's wrong.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {["Spam", "Harassment", "Inappropriate content", "Impersonation", "Other"].map((r) => (
+              <label key={r} className="flex items-center gap-3 rounded-xl bg-surface px-3 py-2.5 text-sm">
+                <input
+                  type="radio"
+                  name="reason"
+                  value={r}
+                  checked={reportReason === r}
+                  onChange={() => setReportReason(r)}
+                />
+                {r}
+              </label>
+            ))}
+            <textarea
+              value={reportDetails}
+              onChange={(e) => setReportDetails(e.target.value)}
+              placeholder="Additional details (optional)"
+              className="min-h-[80px] w-full rounded-xl bg-surface px-3 py-2 text-sm outline-none"
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              onClick={() => setReportOpen(false)}
+              className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onSubmitReport}
+              className="flex-1 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              Submit
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Block confirmation */}
+      <Dialog open={confirmBlock} onOpenChange={setConfirmBlock}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Block {char.name}?</DialogTitle>
+            <DialogDescription>
+              You won't see this character or its creator. You can unblock from Settings.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              onClick={() => setConfirmBlock(false)}
+              className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onBlock}
+              className="flex-1 rounded-full bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white"
+            >
+              Block
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Restart confirmation */}
+      <Dialog open={confirmRestart} onOpenChange={setConfirmRestart}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Restart conversation?</DialogTitle>
+            <DialogDescription>
+              This deletes all messages with {char.name}. This can't be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              onClick={() => setConfirmRestart(false)}
+              className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onRestart}
+              className="flex-1 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              Restart
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
