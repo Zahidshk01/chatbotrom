@@ -6,6 +6,7 @@ const schema = z.object({
   image: z.string().trim().min(1).max(15_000_000).optional(),
   description: z.string().trim().max(1000).optional(),
   category: z.string().trim().max(60).optional(),
+  mode: z.enum(["mixed", "scenario", "label", "name"]).optional(),
 });
 
 async function requireAuth(request: Request): Promise<Response | null> {
