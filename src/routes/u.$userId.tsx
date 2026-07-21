@@ -65,13 +65,8 @@ function UserProfilePage() {
         const rows: any[] = charData ?? [];
         setProfile({ username: handle, avatar_url: avatarForHandle(handle), bio: bioForHandle(handle) });
         setChars(rows.map((c) => ({ id: c.id, name: c.name, image: c.image || imageById.get(c.id) || null })));
-        const sum = rows.reduce((acc, c) => {
-          const raw = String(c.chats ?? "0").replace(/[^\d.]/g, "");
-          const num = parseFloat(raw) || 0;
-          const mult = /m/i.test(c.chats ?? "") ? 1_000_000 : /k/i.test(c.chats ?? "") ? 1_000 : 1;
-          return acc + num * mult;
-        }, 0);
-        setTotalChats(Math.round(sum));
+        const sum = rows.reduce((acc, c) => acc + baseChatCount(c.id), 0);
+        setTotalChats(sum);
         setCounts(baselineFollowCounts("h:" + handle));
         return;
       }
