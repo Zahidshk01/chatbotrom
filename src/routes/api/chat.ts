@@ -77,8 +77,29 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const authFail = await requireAuth(request);
-        if (authFail) return authFail;
+        const auth = await requireAuth(request);
+        if ("errorResponse" in auth) return auth.errorResponse;
+
+        const ip = getClientIp(request);
+        const [userOk, ipOk] = await Promise.all([
+          checkRateLimit(`u:${auth.userId}`, 20, 60),
+          checkRateLimit(`ip:${ip}`, 60, 60),
+        ]);
+        if (!userOk || !ipOk) {
+          return new Response(
+            JSON.stringify({
+              error: "You're sending messages too fast. Please slow down and try again in a moment.",
+            }),
+            {
+              status: 429,
+              headers: {
+                "Content-Type": "application/json",
+                "Retry-After": "30",
+              },
+            }
+          );
+        }
+
 
         try {
           const {
