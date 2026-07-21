@@ -60,6 +60,9 @@ if (typeof window !== "undefined") {
     uid = s?.user.id ?? null;
     loadFromDb();
   });
+  window.addEventListener("kender:follows-changed", () => {
+    loadFromDb();
+  });
 }
 
 export async function toggleFollow(rawHandle: string) {
