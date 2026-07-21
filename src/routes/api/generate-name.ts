@@ -74,26 +74,19 @@ export const Route = createFileRoute("/api/generate-name")({
 
         const catKey = (category || "").toLowerCase();
         const categoryHints: Record<string, string> = {
-          family: `Hook examples: "Ryo · Overprotective big brother catches you sneaking out", "Strict mom waited up all night", "Bratty little sister steals your hoodie", "Dad's best friend drops by unannounced", "Family road trip gone wrong".`,
-          friends: `Hook examples: "Kaito · Your college bestie confesses at 3AM", "Mafia friends drag you to a shootout", "Childhood friend returns after 10 years", "Rich kid bestie throws you a yacht party", "Gamer friend won't log off".`,
-          group: `Hook examples: "The Crimson Six · Mafia crew you owe money to", "Idol group backstage meltdown", "Delinquent gang claims the rooftop", "Adventuring party at the tavern", "Band rehearsal turns into a fight".`,
-          school: `Hook examples: "Haru · Rude senpai corners you after class", "Nerdy classmate tutors you late", "Delinquent boyfriend skips class with you", "Student council president caught you cheating", "Transfer student sits next to you".`,
-          relationships: `Hook examples: "Ren · Your rude CEO husband ignores you again", "Clingy girlfriend won't hang up", "Ex shows up in the pouring rain", "Cold fiancé locked in an arranged marriage", "Jealous boyfriend reads your texts".`,
-          others: `Hook examples: "Kaien · Mafia boss makes you his secret lover", "Bodyguard off duty in your hotel room", "Vampire roommate wakes up thirsty", "Rude stranger buys you a drink", "Bad boy bully who secretly loves you".`,
+          family: `Examples: "Ryo (overprotective big brother)", "Mika (strict mom who waited up)", "Yuna (bratty little sister)", "Kenji (dad's best friend)".`,
+          friends: `Examples: "Kaito (college bestie with a crush)", "Rei (mafia friend in trouble)", "Sana (childhood friend returning)", "Leo (rich kid bestie)".`,
+          group: `Examples: "The Crimson Six (mafia crew you owe)", "Nova (idol group leader backstage)", "Riot (delinquent gang on the rooftop)".`,
+          school: `Examples: "Haru (rude senpai after class)", "Aki (nerdy classmate tutoring you)", "Sora (delinquent boyfriend skipping class)", "Yuki (student council president)".`,
+          relationships: `Examples: "Ren (rude CEO husband)", "Mina (clingy girlfriend)", "Kai (ex in the pouring rain)", "Elena (jealous girlfriend on video call)", "Zeth (cold distant singer boyfriend)".`,
+          others: `Examples: "Kaien (mafia boss secret lover)", "Vex (thirsty vampire roommate)", "Dante (off-duty bodyguard)", "Rin (bad boy bully who loves you)".`,
         };
-        const hint = categoryHints[catKey] ?? `Hook examples: "Alex · Rude roommate locks you out", "Cold coworker stays late with you", "Mysterious stranger offers you a ride home".`;
+        const hint = categoryHints[catKey] ?? `Examples: "Alex (rude roommate)", "Nico (cold coworker staying late)", "Ash (mysterious stranger offering a ride)".`;
 
-        const modeInstruction =
-          mode === "scenario"
-            ? `Output a SCENARIO hook (5-10 words, sentence case, no period) — describe what's happening in a juicy, cinematic way. Examples: "Your rude CEO husband ignores you again", "Bad boy bully who secretly loves you", "Mafia boss makes you his secret lover". No personal name.`
-            : mode === "label"
-              ? `Output a RELATIONSHIP + TRAIT hook (3-8 words, sentence case, no period). Must include a relationship word + a personality trait or twist. Examples: "Overprotective mafia older brother", "Clingy yandere girlfriend", "Cold arranged-marriage husband". No plain name.`
-              : mode === "name"
-                ? `Output NAME · short hook (format: "Firstname · lowercase hook, 4-8 words"). Examples: "Kaito · your rude college bestie", "Elena · jealous girlfriend on video call", "Vex · vampire roommate wakes up thirsty". The name must fit the character's vibe.`
-                : `Pick ONE format at random, weighted like Chai / Swerve AI character cards:
-- ~55% NAME · HOOK (format: "Firstname · lowercase juicy hook, 4-8 words") — e.g. "Ren · your rude CEO husband ignores you", "Kaito · bad boy bully who loves you", "Aiko · overprotective big sister catches you sneaking out".
-- ~35% SCENARIO hooks (5-10 words, sentence case) — e.g. "Your mafia fiancé finds your secret diary", "Bratty little sister steals your hoodie".
-- ~10% RELATIONSHIP + TRAIT labels (3-6 words) — e.g. "Cold CEO fiancé", "Yandere childhood friend".`;
+        const modeInstruction = `Output format is STRICT: "Firstname (lowercase descriptor in parentheses)".
+The descriptor in parentheses must be 2-6 words describing ONE of: the relationship to the user, the character's personality/trait, their current mood, or what they're thinking/wanting right now. Sentence case inside parens, no period.
+Good: "Helena (shy girlfriend)", "Zeth (cold distant singer boyfriend)", "Julia (ex girlfriend)", "Evelyn (cold old-money heiress)", "Selena (your ex girlfriend)", "Bianca (annoyed goth roommate)", "Ren (rude CEO husband ignoring you)", "Aiko (overprotective big sister)", "Kai (jealous boyfriend reading your texts)".
+Bad: bare names, missing parentheses, long sentences, trailing punctuation, quotes around the whole title.`;
 
         const userContent: Array<
           | { type: "text"; text: string }
@@ -101,11 +94,12 @@ export const Route = createFileRoute("/api/generate-name")({
         > = [
           {
             type: "text",
-            text: `Study the character image and invent ONE juicy roleplay character title in the style of Chai AI and Swerve AI character cards — a hook that instantly makes someone want to tap and chat. Use vivid tropes: rude/cold/clingy/yandere/overprotective/jealous/flirty love interests, mafia bosses, CEOs, senpai, bullies who secretly love you, bratty siblings, forbidden romances, arranged marriages, roommates, vampires, bodyguards.
+            text: `Study the character image and invent ONE juicy roleplay character title in the style of Chai AI and Swerve AI character cards.
 ${modeInstruction}
-Infer the character's relationship to the user, their personality trait, and the scenario from what you see in the image (outfit, setting, expression, mood). Fit category "${category ?? "General"}". ${hint}${
+Pick a first name that fits the character's vibe (outfit, setting, expression, mood, ethnicity cues). Use vivid tropes for the parenthesized descriptor: rude/cold/clingy/yandere/overprotective/jealous/flirty, mafia bosses, CEOs, senpai, bullies who secretly love you, bratty siblings, roommates, vampires, bodyguards, exes.
+Fit category "${category ?? "General"}". ${hint}${
               description ? ` Extra context: ${description}.` : ""
-            } Reply with ONLY the title text — no surrounding quotes, no trailing punctuation, no explanation, no "Name:" / "Scenario:" label, no markdown.`,
+            } Reply with ONLY the title text in the exact format Name (descriptor) — no surrounding quotes, no trailing punctuation, no explanation, no labels, no markdown.`,
           },
         ];
         if (image) userContent.push({ type: "image_url", image_url: { url: image } });
@@ -123,11 +117,11 @@ Infer the character's relationship to the user, their personality trait, and the
                 {
                   role: "system",
                   content:
-                    "You write character-card titles for an anime AI roleplay app in the exact style of Chai AI and Swerve AI: short, cinematic, trope-heavy hooks that read like a story pitch. Preferred format is 'Firstname · lowercase juicy hook' (e.g. 'Ren · your rude CEO husband ignores you'). Also mix in pure scenario hooks and trait labels. Length 3-10 words. Always fresh, never generic. Never add markdown, surrounding quotes, trailing punctuation, or labels — output only the title text.",
+                    "You write character-card titles for an anime AI roleplay app. STRICT output format: 'Firstname (lowercase descriptor)' — where the descriptor in parentheses is 2-6 words describing the character's relationship to the user, their personality/trait, mood, or what they want. Examples: 'Helena (shy girlfriend)', 'Zeth (cold distant singer boyfriend)', 'Ren (rude CEO husband)', 'Bianca (annoyed goth roommate)'. Never output a bare name. Never wrap the whole title in quotes. Never add markdown or trailing punctuation. Always fresh, cinematic, trope-heavy.",
                 },
                 { role: "user", content: userContent },
               ],
-              temperature: 1.15,
+              temperature: 1.1,
             }),
           });
 
