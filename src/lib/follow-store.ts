@@ -51,19 +51,49 @@ export async function refreshFollows() {
   await loadFromDb();
 }
 
+let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
+
+function setupRealtime() {
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel);
+    realtimeChannel = null;
+  }
+  if (!uid) return;
+  realtimeChannel = supabase
+    .channel(`user_user_follows:${uid}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "user_user_follows" },
+      (payload: any) => {
+        const row = payload.new ?? payload.old ?? {};
+        if (row.follower_id === uid || row.followed_id === uid) {
+          loadFromDb();
+          window.dispatchEvent(new CustomEvent("kender:follows-changed"));
+        } else {
+          // Someone else's follow — still notify count listeners viewing that profile.
+          window.dispatchEvent(new CustomEvent("kender:follows-changed"));
+        }
+      },
+    )
+    .subscribe();
+}
+
 if (typeof window !== "undefined") {
   supabase.auth.getSession().then(({ data }) => {
     uid = data.session?.user.id ?? null;
     loadFromDb();
+    setupRealtime();
   });
   supabase.auth.onAuthStateChange((_e, s) => {
     uid = s?.user.id ?? null;
     loadFromDb();
+    setupRealtime();
   });
   window.addEventListener("kender:follows-changed", () => {
     loadFromDb();
   });
 }
+
 
 export async function toggleFollow(rawHandle: string) {
   if (!uid) return false;
