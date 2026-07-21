@@ -71,19 +71,16 @@ export const Route = createFileRoute("/api/generate-name")({
           );
         }
 
+        const catKey = (category || "").toLowerCase();
         const categoryHints: Record<string, string> = {
-          Family: "Examples: Family on Vacation, Family Having Dinner, Sunday Morning Pancakes, Backyard BBQ Day, Movie Night with Family, Road Trip Memories, Grandma's Birthday, Cozy Winter Evening.",
-          Friends: "Examples: Best Friends Sleepover, Late Night Coffee Run, Beach Day With Friends, Rooftop Hangout, Study Session Chaos, Karaoke Night Out.",
-          Group: "Examples: Squad on Tour, Rival Gang Meetup, Adventuring Party, Rooftop Crew, Weekend Getaway Group.",
-          School: "Examples: After School Rooftop, Library Study Buddy, Class President Drama, Rainy Day Classroom, Cultural Festival Prep, Cherry Blossom Walk Home.",
-          Relationships: "Examples: First Date Café, Rainy Umbrella Moment, Late Night Confession, Anniversary Dinner, Long Distance Reunion.",
+          family: "Examples: Family on Vacation, Family Having Dinner, Sunday Morning Pancakes, Backyard BBQ Day, Movie Night with Family, Road Trip Memories, Grandma's Birthday, Cozy Winter Evening.",
+          friends: "Examples: Best Friends Sleepover, Late Night Coffee Run, Beach Day With Friends, Rooftop Hangout, Study Session Chaos, Karaoke Night Out.",
+          group: "Examples: Squad on Tour, Rival Gang Meetup, Adventuring Party, Rooftop Crew, Weekend Getaway Group.",
+          school: "Examples: After School Rooftop, Library Study Buddy, Class President Drama, Rainy Day Classroom, Cultural Festival Prep, Cherry Blossom Walk Home.",
+          relationships: "Examples: First Date Café, Rainy Umbrella Moment, Late Night Confession, Anniversary Dinner, Long Distance Reunion.",
+          others: "Examples: Midnight Encounter, Forbidden Rendezvous, Silk & Shadows, After Hours Suite.",
         };
-        const hint =
-          category && categoryHints[category]
-            ? categoryHints[category]
-            : category === "Others (18+)"
-              ? "Examples: Midnight Encounter, Forbidden Rendezvous, Silk & Shadows, After Hours Suite."
-              : "Examples: Quiet Afternoon, Neon City Night, Rainy Rooftop Moment.";
+        const hint = categoryHints[catKey] ?? "Examples: Quiet Afternoon, Neon City Night, Rainy Rooftop Moment.";
 
         const userContent: Array<
           | { type: "text"; text: string }
