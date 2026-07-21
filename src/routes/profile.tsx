@@ -14,7 +14,7 @@ import { useFollowing, useFollowers, toggleFollow } from "@/lib/follow-store";
 import { useProfile, updateProfile } from "@/lib/profile-store";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserFollowCounts } from "@/lib/user-follow";
-import { useChatCount } from "@/lib/chat-counts";
+import { useChatCount, baseChatCount } from "@/lib/chat-counts";
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -176,7 +176,7 @@ function ProfilePage() {
               <>
                 <Stat value={fmt(liveCounts.following)} label="Following" onClick={() => setListDialog("following")} />
                 <Stat value={fmt(liveCounts.followers)} label="Followers" onClick={() => setListDialog("followers")} />
-                <Stat value={profile.stats.interactions} label="Interactions" />
+                <Stat value={fmt(myChars.reduce((acc, c) => acc + baseChatCount(c.id), 0))} label="Chats" />
               </>
             );
           })()}
