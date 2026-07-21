@@ -306,8 +306,16 @@ function UserProfilePage() {
           )}
           <div className="flex flex-1 items-center justify-around">
             <Stat value={fmt(totalChats)} label="CHATS" />
-            <Stat value={fmt(counts.following)} label="FOLLOWING" />
-            <Stat value={fmt(counts.followers)} label="FOLLOWERS" />
+            <Stat
+              value={fmt(counts.following)}
+              label="FOLLOWING"
+              onClick={isHandle ? undefined : () => setListDialog("following")}
+            />
+            <Stat
+              value={fmt(counts.followers)}
+              label="FOLLOWERS"
+              onClick={isHandle ? undefined : () => setListDialog("followers")}
+            />
           </div>
         </div>
 
@@ -320,13 +328,23 @@ function UserProfilePage() {
             <button
               onClick={onToggleFollow}
               disabled={busy}
-              className={`h-11 rounded-2xl text-sm font-semibold transition-colors active:scale-[0.98] ${
+              aria-busy={busy}
+              className={`flex h-11 items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition-colors active:scale-[0.98] disabled:opacity-70 ${
                 (isHandle ? handleFollowingState : following)
                   ? "bg-surface text-foreground"
                   : "bg-primary text-primary-foreground"
               }`}
             >
-              {(isHandle ? handleFollowingState : following) ? "Following" : "Follow"}
+              {busy ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {(isHandle ? handleFollowingState : following) ? "Unfollowing…" : "Following…"}
+                </>
+              ) : (isHandle ? handleFollowingState : following) ? (
+                "Following"
+              ) : (
+                "Follow"
+              )}
             </button>
             {!isHandle && (
               <button
@@ -339,6 +357,13 @@ function UserProfilePage() {
           </div>
         )}
       </section>
+
+      <UserFollowListDialog
+        open={listDialog !== null}
+        kind={listDialog}
+        userId={userId}
+        onClose={() => setListDialog(null)}
+      />
 
 
 
