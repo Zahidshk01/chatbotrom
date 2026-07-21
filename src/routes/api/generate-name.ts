@@ -83,10 +83,6 @@ export const Route = createFileRoute("/api/generate-name")({
         };
         const hint = categoryHints[catKey] ?? "Types/scenarios: Rude Roommate Locks Me Out, Cold Coworker Stays Late, Mysterious Stranger Offers a Ride. Names: Alex Voss, Mira Chen.";
 
-        const userContent: Array<
-          | { type: "text"; text: string }
-          | { type: "image_url"; image_url: { url: string } }
-        > = [
         const modeInstruction =
           mode === "scenario"
             ? `Output a SCENARIO / SITUATION title (3-7 words, Title Case) — describe what's happening or about to happen. Examples: "Girlfriend Waiting on the Rooftop", "Little Sister Wants to Play", "Best Friend Sneaks Into My Room". Do NOT output a plain personal name.`
