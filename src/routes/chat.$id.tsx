@@ -119,6 +119,7 @@ function ChatPage() {
       role,
       content,
     }).select("id").single();
+    import("@/lib/chat-counts").then((m) => m.refreshChatCount(char.id));
     return data?.id as string | undefined;
   };
 

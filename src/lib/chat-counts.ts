@@ -1,0 +1,61 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+// Deterministic base count derived from character id, so it never changes
+// between refreshes. Increments only when the user actually chats.
+export function baseChatCount(id: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  // 1,000 – 150,999 range, stable per id
+  return 1000 + (Math.abs(h) % 150000);
+}
+
+const cache = new Map<string, number>();
+const listeners = new Set<() => void>();
+
+function notify() {
+  listeners.forEach((l) => l());
+}
+
+async function fetchOwn(charId: string): Promise<number> {
+  const { count } = await (supabase as any)
+    .from("chat_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("character_id", charId);
+  return count ?? 0;
+}
+
+export async function refreshChatCount(charId: string) {
+  const n = await fetchOwn(charId);
+  cache.set(charId, n);
+  notify();
+  return n;
+}
+
+export function useChatCount(charId: string): number {
+  const [own, setOwn] = useState<number>(() => cache.get(charId) ?? 0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const listener = () => {
+      if (!cancelled) setOwn(cache.get(charId) ?? 0);
+    };
+    listeners.add(listener);
+    if (!cache.has(charId)) {
+      fetchOwn(charId).then((n) => {
+        if (cancelled) return;
+        cache.set(charId, n);
+        setOwn(n);
+      });
+    }
+    return () => {
+      cancelled = true;
+      listeners.delete(listener);
+    };
+  }, [charId]);
+
+  return baseChatCount(charId) + own;
+}
