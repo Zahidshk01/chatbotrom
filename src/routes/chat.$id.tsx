@@ -1,10 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, MoreVertical, Send, Sparkles, RotateCcw, Pencil, Check, X, Trash2, Lock } from "lucide-react";
+import { ChevronLeft, MoreVertical, Send, RotateCcw, Pencil, Check, X, Trash2, Lock, Flag, Ban, Share2, RefreshCw } from "lucide-react";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Character } from "@/lib/character";
 import { resolveImage } from "@/lib/character-images";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { blockTarget, reportTarget } from "@/lib/block-store";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/chat/$id")({
   head: ({ params }) => {
@@ -40,6 +44,11 @@ function ChatPage() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [confirmBlock, setConfirmBlock] = useState(false);
+  const [confirmRestart, setConfirmRestart] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
   // Load character from DB (in case it was created by user)
@@ -231,26 +240,113 @@ function ChatPage() {
     if (target) deleteFromDb(target.db_id);
   };
 
+
+  const blockTargetId = char.owner_id ? char.owner_id : `h:${(char.creator ?? char.name).replace(/^@/, "")}`;
+
+  const onShare = async () => {
+    const url = typeof window !== "undefined" ? `${window.location.origin}/chat/${char.id}` : "";
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: char.name, text: char.tagline ?? "", url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied");
+      }
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const onSubmitReport = async () => {
+    if (!reportReason) {
+      toast.error("Please select a reason");
+      return;
+    }
+    await reportTarget(blockTargetId, reportReason, reportDetails);
+    setReportOpen(false);
+    setReportReason("");
+    setReportDetails("");
+    toast.success("Report submitted. Thank you.");
+  };
+
+  const onBlock = async () => {
+    await blockTarget(blockTargetId);
+    setConfirmBlock(false);
+    toast.success(`Blocked ${char.name}`);
+    navigate({ to: "/" });
+  };
+
+  const onRestart = async () => {
+    if (userId) {
+      await (supabase as any)
+        .from("chat_messages")
+        .delete()
+        .eq("character_id", char.id)
+        .eq("user_id", userId);
+    }
+    setMsgs([]);
+    setConfirmRestart(false);
+    toast.success("Conversation restarted");
+  };
+
   const opening = char.first_message || openingScene(char.name, char.category ?? "", char.tagline ?? "");
   const charImage = char.image || "/placeholder.png";
 
+
   return (
     <div className="flex min-h-screen flex-col bg-background pb-0">
-      <header className="safe-top sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-background/85 px-3 py-3 backdrop-blur-xl">
+      <header className="safe-top sticky top-0 z-30 flex items-center border-b border-border bg-background/85 px-3 py-3 backdrop-blur-xl">
         <button
           onClick={() => navigate({ to: "/" })}
           aria-label="Back"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-surface active:scale-95"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface active:scale-95"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <div className="flex-1 text-center text-lg font-bold tracking-[0.2em]">KENDER</div>
-        <button className="flex items-center gap-1 rounded-full px-2 text-xs font-semibold text-primary">
-          Get Ultra <Sparkles className="h-4 w-4" />
-        </button>
-        <button aria-label="More" className="flex h-9 w-9 items-center justify-center rounded-full bg-surface">
-          <MoreVertical className="h-5 w-5" />
-        </button>
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex h-full items-center justify-center safe-top">
+          <div className="text-lg font-bold tracking-[0.2em]">KENDER</div>
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => navigate({ to: "/premium" })}
+            className="rounded-full bg-gradient-to-r from-amber-400 to-amber-600 px-3 py-1 text-xs font-bold text-black active:scale-95"
+          >
+            Get Pro
+          </button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button aria-label="More" className="flex h-9 w-9 items-center justify-center rounded-full bg-surface active:scale-95">
+                <MoreVertical className="h-5 w-5" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-52 p-1">
+              <button
+                onClick={() => setReportOpen(true)}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm active:bg-surface"
+              >
+                <Flag className="h-4 w-4" /> Report
+              </button>
+              <button
+                onClick={onShare}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm active:bg-surface"
+              >
+                <Share2 className="h-4 w-4" /> Share
+              </button>
+              <button
+                onClick={() => setConfirmBlock(true)}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-orange-400 active:bg-surface"
+              >
+                <Ban className="h-4 w-4" /> Block
+              </button>
+              <button
+                onClick={() => setConfirmRestart(true)}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm active:bg-surface"
+              >
+                <RefreshCw className="h-4 w-4" /> Restart conversation
+              </button>
+            </PopoverContent>
+          </Popover>
+        </div>
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 pb-32 pt-4">
@@ -334,6 +430,102 @@ function ChatPage() {
           </button>
         </div>
       </div>
+
+      {/* Report dialog */}
+      <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Report {char.name}</DialogTitle>
+            <DialogDescription>Help us understand what's wrong.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {["Spam", "Harassment", "Inappropriate content", "Impersonation", "Other"].map((r) => (
+              <label key={r} className="flex items-center gap-3 rounded-xl bg-surface px-3 py-2.5 text-sm">
+                <input
+                  type="radio"
+                  name="reason"
+                  value={r}
+                  checked={reportReason === r}
+                  onChange={() => setReportReason(r)}
+                />
+                {r}
+              </label>
+            ))}
+            <textarea
+              value={reportDetails}
+              onChange={(e) => setReportDetails(e.target.value)}
+              placeholder="Additional details (optional)"
+              className="min-h-[80px] w-full rounded-xl bg-surface px-3 py-2 text-sm outline-none"
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              onClick={() => setReportOpen(false)}
+              className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onSubmitReport}
+              className="flex-1 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              Submit
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Block confirmation */}
+      <Dialog open={confirmBlock} onOpenChange={setConfirmBlock}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Block {char.name}?</DialogTitle>
+            <DialogDescription>
+              You won't see this character or its creator. You can unblock from Settings.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              onClick={() => setConfirmBlock(false)}
+              className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onBlock}
+              className="flex-1 rounded-full bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white"
+            >
+              Block
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Restart confirmation */}
+      <Dialog open={confirmRestart} onOpenChange={setConfirmRestart}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Restart conversation?</DialogTitle>
+            <DialogDescription>
+              This deletes all messages with {char.name}. This can't be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              onClick={() => setConfirmRestart(false)}
+              className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onRestart}
+              className="flex-1 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              Restart
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
