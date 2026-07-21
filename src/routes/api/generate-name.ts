@@ -87,13 +87,27 @@ export const Route = createFileRoute("/api/generate-name")({
           | { type: "text"; text: string }
           | { type: "image_url"; image_url: { url: string } }
         > = [
+        const modeInstruction =
+          mode === "scenario"
+            ? `Output a SCENARIO / SITUATION title (3-7 words, Title Case) — describe what's happening or about to happen. Examples: "Girlfriend Waiting on the Rooftop", "Little Sister Wants to Play", "Best Friend Sneaks Into My Room". Do NOT output a plain personal name.`
+            : mode === "label"
+              ? `Output a RELATIONSHIP + TRAIT label (2-6 words, Title Case). Examples: "Rude Boyfriend", "College Friends", "Mafia Friends Late Meetup", "Overprotective Big Brother", "Clingy Girlfriend", "Cold CEO Fiancé". Must include a relationship word. Do NOT output a plain personal name and do NOT describe an action.`
+              : mode === "name"
+                ? `Output a PERSONAL NAME only — a believable first + last name (or single stage name) fitting the character's vibe/ethnicity. Examples: "Kaito Mori", "Elena Cruz", "Vex". Do NOT include a scenario, action, or relationship word.`
+                : `Pick ONE format at random, weighted:
+- ~60% SCENARIO titles — e.g. "Girlfriend Waiting on the Rooftop", "Little Sister Wants to Play".
+- ~25% RELATIONSHIP + TRAIT labels — e.g. "Rude Boyfriend", "College Friends Study Night", "Overprotective Big Brother".
+- ~15% PERSONAL NAMES — e.g. "Kaito Mori", "Elena Cruz", "Vex".`;
+
+        const userContent: Array<
+          | { type: "text"; text: string }
+          | { type: "image_url"; image_url: { url: string } }
+        > = [
           {
             type: "text",
-            text: `Look at the image and invent ONE short roleplay title (2-7 words, Title Case) for this character. Pick ONE of these formats at random, weighted so scenarios dominate:
-- ~60% SCENARIO / SITUATION titles — describe what's happening or about to happen, e.g. "Girlfriend Waiting on the Rooftop", "Little Sister Wants to Play", "Best Friend Sneaks Into My Room".
-- ~25% RELATIONSHIP + TRAIT / SETTING labels — e.g. "College Friends Study Night", "Mafia Friends Late Meetup", "Rude Boyfriend Ignoring You", "Overprotective Big Brother", "Clingy Girlfriend Video Call", "Rich Kid Best Friend".
-- ~15% PERSONAL NAMES — just a believable first + last name (or single stage name) fitting the character's vibe/ethnicity, e.g. "Kaito Mori", "Elena Cruz", "Vex".
-Infer relationship (friend, girlfriend, boyfriend, best friend, sister, brother, mom, dad, senpai, stranger, boss, roommate, etc.) and personality trait (rude, shy, clingy, cold, protective, flirty, bratty, cool, mysterious) from the image when possible. Fit category "${category ?? "General"}". ${hint}${
+            text: `Look at the image and invent ONE short roleplay title (2-7 words, Title Case) for this character.
+${modeInstruction}
+Infer relationship (friend, girlfriend, boyfriend, best friend, sister, brother, mom, dad, senpai, stranger, boss, roommate, etc.) and personality trait (rude, shy, clingy, cold, protective, flirty, bratty, cool, mysterious) from the image when useful. Fit category "${category ?? "General"}". ${hint}${
               description ? ` Extra context: ${description}.` : ""
             } Reply with ONLY the title — no quotes, no trailing punctuation, no explanation, no label like "Name:" or "Scenario:".`,
           },
