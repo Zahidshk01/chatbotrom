@@ -293,30 +293,32 @@ function UserProfilePage() {
           <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-foreground">{profile.bio}</p>
         ) : null}
 
-        {!isSelf && !isHandle && (
-          <div className="mt-4 grid grid-cols-2 gap-3">
+        {!isSelf && (
+          <div className={`mt-4 grid gap-3 ${isHandle ? "grid-cols-1" : "grid-cols-2"}`}>
             <button
               onClick={onToggleFollow}
               disabled={busy}
               className={`h-11 rounded-2xl text-sm font-semibold transition-colors active:scale-[0.98] ${
-                following ? "bg-surface text-foreground" : "bg-surface text-foreground"
+                (isHandle ? handleFollowingState : following)
+                  ? "bg-surface text-foreground"
+                  : "bg-primary text-primary-foreground"
               }`}
             >
-              {following ? "Following" : "Follow"}
+              {(isHandle ? handleFollowingState : following) ? "Following" : "Follow"}
             </button>
-            <button
-              onClick={() => navigate({ to: "/dm/$userId", params: { userId } })}
-              className="h-11 rounded-2xl bg-surface text-sm font-semibold active:scale-[0.98]"
-            >
-              Message
-            </button>
+            {!isHandle && (
+              <button
+                onClick={() => navigate({ to: "/dm/$userId", params: { userId } })}
+                className="h-11 rounded-2xl bg-surface text-sm font-semibold active:scale-[0.98]"
+              >
+                Message
+              </button>
+            )}
           </div>
         )}
       </section>
 
-      <div className="mt-6 text-center text-sm font-semibold tracking-wide text-muted-foreground">
-        CHAT AI
-      </div>
+
 
       <section className="mt-3 grid grid-cols-2 gap-0.5">
         {chars.map((c) => (
