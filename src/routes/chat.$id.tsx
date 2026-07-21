@@ -295,18 +295,20 @@ function ChatPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-0">
-      <header className="safe-top sticky top-0 z-30 flex items-center border-b border-border bg-background/85 px-3 py-3 backdrop-blur-xl">
-        <button
-          onClick={() => navigate({ to: "/" })}
-          aria-label="Back"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface active:scale-95"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex h-full items-center justify-center safe-top">
-          <div className="text-lg font-bold tracking-[0.2em]">KENDER</div>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-xl">
+        <div className="safe-top" />
+        <div className="relative flex items-center px-3 py-3">
+          <button
+            onClick={() => navigate({ to: "/" })}
+            aria-label="Back"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface active:scale-95"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <div className="pointer-events-none absolute inset-x-0 flex h-full items-center justify-center">
+            <div className="text-lg font-bold tracking-[0.2em]">KENDER</div>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
           <button
             onClick={() => navigate({ to: "/premium" })}
             className="rounded-full bg-gradient-to-r from-amber-400 to-amber-600 px-3 py-1 text-xs font-bold text-black active:scale-95"
