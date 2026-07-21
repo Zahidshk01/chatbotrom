@@ -172,7 +172,7 @@ function CreatePage() {
       image,
       creator: sess.session?.user.email ? `@${sess.session.user.email.split("@")[0]}` : "@you",
       chats: "0",
-      category: "Custom",
+      category: category === "others" ? "18+" : CATEGORIES.find((c) => c.id === category)!.label,
       height: 80,
       tagline: aiPrompt || firstMessage.slice(0, 80),
       relation: "your creation",
