@@ -13,6 +13,52 @@ export function baseChatCount(id: string): number {
   return 1000 + (Math.abs(h) % 150000);
 }
 
+function hashSalt(id: string, salt: string): number {
+  let h = 2166136261;
+  const s = id + "|" + salt;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h);
+}
+
+// Deterministic engagement baselines, stable per character id.
+export function baseLikeCount(id: string): number {
+  return 5000 + (hashSalt(id, "likes") % 40000);
+}
+export function baseSaveCount(id: string): number {
+  return 200 + (hashSalt(id, "saves") % 3800);
+}
+
+async function fetchCount(table: string, charId: string): Promise<number> {
+  const { count } = await (supabase as any)
+    .from(table)
+    .select("user_id", { count: "exact", head: true })
+    .eq("character_id", charId);
+  return count ?? 0;
+}
+
+export function useLikeCount(charId: string): number {
+  const [own, setOwn] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    fetchCount("user_likes", charId).then((n) => !cancelled && setOwn(n));
+    return () => { cancelled = true; };
+  }, [charId]);
+  return baseLikeCount(charId) + own;
+}
+
+export function useSaveCount(charId: string): number {
+  const [own, setOwn] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    fetchCount("user_saves", charId).then((n) => !cancelled && setOwn(n));
+    return () => { cancelled = true; };
+  }, [charId]);
+  return baseSaveCount(charId) + own;
+}
+
 const cache = new Map<string, number>();
 const listeners = new Set<() => void>();
 
