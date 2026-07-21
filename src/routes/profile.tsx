@@ -361,6 +361,7 @@ function TabContent({
           className="group relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-2 active:scale-95"
         >
           <img src={c.image} alt={c.name} className="h-full w-full object-cover" />
+          <ChatCountBadge id={c.id} />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-left">
             <p className="truncate text-xs font-semibold text-white">{c.name}</p>
             <p className="truncate text-[10px] text-white/70">({c.relation})</p>
@@ -368,6 +369,28 @@ function TabContent({
         </button>
       ))}
     </div>
+  );
+}
+
+function ChatCountBadge({ id }: { id: string }) {
+  const n = useChatCount(id);
+  const fmt = (v: number) =>
+    v >= 1_000_000 ? (v / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M"
+    : v >= 1_000 ? (v / 1_000).toFixed(1).replace(/\.0$/, "") + "K"
+    : String(v);
+  return (
+    <span className="absolute right-1.5 top-1.5 flex items-center gap-1 rounded-md bg-black/55 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-md">
+      <MsgIcon />
+      {fmt(n)}
+    </span>
+  );
+}
+
+function MsgIcon() {
+  return (
+    <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
   );
 }
 
