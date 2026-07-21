@@ -22,12 +22,28 @@ async function loadFromDb() {
     emit();
     return;
   }
-  const { data } = await supabase
-    .from("user_follows")
-    .select("handle")
-    .eq("user_id", uid);
-  followingSnap = (data ?? []).map((r) => r.handle);
-  followersSnap = [];
+  const [{ data: fList }, { data: followerRows }] = await Promise.all([
+    supabase.from("user_follows").select("handle").eq("user_id", uid),
+    (supabase as any)
+      .from("user_user_follows")
+      .select("follower_id")
+      .eq("followed_id", uid),
+  ]);
+  followingSnap = (fList ?? []).map((r: any) => r.handle);
+
+  const followerIds = (followerRows ?? []).map((r: any) => r.follower_id);
+  if (followerIds.length > 0) {
+    const { data: profs } = await (supabase as any)
+      .from("profiles")
+      .select("username")
+      .in("id", followerIds);
+    followersSnap = (profs ?? [])
+      .map((p: any) => p.username)
+      .filter(Boolean)
+      .map((u: string) => (u.startsWith("@") ? u : `@${u}`));
+  } else {
+    followersSnap = [];
+  }
   emit();
 }
 
