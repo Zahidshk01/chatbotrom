@@ -661,9 +661,9 @@ function CharacterDetailsDialog({
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const likes = char ? useLikeCount(char.id) : 0;
-  const chats = char ? useChatCount(char.id) : 0;
-  const saves = char ? useSaveCount(char.id) : 0;
+  const likes = useLikeCount(char?.id ?? "");
+  const chats = useChatCount(char?.id ?? "");
+  const saves = useSaveCount(char?.id ?? "");
 
   async function handleDelete() {
     if (!char) return;
