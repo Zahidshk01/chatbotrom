@@ -270,8 +270,13 @@ function CreatePage() {
                 className="w-full bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
               />
               <div className="mt-3 flex justify-end gap-5 border-t border-border pt-2.5 text-sm text-muted-foreground">
-                <button onClick={generateName} className="flex items-center gap-1.5 active:text-foreground">
-                  <RotateCcw className="h-4 w-4" /> Generate
+                <button
+                  onClick={generateName}
+                  disabled={generatingName}
+                  className="flex items-center gap-1.5 active:text-foreground disabled:opacity-50"
+                >
+                  <RotateCcw className={`h-4 w-4 ${generatingName ? "animate-spin" : ""}`} />
+                  {generatingName ? "Generating…" : "Generate"}
                 </button>
                 <button className="flex items-center gap-1.5 active:text-foreground">
                   <Pencil className="h-4 w-4" /> Edit
