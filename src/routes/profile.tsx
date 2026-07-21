@@ -176,7 +176,7 @@ function ProfilePage() {
               <>
                 <Stat value={fmt(liveCounts.following)} label="Following" onClick={() => setListDialog("following")} />
                 <Stat value={fmt(liveCounts.followers)} label="Followers" onClick={() => setListDialog("followers")} />
-                <Stat value={profile.stats.interactions} label="Interactions" />
+                <Stat value={fmt(myChars.reduce((acc, c) => acc + baseChatCount(c.id), 0))} label="Chats" />
               </>
             );
           })()}
