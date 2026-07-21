@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, MoreVertical, Send, RotateCcw, Pencil, Check, X, Trash2, Lock, Flag, Ban, Share2, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronDown, MoreVertical, Send, RotateCcw, Pencil, Check, X, Trash2, Lock, Flag, Ban, Share2, RefreshCw } from "lucide-react";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 import type { Character } from "@/lib/character";
