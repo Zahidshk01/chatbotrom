@@ -365,7 +365,7 @@ function ChatPage() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-32 pt-4">
+      <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-4 pb-32 pt-4">
         <Link
           to="/u/$userId"
           params={{ userId: char.owner_id ? char.owner_id : `h:${(char.creator ?? char.name).replace(/^@/, "")}` }}
