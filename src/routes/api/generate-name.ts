@@ -3,9 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 const schema = z.object({
-  name: z.string().trim().max(200).optional(),
+  image: z.string().trim().min(1).max(2_000_000).optional(),
   description: z.string().trim().max(1000).optional(),
-  image: z.string().trim().max(2_000_000).optional(),
 });
 
 async function requireAuth(request: Request): Promise<Response | null> {
@@ -38,7 +37,7 @@ async function requireAuth(request: Request): Promise<Response | null> {
   return null;
 }
 
-export const Route = createFileRoute("/api/generate-first-message")({
+export const Route = createFileRoute("/api/generate-name")({
   server: {
     handlers: {
       POST: async ({ request }) => {
@@ -61,17 +60,13 @@ export const Route = createFileRoute("/api/generate-first-message")({
             headers: { "Content-Type": "application/json" },
           });
         }
-        const { name, description, image } = parsed.data;
+        const { image, description } = parsed.data;
 
         const key = process.env.LOVABLE_API_KEY;
         if (!key) {
-          console.error("[generate-first-message] Missing LOVABLE_API_KEY");
           return new Response(
             JSON.stringify({ error: "AI generation is not configured." }),
-            {
-              status: 500,
-              headers: { "Content-Type": "application/json" },
-            }
+            { status: 500, headers: { "Content-Type": "application/json" } }
           );
         }
 
@@ -81,45 +76,36 @@ export const Route = createFileRoute("/api/generate-first-message")({
         > = [
           {
             type: "text",
-            text: `Write the first message for a character named "${name || "the character"}"${
-              description ? ` (vibe / look: ${description})` : ""
-            }. Base the scene, appearance and tone on the attached character image — describe what you can see (outfit, setting, mood, expression). Set a short scene, then have them speak one short line in single quotes.`,
+            text: `Invent a single evocative character name (first + last, 2-3 words max) that fits the character shown${
+              description ? ` (extra vibe: ${description})` : ""
+            }. Reply with ONLY the name — no quotes, no punctuation, no explanation.`,
           },
         ];
         if (image) userContent.push({ type: "image_url", image_url: { url: image } });
 
         try {
-          const upstream = await fetch(
-            "https://ai.gateway.lovable.dev/v1/chat/completions",
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${key}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                model: "google/gemini-2.5-flash",
-                messages: [
-                  {
-                    role: "system",
-                    content:
-                      "You write cinematic, immersive opening lines for AI chat characters in a roleplay app. Always 2–4 sentences, present tense, vivid sensory detail grounded in the provided image, ending with the character speaking one short line in single quotes. Never break character. Never use markdown.",
-                  },
-                  { role: "user", content: userContent },
-                ],
-                temperature: 0.9,
-              }),
-            }
-          );
+          const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${key}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: [
+                {
+                  role: "system",
+                  content:
+                    "You name anime/roleplay characters. Output just the name — no markdown, no quotes, no commentary. 2-3 words.",
+                },
+                { role: "user", content: userContent },
+              ],
+              temperature: 1,
+            }),
+          });
 
           const rawText = await upstream.text();
-
           if (!upstream.ok) {
-            console.error(
-              "[generate-first-message] Upstream error",
-              upstream.status,
-              rawText
-            );
             const clientMsg =
               upstream.status === 429
                 ? "AI service is busy. Please try again shortly."
@@ -131,24 +117,24 @@ export const Route = createFileRoute("/api/generate-first-message")({
               headers: { "Content-Type": "application/json" },
             });
           }
-
           const data = JSON.parse(rawText) as {
             choices?: { message?: { content?: string } }[];
           };
+          const name = (data.choices?.[0]?.message?.content || "")
+            .replace(/["'`*_]/g, "")
+            .replace(/\s+/g, " ")
+            .trim()
+            .split("\n")[0]
+            .slice(0, 60);
 
-          const message = data.choices?.[0]?.message?.content?.trim() || "";
-
-          return new Response(JSON.stringify({ message }), {
+          return new Response(JSON.stringify({ name }), {
             headers: { "Content-Type": "application/json" },
           });
         } catch (error) {
-          console.error("[generate-first-message] Server error", error);
+          console.error("[generate-name] Server error", error);
           return new Response(
             JSON.stringify({ error: "AI generation failed. Please try again." }),
-            {
-              status: 500,
-              headers: { "Content-Type": "application/json" },
-            }
+            { status: 500, headers: { "Content-Type": "application/json" } }
           );
         }
       },
