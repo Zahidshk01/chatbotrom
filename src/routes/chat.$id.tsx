@@ -240,8 +240,58 @@ function ChatPage() {
     if (target) deleteFromDb(target.db_id);
   };
 
+
+  const blockTargetId = char.owner_id ? char.owner_id : `h:${(char.creator ?? char.name).replace(/^@/, "")}`;
+
+  const onShare = async () => {
+    const url = typeof window !== "undefined" ? `${window.location.origin}/chat/${char.id}` : "";
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: char.name, text: char.tagline ?? "", url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied");
+      }
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const onSubmitReport = async () => {
+    if (!reportReason) {
+      toast.error("Please select a reason");
+      return;
+    }
+    await reportTarget(blockTargetId, reportReason, reportDetails);
+    setReportOpen(false);
+    setReportReason("");
+    setReportDetails("");
+    toast.success("Report submitted. Thank you.");
+  };
+
+  const onBlock = async () => {
+    await blockTarget(blockTargetId);
+    setConfirmBlock(false);
+    toast.success(`Blocked ${char.name}`);
+    navigate({ to: "/" });
+  };
+
+  const onRestart = async () => {
+    if (userId) {
+      await (supabase as any)
+        .from("chat_messages")
+        .delete()
+        .eq("character_id", char.id)
+        .eq("user_id", userId);
+    }
+    setMsgs([]);
+    setConfirmRestart(false);
+    toast.success("Conversation restarted");
+  };
+
   const opening = char.first_message || openingScene(char.name, char.category ?? "", char.tagline ?? "");
   const charImage = char.image || "/placeholder.png";
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-0">
