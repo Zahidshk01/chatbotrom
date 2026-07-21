@@ -21,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as UUserIdRouteImport } from './routes/u.$userId'
 import { Route as DmUserIdRouteImport } from './routes/dm.$userId'
 import { Route as ChatIdRouteImport } from './routes/chat.$id'
+import { Route as ApiGenerateNameRouteImport } from './routes/api/generate-name'
 import { Route as ApiGenerateFirstMessageRouteImport } from './routes/api/generate-first-message'
 import { Route as ApiGenerateCharacterImageRouteImport } from './routes/api/generate-character-image'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -85,6 +86,11 @@ const ChatIdRoute = ChatIdRouteImport.update({
   path: '/chat/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerateNameRoute = ApiGenerateNameRouteImport.update({
+  id: '/api/generate-name',
+  path: '/api/generate-name',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGenerateFirstMessageRoute = ApiGenerateFirstMessageRouteImport.update({
   id: '/api/generate-first-message',
   path: '/api/generate-first-message',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-character-image': typeof ApiGenerateCharacterImageRoute
   '/api/generate-first-message': typeof ApiGenerateFirstMessageRoute
+  '/api/generate-name': typeof ApiGenerateNameRoute
   '/chat/$id': typeof ChatIdRoute
   '/dm/$userId': typeof DmUserIdRoute
   '/u/$userId': typeof UUserIdRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-character-image': typeof ApiGenerateCharacterImageRoute
   '/api/generate-first-message': typeof ApiGenerateFirstMessageRoute
+  '/api/generate-name': typeof ApiGenerateNameRoute
   '/chat/$id': typeof ChatIdRoute
   '/dm/$userId': typeof DmUserIdRoute
   '/u/$userId': typeof UUserIdRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-character-image': typeof ApiGenerateCharacterImageRoute
   '/api/generate-first-message': typeof ApiGenerateFirstMessageRoute
+  '/api/generate-name': typeof ApiGenerateNameRoute
   '/chat/$id': typeof ChatIdRoute
   '/dm/$userId': typeof DmUserIdRoute
   '/u/$userId': typeof UUserIdRoute
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-character-image'
     | '/api/generate-first-message'
+    | '/api/generate-name'
     | '/chat/$id'
     | '/dm/$userId'
     | '/u/$userId'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-character-image'
     | '/api/generate-first-message'
+    | '/api/generate-name'
     | '/chat/$id'
     | '/dm/$userId'
     | '/u/$userId'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-character-image'
     | '/api/generate-first-message'
+    | '/api/generate-name'
     | '/chat/$id'
     | '/dm/$userId'
     | '/u/$userId'
@@ -221,6 +233,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateCharacterImageRoute: typeof ApiGenerateCharacterImageRoute
   ApiGenerateFirstMessageRoute: typeof ApiGenerateFirstMessageRoute
+  ApiGenerateNameRoute: typeof ApiGenerateNameRoute
   ChatIdRoute: typeof ChatIdRoute
   DmUserIdRoute: typeof DmUserIdRoute
   UUserIdRoute: typeof UUserIdRoute
@@ -312,6 +325,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/generate-name': {
+      id: '/api/generate-name'
+      path: '/api/generate-name'
+      fullPath: '/api/generate-name'
+      preLoaderRoute: typeof ApiGenerateNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/generate-first-message': {
       id: '/api/generate-first-message'
       path: '/api/generate-first-message'
@@ -349,6 +369,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiGenerateCharacterImageRoute: ApiGenerateCharacterImageRoute,
   ApiGenerateFirstMessageRoute: ApiGenerateFirstMessageRoute,
+  ApiGenerateNameRoute: ApiGenerateNameRoute,
   ChatIdRoute: ChatIdRoute,
   DmUserIdRoute: DmUserIdRoute,
   UUserIdRoute: UUserIdRoute,

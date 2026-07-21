@@ -61,11 +61,11 @@ export const Route = createFileRoute("/api/generate-first-message")({
             headers: { "Content-Type": "application/json" },
           });
         }
-        const { name, description } = parsed.data;
+        const { name, description, image } = parsed.data;
 
-        const key = process.env.DASHSCOPE_API_KEY;
+        const key = process.env.LOVABLE_API_KEY;
         if (!key) {
-          console.error("[generate-first-message] Missing DASHSCOPE_API_KEY");
+          console.error("[generate-first-message] Missing LOVABLE_API_KEY");
           return new Response(
             JSON.stringify({ error: "AI generation is not configured." }),
             {
@@ -75,9 +75,22 @@ export const Route = createFileRoute("/api/generate-first-message")({
           );
         }
 
+        const userContent: Array<
+          | { type: "text"; text: string }
+          | { type: "image_url"; image_url: { url: string } }
+        > = [
+          {
+            type: "text",
+            text: `Write the first message for a character named "${name || "the character"}"${
+              description ? ` (vibe / look: ${description})` : ""
+            }. Base the scene, appearance and tone on the attached character image — describe what you can see (outfit, setting, mood, expression). Set a short scene, then have them speak one short line in single quotes.`,
+          },
+        ];
+        if (image) userContent.push({ type: "image_url", image_url: { url: image } });
+
         try {
           const upstream = await fetch(
-            "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+            "https://ai.gateway.lovable.dev/v1/chat/completions",
             {
               method: "POST",
               headers: {
@@ -85,19 +98,14 @@ export const Route = createFileRoute("/api/generate-first-message")({
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                model: "qwen-plus",
+                model: "google/gemini-2.5-flash",
                 messages: [
                   {
                     role: "system",
                     content:
-                      "You write cinematic, immersive opening lines for AI chat characters in a roleplay app. Always 2–4 sentences, present tense, vivid sensory detail, ending with the character speaking one short line in single quotes. Never break character. Never use markdown.",
+                      "You write cinematic, immersive opening lines for AI chat characters in a roleplay app. Always 2–4 sentences, present tense, vivid sensory detail grounded in the provided image, ending with the character speaking one short line in single quotes. Never break character. Never use markdown.",
                   },
-                  {
-                    role: "user",
-                    content: `Write the first message for a character named "${name || "the character"}". ${
-                      description ? `Vibe / look: ${description}.` : ""
-                    } Set a short scene, then have them speak.`,
-                  },
+                  { role: "user", content: userContent },
                 ],
                 temperature: 0.9,
               }),
