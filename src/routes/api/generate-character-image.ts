@@ -65,7 +65,7 @@ export const Route = createFileRoute("/api/generate-character-image")({
             }
           );
         }
-        const { prompt } = parsed.data;
+        const { prompt, category } = parsed.data;
 
         const key = process.env.LOVABLE_API_KEY;
         if (!key) {
@@ -76,7 +76,24 @@ export const Route = createFileRoute("/api/generate-character-image")({
           );
         }
 
-        const fullPrompt = `Hyper-realistic anime illustration for a mature (18+) audience. Photorealistic anime rendering style — highly detailed skin, hair, and fabric textures, cinematic lighting, film-grade color grading, atmospheric depth, volumetric light, shallow depth of field, expressive detailed eyes, painterly backgrounds, mature/sensual aesthetic where appropriate. Still stylized anime, NOT a real-life photograph, NOT 3D CGI, NOT live-action. Character: ${prompt}`;
+        const styleByCategory: Record<string, string> = {
+          family:
+            "Wholesome family-themed cinematic anime portrait. Warm, cozy, heartfelt mood — a parent, sibling, grandparent, or family member. Modest everyday clothing (casual home wear, sweaters, aprons), gentle smile, soft natural lighting, home or garden background. SFW, no sensual or suggestive content.",
+          friends:
+            "Cheerful friendship-themed cinematic anime portrait. Casual, fun, energetic vibe — a best friend character. Modern casual outfit (hoodie, tee, jacket), bright expression, urban or cafe backdrop, sunny lighting. SFW, no sensual or suggestive content.",
+          group:
+            "Group-themed cinematic anime portrait of a single character who belongs to a squad or crew. Coordinated casual outfit, confident pose, dynamic city or clubhouse setting, group-hangout mood. SFW, no sensual or suggestive content.",
+          school:
+            "School-themed cinematic anime portrait. Japanese high-school student aesthetic — school uniform (blazer or sailor style), classroom, rooftop, or cherry-blossom courtyard background, youthful and studious. Age-appropriate, fully clothed, SFW, no sensual or suggestive content.",
+          relationships:
+            "Romantic cinematic anime portrait. Sweet, tender, blushing romance mood — a boyfriend/girlfriend/crush archetype. Stylish but modest outfit, soft golden-hour or evening lighting, intimate but tasteful (holding hands, gentle gaze). SFW, romantic not explicit.",
+          others:
+            "Mature (18+) cinematic anime portrait. Sensual, seductive, dramatic mood — allowed to be flirtatious, alluring, and provocative in tone. Elegant fashion (evening wear, lingerie-adjacent styling, tailored suits), moody cinematic lighting, luxurious or nightlife setting. Still stylized anime, tasteful, artistic.",
+        };
+        const styleDirective =
+          styleByCategory[category ?? "friends"] ?? styleByCategory.friends;
+
+        const fullPrompt = `Hyper-realistic cinematic anime illustration. Photorealistic anime rendering — highly detailed skin, hair, and fabric textures, cinematic lighting, film-grade color grading, atmospheric depth, volumetric light, shallow depth of field, expressive detailed eyes, painterly background. Still stylized anime, NOT a real-life photograph, NOT 3D CGI, NOT live-action. ${styleDirective} Character: ${prompt}`;
 
         const modelLabels: Record<string, string> = {
           "google/gemini-2.5-flash-image": "Nano Banana",
