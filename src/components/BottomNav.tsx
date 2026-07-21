@@ -27,7 +27,7 @@ export function BottomNav() {
       className="fixed bottom-0 left-0 z-50 w-full border-t border-border bg-background/85 backdrop-blur-xl safe-bottom"
       aria-label="Primary"
     >
-      <ul className="mx-auto flex w-full items-center justify-around px-4 pt-3 pb-3">
+      <ul className="mx-auto flex w-full items-center justify-around px-4 py-2">
 
         {items.map(({ to, label, icon: Icon, accent }) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
