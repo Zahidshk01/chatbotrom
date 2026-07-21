@@ -160,7 +160,7 @@ function CreatePage() {
     if (!image) return toast("Add an image first");
     if (!name.trim()) return toast("Give your character a name");
     setStep(2);
-    if (!firstMessage) void generateFirstMessage();
+    
   }
 
   async function finish() {
