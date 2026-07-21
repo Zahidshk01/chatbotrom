@@ -1,0 +1,16 @@
+CREATE INDEX IF NOT EXISTS idx_chat_messages_char_user_created ON public.chat_messages (character_id, user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_user ON public.chat_messages (user_id);
+CREATE INDEX IF NOT EXISTS idx_direct_messages_pair_created ON public.direct_messages (sender_id, recipient_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_direct_messages_recipient ON public.direct_messages (recipient_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_characters_creator_created ON public.characters (creator, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_characters_owner_created ON public.characters (owner_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_likes_character ON public.user_likes (character_id);
+CREATE INDEX IF NOT EXISTS idx_user_likes_user ON public.user_likes (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_saves_character ON public.user_saves (character_id);
+CREATE INDEX IF NOT EXISTS idx_user_saves_user ON public.user_saves (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_follows_user ON public.user_follows (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_follows_handle ON public.user_follows (handle);
+CREATE INDEX IF NOT EXISTS idx_user_user_follows_follower ON public.user_user_follows (follower_id);
+CREATE INDEX IF NOT EXISTS idx_user_user_follows_followed ON public.user_user_follows (followed_id);
+CREATE INDEX IF NOT EXISTS idx_user_blocks_blocker ON public.user_blocks (blocker_id);
+CREATE INDEX IF NOT EXISTS idx_user_reports_reported ON public.user_reports (reported_target, created_at DESC);
