@@ -9,6 +9,7 @@ import {
 } from "@/lib/user-follow";
 import { refreshFollows, toggleFollow, useIsFollowing } from "@/lib/follow-store";
 import { characters as localCharacters } from "@/lib/mock-data";
+import { useChatCount, baseChatCount } from "@/lib/chat-counts";
 import { avatarForHandle, bioForHandle } from "@/lib/creator-meta";
 import { baselineFollowCounts } from "@/lib/follow-baseline";
 import { blockTarget, reportTarget, useBlockedTargets } from "@/lib/block-store";
