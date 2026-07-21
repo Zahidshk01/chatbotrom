@@ -73,14 +73,14 @@ export const Route = createFileRoute("/api/generate-name")({
 
         const catKey = (category || "").toLowerCase();
         const categoryHints: Record<string, string> = {
-          family: "Examples: Mom Cooking Sunday Dinner, Dad Teaching Me to Drive, Little Sister Wants to Play, Big Brother Home from College, Grandma Sharing Old Photos, Family Packing for Vacation.",
-          friends: "Examples: Best Friend Sneaks Into My Room, Friends Planning a Road Trip, Bestie Crying After a Breakup, Friend Dares Me at 2AM, Childhood Friend Reappears.",
-          group: "Examples: Squad Planning a Heist, Band Rehearsing Before the Show, Rival Gang Blocks the Alley, Study Group Pulls an All-Nighter.",
-          school: "Examples: Classmate Passes Me a Note, Senpai Waits After Class, Student Council President Confronts Me, Rainy Walk Home With Rival, Library Tutor Session.",
-          relationships: "Examples: Girlfriend Waiting on the Rooftop, Boyfriend Surprises Me at Work, Long Distance Video Call at Midnight, First Date Nervous Café Meetup, Ex Shows Up in the Rain.",
-          others: "Examples: Mysterious Stranger in a Hotel Bar, Late Night Rooftop Confession, Forbidden Rendezvous Backstage, Bodyguard Off Duty.",
+          family: "Scenarios: Overprotective Big Brother, Strict Mom Waiting Up, Bratty Little Sister, Cool Uncle Visiting, Grandma Sharing Old Photos, Family Packing for Vacation. Names: Aiko Tanaka, Ryo Nakamura, Mia Rivera.",
+          friends: "Types/scenarios: College Friends Study Night, Mafia Friends Late Meetup, Childhood Friend Reappears, Rich Kid Best Friend, Gamer Friend Sleepover, Rude Friend Roasting You. Names: Kaito Mori, Jules Park, Sasha Lin.",
+          group: "Types/scenarios: Mafia Crew at the Docks, Idol Group Backstage, Delinquent Gang Rooftop, Fantasy Adventuring Party, Band Rehearsal Fight. Names: The Crimson Six, Nightfall Crew, Team Ember.",
+          school: "Types/scenarios: Rude Senpai After Class, Nerdy Classmate Tutoring, Delinquent Boyfriend Skipping Class, Student Council President Confronts Me, Transfer Student First Day. Names: Haru Sato, Rin Ikeda, Noa Fujimoto.",
+          relationships: "Types/scenarios: Rude Boyfriend Ignoring You, Clingy Girlfriend Video Call, Ex Shows Up in the Rain, Cold CEO Fiancé, Long Distance Midnight Call, Jealous Boyfriend Late Night. Names: Ren Aoyama, Yuki Hoshino, Elena Cruz.",
+          others: "Types/scenarios: Mafia Boss's Secret Lover, Bodyguard Off Duty, Rude Stranger at the Bar, Vampire Roommate Awakens, Late Night Hotel Encounter. Names: Kaien Kuroda, Vex, Selene Vale.",
         };
-        const hint = categoryHints[catKey] ?? "Examples: Roommate Locks Me Out, Stranger Offers a Ride Home, Coworker Stays Late With Me.";
+        const hint = categoryHints[catKey] ?? "Types/scenarios: Rude Roommate Locks Me Out, Cold Coworker Stays Late, Mysterious Stranger Offers a Ride. Names: Alex Voss, Mira Chen.";
 
         const userContent: Array<
           | { type: "text"; text: string }
@@ -88,9 +88,13 @@ export const Route = createFileRoute("/api/generate-name")({
         > = [
           {
             type: "text",
-            text: `Look at the image and invent a short SCENARIO TITLE (3-7 words, Title Case) describing what's happening — what the character(s) are doing right now or about to do — like a roleplay chapter title. It should read like a situation (e.g. "Girlfriend Waiting on the Rooftop", "Little Sister Wants to Play", "Best Friend Sneaks Into My Room"), NOT a personal name and NOT just a vibe/aesthetic phrase. Infer the relationship (friend, girlfriend, boyfriend, best friend, sister, brother, mom, dad, senpai, stranger, etc.) from the image when possible. It should fit the category "${category ?? "General"}". ${hint}${
+            text: `Look at the image and invent ONE short roleplay title (2-7 words, Title Case) for this character. Pick ONE of these formats at random, weighted so scenarios dominate:
+- ~60% SCENARIO / SITUATION titles — describe what's happening or about to happen, e.g. "Girlfriend Waiting on the Rooftop", "Little Sister Wants to Play", "Best Friend Sneaks Into My Room".
+- ~25% RELATIONSHIP + TRAIT / SETTING labels — e.g. "College Friends Study Night", "Mafia Friends Late Meetup", "Rude Boyfriend Ignoring You", "Overprotective Big Brother", "Clingy Girlfriend Video Call", "Rich Kid Best Friend".
+- ~15% PERSONAL NAMES — just a believable first + last name (or single stage name) fitting the character's vibe/ethnicity, e.g. "Kaito Mori", "Elena Cruz", "Vex".
+Infer relationship (friend, girlfriend, boyfriend, best friend, sister, brother, mom, dad, senpai, stranger, boss, roommate, etc.) and personality trait (rude, shy, clingy, cold, protective, flirty, bratty, cool, mysterious) from the image when possible. Fit category "${category ?? "General"}". ${hint}${
               description ? ` Extra context: ${description}.` : ""
-            } Reply with ONLY the scenario title — no quotes, no trailing punctuation, no explanation.`,
+            } Reply with ONLY the title — no quotes, no trailing punctuation, no explanation, no label like "Name:" or "Scenario:".`,
           },
         ];
         if (image) userContent.push({ type: "image_url", image_url: { url: image } });
@@ -108,11 +112,11 @@ export const Route = createFileRoute("/api/generate-name")({
                 {
                   role: "system",
                   content:
-                    "You write short roleplay SCENARIO titles (3-7 words, Title Case). Every title must describe a situation — who the character is to the user (friend, girlfriend, boyfriend, best friend, sister, brother, mom, dad, senpai, stranger, etc.) plus what they are doing or about to do. Never output a bare personal name. Never output a pure aesthetic/vibe phrase without an action or relationship. No markdown, no quotes, no commentary — just the title.",
+                    "You generate short roleplay character titles for an anime chat app. Mix three formats: scenario titles (what's happening), relationship+trait labels (e.g. 'Rude Boyfriend', 'College Friends', 'Mafia Friends'), and occasional plain personal names. 2-7 words, Title Case. Vary format each call. Never add markdown, quotes, labels, or commentary — output only the title text.",
                 },
                 { role: "user", content: userContent },
               ],
-              temperature: 1,
+              temperature: 1.1,
             }),
           });
 
