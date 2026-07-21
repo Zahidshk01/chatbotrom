@@ -73,8 +73,13 @@ export const Route = createFileRoute("/api/generate-character-image")({
           );
         }
 
-        const fullPrompt = `Cinematic anime illustration only. Studio-quality anime aesthetic with dramatic cinematic lighting, film-grade color grading, atmospheric depth, volumetric light, shallow depth of field, expressive eyes, clean cel-shaded lineart, vibrant yet moody palette, painterly backgrounds. Absolutely NO photorealism, NO 3D render, NO live-action, NO real photo. Character: ${prompt}`;
+        const fullPrompt = `Hyper-realistic anime illustration for a mature (18+) audience. Photorealistic anime rendering style — highly detailed skin, hair, and fabric textures, cinematic lighting, film-grade color grading, atmospheric depth, volumetric light, shallow depth of field, expressive detailed eyes, painterly backgrounds, mature/sensual aesthetic where appropriate. Still stylized anime, NOT a real-life photograph, NOT 3D CGI, NOT live-action. Character: ${prompt}`;
 
+        const modelLabels: Record<string, string> = {
+          "google/gemini-2.5-flash-image": "Nano Banana",
+          "google/gemini-3.1-flash-image": "Nano Banana 2",
+          "google/gemini-3.1-flash-lite-image": "Nano Banana 2 Lite",
+        };
         const models = [
           "google/gemini-2.5-flash-image",
           "google/gemini-3.1-flash-image",
@@ -84,7 +89,8 @@ export const Route = createFileRoute("/api/generate-character-image")({
         let lastStatus = 500;
         let lastError = "Image generation failed. Please try again.";
 
-        for (const model of models) {
+        for (let i = 0; i < models.length; i++) {
+          const model = models[i];
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
             method: "POST",
             headers: {
@@ -105,7 +111,13 @@ export const Route = createFileRoute("/api/generate-character-image")({
             const b64 = data.data?.[0]?.b64_json;
             if (b64) {
               return new Response(
-                JSON.stringify({ image: `data:image/png;base64,${b64}` }),
+                JSON.stringify({
+                  image: `data:image/png;base64,${b64}`,
+                  model,
+                  modelLabel: modelLabels[model] ?? model,
+                  fellBack: i > 0,
+                  attempts: i + 1,
+                }),
                 { headers: { "Content-Type": "application/json" } }
               );
             }
@@ -141,6 +153,7 @@ export const Route = createFileRoute("/api/generate-character-image")({
           JSON.stringify({ error: lastError }),
           { status: lastStatus, headers: { "Content-Type": "application/json" } }
         );
+
 
       },
     },
