@@ -4,6 +4,9 @@ import { z } from "zod";
 
 const schema = z.object({
   prompt: z.string().trim().min(1).max(1000),
+  category: z
+    .enum(["family", "friends", "group", "school", "relationships", "others"])
+    .optional(),
 });
 
 async function requireAuth(request: Request): Promise<Response | null> {
