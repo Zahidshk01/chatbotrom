@@ -77,3 +77,34 @@ export async function getUserFollowCounts(userId: string) {
     following: (following ?? 0) + base.following,
   };
 }
+
+export type FollowListEntry = { id: string; username: string; avatar_url: string | null };
+
+async function fetchProfiles(ids: string[]): Promise<FollowListEntry[]> {
+  if (ids.length === 0) return [];
+  const { data } = await (supabase as any)
+    .from("profiles")
+    .select("id, username, avatar_url")
+    .in("id", ids);
+  return (data ?? []).map((p: any) => ({
+    id: p.id,
+    username: p.username ?? "user",
+    avatar_url: p.avatar_url ?? null,
+  }));
+}
+
+export async function getFollowersOfUser(userId: string): Promise<FollowListEntry[]> {
+  const { data } = await (supabase as any)
+    .from("user_user_follows")
+    .select("follower_id")
+    .eq("followed_id", userId);
+  return fetchProfiles((data ?? []).map((r: any) => r.follower_id));
+}
+
+export async function getFollowingOfUser(userId: string): Promise<FollowListEntry[]> {
+  const { data } = await (supabase as any)
+    .from("user_user_follows")
+    .select("followed_id")
+    .eq("follower_id", userId);
+  return fetchProfiles((data ?? []).map((r: any) => r.followed_id));
+}

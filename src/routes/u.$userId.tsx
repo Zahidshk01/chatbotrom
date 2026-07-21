@@ -1,9 +1,12 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, MoreVertical, Flag, Ban } from "lucide-react";
+import { ArrowLeft, MoreVertical, Flag, Ban, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { toggleFollowUser, isFollowingUser, getUserFollowCounts } from "@/lib/user-follow";
+import {
+  toggleFollowUser, isFollowingUser, getUserFollowCounts,
+  getFollowersOfUser, getFollowingOfUser, type FollowListEntry,
+} from "@/lib/user-follow";
 import { refreshFollows, toggleFollow, useIsFollowing } from "@/lib/follow-store";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { avatarForHandle, bioForHandle } from "@/lib/creator-meta";
@@ -106,26 +109,44 @@ function UserProfilePage() {
 
   const handleFollowingState = useIsFollowing(handle ?? null);
 
+  // Re-fetch counts whenever a follow/unfollow happens anywhere in the app
+  useEffect(() => {
+    if (isHandle) return;
+    const refetch = () => {
+      getUserFollowCounts(userId).then(setCounts).catch(() => {});
+    };
+    window.addEventListener("kender:follows-changed", refetch);
+    return () => window.removeEventListener("kender:follows-changed", refetch);
+  }, [userId, isHandle]);
+
   const onToggleFollow = async () => {
     if (!me) {
       toast.error("Sign in to follow");
       return;
     }
+    if (busy) return;
     if (isHandle) {
       if (!handle) return;
       setBusy(true);
-      const nowFollowing = await toggleFollow(handle);
-      setCounts((c) => ({ ...c, followers: c.followers + (nowFollowing ? 1 : -1) }));
-      setBusy(false);
+      try {
+        const nowFollowing = await toggleFollow(handle);
+        setCounts((c) => ({ ...c, followers: c.followers + (nowFollowing ? 1 : -1) }));
+      } finally {
+        setBusy(false);
+      }
       return;
     }
     if (me === userId) return;
     setBusy(true);
-    const now = await toggleFollowUser(userId);
-    setFollowing(now);
-    setCounts((c) => ({ ...c, followers: c.followers + (now ? 1 : -1) }));
-    await refreshFollows();
-    setBusy(false);
+    try {
+      const now = await toggleFollowUser(userId);
+      setFollowing(now);
+      const fresh = await getUserFollowCounts(userId);
+      setCounts(fresh);
+      await refreshFollows();
+    } finally {
+      setBusy(false);
+    }
   };
 
   const displayName = profile?.username || (isHandle ? handle! : "user");
@@ -139,6 +160,7 @@ function UserProfilePage() {
   const [confirmBlock, setConfirmBlock] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reportDetails, setReportDetails] = useState("");
+  const [listDialog, setListDialog] = useState<null | "followers" | "following">(null);
 
   // If already blocked, redirect away
   useEffect(() => {
@@ -284,8 +306,16 @@ function UserProfilePage() {
           )}
           <div className="flex flex-1 items-center justify-around">
             <Stat value={fmt(totalChats)} label="CHATS" />
-            <Stat value={fmt(counts.following)} label="FOLLOWING" />
-            <Stat value={fmt(counts.followers)} label="FOLLOWERS" />
+            <Stat
+              value={fmt(counts.following)}
+              label="FOLLOWING"
+              onClick={isHandle ? undefined : () => setListDialog("following")}
+            />
+            <Stat
+              value={fmt(counts.followers)}
+              label="FOLLOWERS"
+              onClick={isHandle ? undefined : () => setListDialog("followers")}
+            />
           </div>
         </div>
 
@@ -298,13 +328,23 @@ function UserProfilePage() {
             <button
               onClick={onToggleFollow}
               disabled={busy}
-              className={`h-11 rounded-2xl text-sm font-semibold transition-colors active:scale-[0.98] ${
+              aria-busy={busy}
+              className={`flex h-11 items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition-colors active:scale-[0.98] disabled:opacity-70 ${
                 (isHandle ? handleFollowingState : following)
                   ? "bg-surface text-foreground"
                   : "bg-primary text-primary-foreground"
               }`}
             >
-              {(isHandle ? handleFollowingState : following) ? "Following" : "Follow"}
+              {busy ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {(isHandle ? handleFollowingState : following) ? "Unfollowing…" : "Following…"}
+                </>
+              ) : (isHandle ? handleFollowingState : following) ? (
+                "Following"
+              ) : (
+                "Follow"
+              )}
             </button>
             {!isHandle && (
               <button
@@ -317,6 +357,13 @@ function UserProfilePage() {
           </div>
         )}
       </section>
+
+      <UserFollowListDialog
+        open={listDialog !== null}
+        kind={listDialog}
+        userId={userId}
+        onClose={() => setListDialog(null)}
+      />
 
 
 
@@ -353,11 +400,104 @@ function UserProfilePage() {
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="text-center">
+function Stat({
+  value,
+  label,
+  onClick,
+}: {
+  value: string;
+  label: string;
+  onClick?: () => void;
+}) {
+  const inner = (
+    <>
       <div className="text-xl font-bold">{value}</div>
       <div className="text-[10px] font-medium tracking-wider text-muted-foreground">{label}</div>
-    </div>
+    </>
+  );
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="rounded-lg px-2 py-1 text-center active:bg-surface">
+        {inner}
+      </button>
+    );
+  }
+  return <div className="text-center">{inner}</div>;
+}
+
+function UserFollowListDialog({
+  open,
+  kind,
+  userId,
+  onClose,
+}: {
+  open: boolean;
+  kind: "followers" | "following" | null;
+  userId: string;
+  onClose: () => void;
+}) {
+  const [entries, setEntries] = useState<FollowListEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!open || !kind) return;
+    let cancelled = false;
+    setLoading(true);
+    const p = kind === "followers" ? getFollowersOfUser(userId) : getFollowingOfUser(userId);
+    p.then((rows) => {
+      if (!cancelled) setEntries(rows);
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [open, kind, userId]);
+
+  const title = kind === "followers" ? "Followers" : "Following";
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            {loading
+              ? "Loading…"
+              : entries.length === 0
+                ? kind === "followers"
+                  ? "No followers yet."
+                  : "Not following anyone yet."
+                : `${entries.length} ${entries.length === 1 ? "person" : "people"}`}
+          </DialogDescription>
+        </DialogHeader>
+        {!loading && entries.length > 0 && (
+          <div className="max-h-[60vh] space-y-2 overflow-y-auto">
+            {entries.map((e) => (
+              <button
+                key={e.id}
+                onClick={() => {
+                  onClose();
+                  navigate({ to: "/u/$userId", params: { userId: e.id } });
+                }}
+                className="flex w-full items-center gap-3 rounded-xl bg-surface px-3 py-2 text-left active:bg-surface"
+              >
+                {e.avatar_url ? (
+                  <img src={e.avatar_url} alt={e.username} className="h-10 w-10 rounded-full object-cover" />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-sm font-bold">
+                    {e.username.replace(/^@/, "").slice(0, 1).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">
+                    {e.username.startsWith("@") ? e.username : `@${e.username}`}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
