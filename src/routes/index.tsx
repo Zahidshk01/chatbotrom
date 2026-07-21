@@ -20,7 +20,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Kender — Discover AI Characters" },
       {
         property: "og:description",
-        content: "An Instagram-style feed of AI characters on Kender.",
+        content: "An Instagram-style feed of AI characters. Like, share, and chat with them on Kender.",
       },
     ],
   }),
