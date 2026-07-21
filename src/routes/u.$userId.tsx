@@ -109,26 +109,44 @@ function UserProfilePage() {
 
   const handleFollowingState = useIsFollowing(handle ?? null);
 
+  // Re-fetch counts whenever a follow/unfollow happens anywhere in the app
+  useEffect(() => {
+    if (isHandle) return;
+    const refetch = () => {
+      getUserFollowCounts(userId).then(setCounts).catch(() => {});
+    };
+    window.addEventListener("kender:follows-changed", refetch);
+    return () => window.removeEventListener("kender:follows-changed", refetch);
+  }, [userId, isHandle]);
+
   const onToggleFollow = async () => {
     if (!me) {
       toast.error("Sign in to follow");
       return;
     }
+    if (busy) return;
     if (isHandle) {
       if (!handle) return;
       setBusy(true);
-      const nowFollowing = await toggleFollow(handle);
-      setCounts((c) => ({ ...c, followers: c.followers + (nowFollowing ? 1 : -1) }));
-      setBusy(false);
+      try {
+        const nowFollowing = await toggleFollow(handle);
+        setCounts((c) => ({ ...c, followers: c.followers + (nowFollowing ? 1 : -1) }));
+      } finally {
+        setBusy(false);
+      }
       return;
     }
     if (me === userId) return;
     setBusy(true);
-    const now = await toggleFollowUser(userId);
-    setFollowing(now);
-    setCounts((c) => ({ ...c, followers: c.followers + (now ? 1 : -1) }));
-    await refreshFollows();
-    setBusy(false);
+    try {
+      const now = await toggleFollowUser(userId);
+      setFollowing(now);
+      const fresh = await getUserFollowCounts(userId);
+      setCounts(fresh);
+      await refreshFollows();
+    } finally {
+      setBusy(false);
+    }
   };
 
   const displayName = profile?.username || (isHandle ? handle! : "user");
