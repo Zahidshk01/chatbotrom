@@ -5,6 +5,7 @@ import { z } from "zod";
 const schema = z.object({
   image: z.string().trim().min(1).max(15_000_000).optional(),
   description: z.string().trim().max(1000).optional(),
+  category: z.string().trim().max(60).optional(),
 });
 
 async function requireAuth(request: Request): Promise<Response | null> {
@@ -60,7 +61,7 @@ export const Route = createFileRoute("/api/generate-name")({
             headers: { "Content-Type": "application/json" },
           });
         }
-        const { image, description } = parsed.data;
+        const { image, description, category } = parsed.data;
 
         const key = process.env.LOVABLE_API_KEY;
         if (!key) {
@@ -70,15 +71,26 @@ export const Route = createFileRoute("/api/generate-name")({
           );
         }
 
+        const catKey = (category || "").toLowerCase();
+        const categoryHints: Record<string, string> = {
+          family: "Examples: Family on Vacation, Family Having Dinner, Sunday Morning Pancakes, Backyard BBQ Day, Movie Night with Family, Road Trip Memories, Grandma's Birthday, Cozy Winter Evening.",
+          friends: "Examples: Best Friends Sleepover, Late Night Coffee Run, Beach Day With Friends, Rooftop Hangout, Study Session Chaos, Karaoke Night Out.",
+          group: "Examples: Squad on Tour, Rival Gang Meetup, Adventuring Party, Rooftop Crew, Weekend Getaway Group.",
+          school: "Examples: After School Rooftop, Library Study Buddy, Class President Drama, Rainy Day Classroom, Cultural Festival Prep, Cherry Blossom Walk Home.",
+          relationships: "Examples: First Date Café, Rainy Umbrella Moment, Late Night Confession, Anniversary Dinner, Long Distance Reunion.",
+          others: "Examples: Midnight Encounter, Forbidden Rendezvous, Silk & Shadows, After Hours Suite.",
+        };
+        const hint = categoryHints[catKey] ?? "Examples: Quiet Afternoon, Neon City Night, Rainy Rooftop Moment.";
+
         const userContent: Array<
           | { type: "text"; text: string }
           | { type: "image_url"; image_url: { url: string } }
         > = [
           {
             type: "text",
-            text: `Invent a single evocative character name (first + last, 2-3 words max) that fits the character shown${
-              description ? ` (extra vibe: ${description})` : ""
-            }. Reply with ONLY the name — no quotes, no punctuation, no explanation.`,
+            text: `Look at the image and invent a short evocative TITLE (2-5 words, Title Case) that describes the SCENE / VIBE / MOMENT shown — not a personal name. It should fit the category "${category ?? "General"}". ${hint}${
+              description ? ` Extra vibe: ${description}.` : ""
+            } Reply with ONLY the title — no quotes, no punctuation at the end, no explanation.`,
           },
         ];
         if (image) userContent.push({ type: "image_url", image_url: { url: image } });
@@ -96,7 +108,7 @@ export const Route = createFileRoute("/api/generate-name")({
                 {
                   role: "system",
                   content:
-                    "You name anime/roleplay characters. Output just the name — no markdown, no quotes, no commentary. 2-3 words.",
+                    "You title anime/roleplay scenes. Output just a short scene title (2-5 words, Title Case) describing the moment/vibe shown — no personal names unless clearly a solo portrait, no markdown, no quotes, no commentary.",
                 },
                 { role: "user", content: userContent },
               ],
