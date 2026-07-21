@@ -1,9 +1,12 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, MoreVertical, Flag, Ban } from "lucide-react";
+import { ArrowLeft, MoreVertical, Flag, Ban, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { toggleFollowUser, isFollowingUser, getUserFollowCounts } from "@/lib/user-follow";
+import {
+  toggleFollowUser, isFollowingUser, getUserFollowCounts,
+  getFollowersOfUser, getFollowingOfUser, type FollowListEntry,
+} from "@/lib/user-follow";
 import { refreshFollows, toggleFollow, useIsFollowing } from "@/lib/follow-store";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { avatarForHandle, bioForHandle } from "@/lib/creator-meta";
