@@ -364,7 +364,7 @@ function TabContent({
           className="group relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-2 active:scale-95"
         >
           <img src={c.image} alt={c.name} className="h-full w-full object-cover" />
-          <ChatCountBadge id={c.id} />
+          {c.visibility !== "private" && <ChatCountBadge id={c.id} />}
           {c.visibility === "private" && (
             <span className="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-md">
               <Lock className="h-3 w-3" /> Private
