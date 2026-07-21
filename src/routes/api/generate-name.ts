@@ -152,7 +152,7 @@ Infer the character's relationship to the user, their personality trait, and the
             .replace(/\s+/g, " ")
             .trim()
             .split("\n")[0]
-            .slice(0, 60);
+            .slice(0, 90);
 
           return new Response(JSON.stringify({ name }), {
             headers: { "Content-Type": "application/json" },
