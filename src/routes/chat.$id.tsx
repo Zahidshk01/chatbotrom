@@ -349,6 +349,7 @@ function ChatPage() {
             </PopoverContent>
           </Popover>
         </div>
+        </div>
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 pb-32 pt-4">
