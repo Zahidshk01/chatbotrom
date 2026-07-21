@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Settings, Camera, Users as UsersIcon, ChevronLeft,
-  Trash2, BadgeCheck, Smile, Lock,
+  Trash2, BadgeCheck, Smile, Lock, Heart, MessageCircle, Bookmark,
 } from "lucide-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -14,7 +14,7 @@ import { useFollowing, useFollowers, toggleFollow } from "@/lib/follow-store";
 import { useProfile, updateProfile } from "@/lib/profile-store";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserFollowCounts } from "@/lib/user-follow";
-import { useChatCount, baseChatCount } from "@/lib/chat-counts";
+import { useChatCount, useLikeCount, useSaveCount, baseChatCount } from "@/lib/chat-counts";
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -659,34 +659,16 @@ function CharacterDetailsDialog({
   onDeleted: (id: string) => void;
   onOpenChat: (id: string) => void;
 }) {
-  const [stats, setStats] = useState<{ likes: number; saves: number; chats: number } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    if (!char) { setStats(null); return; }
-    let cancelled = false;
-    (async () => {
-      const [likesRes, savesRes, chatsRes] = await Promise.all([
-        supabase.from("user_likes").select("user_id", { count: "exact", head: true }).eq("character_id", char.id),
-        supabase.from("user_saves").select("user_id", { count: "exact", head: true }).eq("character_id", char.id),
-        supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("character_id", char.id),
-      ]);
-      if (cancelled) return;
-      setStats({
-        likes: likesRes.count ?? 0,
-        saves: savesRes.count ?? 0,
-        chats: chatsRes.count ?? 0,
-      });
-    })();
-    return () => { cancelled = true; };
-  }, [char]);
+  const likes = char ? useLikeCount(char.id) : 0;
+  const chats = char ? useChatCount(char.id) : 0;
+  const saves = char ? useSaveCount(char.id) : 0;
 
   async function handleDelete() {
     if (!char) return;
     setDeleting(true);
     try {
-      // Best-effort cleanup of the current user's own related rows (RLS scopes to auth.uid()).
       await Promise.all([
         supabase.from("chat_messages").delete().eq("character_id", char.id),
         supabase.from("user_likes").delete().eq("character_id", char.id),
@@ -696,7 +678,7 @@ function CharacterDetailsDialog({
       if (error) throw error;
       toast.success("Character deleted");
       onDeleted(char.id);
-    } catch (e) {
+    } catch {
       toast.error("Could not delete character");
     } finally {
       setDeleting(false);
@@ -704,52 +686,85 @@ function CharacterDetailsDialog({
     }
   }
 
+  const isPrivate = char?.visibility === "private";
+
   return (
     <Dialog open={char !== null} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+      <DialogContent className="overflow-hidden p-0 gap-0 sm:max-w-md border-border/60 bg-background">
         {char && (
           <>
-            <DialogHeader>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={onClose}
-                  aria-label="Back"
-                  className="rounded-full p-1 text-foreground/80 active:bg-surface"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <DialogTitle>{char.name}</DialogTitle>
-              </div>
-              <DialogDescription>{char.tagline || char.relation || "Your character"}</DialogDescription>
+            <DialogHeader className="sr-only">
+              <DialogTitle>{char.name}</DialogTitle>
+              <DialogDescription>{char.tagline || char.relation || "Character details"}</DialogDescription>
             </DialogHeader>
-            {char.image && (
-              <img
-                src={char.image}
-                alt={char.name}
-                className="aspect-[4/5] w-full rounded-2xl object-cover"
-              />
-            )}
-            <div className="grid grid-cols-3 gap-2">
-              <StatBox label="Likes" value={stats?.likes ?? "—"} />
-              <StatBox label="Chats" value={stats?.chats ?? "—"} />
-              <StatBox label="Saved" value={stats?.saves ?? "—"} />
+
+            <div className="relative">
+              <div className="relative aspect-[4/5] w-full overflow-hidden">
+                {char.image ? (
+                  <img src={char.image} alt={char.name} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full bg-surface-2" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/85" />
+
+                <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-4">
+                  <button
+                    onClick={onClose}
+                    aria-label="Back"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md ring-1 ring-white/10 active:scale-95"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  {isPrivate && (
+                    <span className="flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur-md ring-1 ring-white/10">
+                      <Lock className="h-3 w-3" /> Private
+                    </span>
+                  )}
+                </div>
+
+                <div className="absolute inset-x-0 bottom-0 px-5 pb-5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/60">
+                    {char.category || "Character"}
+                  </p>
+                  <h2 className="mt-1 text-2xl font-bold leading-tight text-white">
+                    {char.name}
+                  </h2>
+                  {char.relation && (
+                    <p className="mt-0.5 text-sm text-white/70">({char.relation})</p>
+                  )}
+                </div>
+              </div>
             </div>
-            <DialogFooter className="gap-2 sm:gap-2">
+
+            <div className="px-5 pt-4">
+              {char.tagline && (
+                <p className="mb-4 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+                  {char.tagline}
+                </p>
+              )}
+              <div className="grid grid-cols-3 gap-2">
+                <StatBox icon={<Heart className="h-3.5 w-3.5" />} label="Likes" value={fmtCount(likes)} />
+                <StatBox icon={<MessageCircle className="h-3.5 w-3.5" />} label="Chats" value={fmtCount(chats)} />
+                <StatBox icon={<Bookmark className="h-3.5 w-3.5" />} label="Saved" value={fmtCount(saves)} />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 px-5 py-5">
               <button
                 onClick={() => onOpenChat(char.id)}
-                className="flex-1 rounded-full bg-surface px-4 py-2.5 text-sm font-semibold"
+                className="flex-1 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-accent active:scale-[0.98]"
               >
                 Open chat
               </button>
               <button
                 onClick={() => setConfirmDelete(true)}
-                className="rounded-full bg-red-600 px-4 py-2.5 text-sm font-semibold text-white active:opacity-90"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-muted-foreground ring-1 ring-border/60 active:scale-95 hover:text-red-500"
                 aria-label="Delete character"
                 title="Delete character"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
-            </DialogFooter>
+            </div>
           </>
         )}
       </DialogContent>
@@ -782,11 +797,18 @@ function CharacterDetailsDialog({
   );
 }
 
-function StatBox({ value, label }: { value: number | string; label: string }) {
+function fmtCount(n: number) {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(n);
+}
+
+function StatBox({ value, label, icon }: { value: number | string; label: string; icon?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center rounded-xl bg-surface py-3">
-      <span className="text-lg font-bold">{value}</span>
-      <span className="text-xs text-muted-foreground">{label}</span>
+    <div className="flex flex-col items-center rounded-2xl bg-surface py-3 ring-1 ring-border/40">
+      {icon && <span className="mb-1 text-muted-foreground">{icon}</span>}
+      <span className="text-base font-bold tabular-nums">{value}</span>
+      <span className="mt-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
     </div>
   );
 }
