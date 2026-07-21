@@ -381,11 +381,7 @@ function UserProfilePage() {
             ) : (
               <div className="flex h-full w-full items-center justify-center text-muted-foreground">{c.name}</div>
             )}
-            <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/70 backdrop-blur-md">
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-            </span>
+            <CharChatBadge id={c.id} />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 pt-6">
               <p className="text-sm font-semibold leading-tight text-white">{c.name}</p>
             </div>
