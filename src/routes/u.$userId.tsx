@@ -160,6 +160,7 @@ function UserProfilePage() {
   const [confirmBlock, setConfirmBlock] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reportDetails, setReportDetails] = useState("");
+  const [listDialog, setListDialog] = useState<null | "followers" | "following">(null);
 
   // If already blocked, redirect away
   useEffect(() => {
