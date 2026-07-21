@@ -53,10 +53,10 @@ export const Route = createFileRoute("/api/chat")({
             messages?: { role: "user" | "assistant"; content: string }[];
           };
 
-          const key = process.env.DASHSCOPE_API_KEY;
+          const key = process.env.OPENROUTER_API_KEY;
           if (!key) {
             return new Response(
-              JSON.stringify({ error: "Missing DASHSCOPE_API_KEY" }),
+              JSON.stringify({ error: "Missing OPENROUTER_API_KEY" }),
               {
                 status: 500,
                 headers: { "Content-Type": "application/json" },
@@ -97,7 +97,7 @@ export const Route = createFileRoute("/api/chat")({
             `.trim();
 
           const upstream = await fetch(
-            "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+            "https://openrouter.ai/api/v1/chat/completions",
             {
               method: "POST",
               headers: {
@@ -105,7 +105,7 @@ export const Route = createFileRoute("/api/chat")({
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                model: "qwen-plus",
+                model: "qwen/qwen3-14b",
                 temperature: 0.95,
                 messages: [
                   { role: "system", content: systemPrompt },
