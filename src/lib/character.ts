@@ -11,4 +11,5 @@ export type Character = {
   persona?: string | null;
   first_message?: string | null;
   owner_id?: string | null;
+  visibility?: string | null;
 };

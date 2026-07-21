@@ -85,11 +85,11 @@ function ProfilePage() {
       if (!user) { if (!cancelled) setMyChars([]); return; }
       const { data, error } = await supabase
         .from("characters")
-        .select("id,name,image,creator,chats,category,height,tagline,relation")
+        .select("id,name,image,creator,chats,category,height,tagline,relation,visibility")
         .eq("owner_id", user.id)
         .order("sort_order", { ascending: false });
       if (cancelled || error || !data) return;
-      setMyChars(data.map((c) => ({
+      setMyChars(data.map((c: any) => ({
         id: c.id,
         name: c.name,
         image: c.image ?? "",
@@ -99,6 +99,7 @@ function ProfilePage() {
         height: c.height ?? 64,
         tagline: c.tagline ?? "",
         relation: c.relation ?? "",
+        visibility: c.visibility ?? "public",
       })));
     }
     loadMine();
@@ -364,6 +365,11 @@ function TabContent({
         >
           <img src={c.image} alt={c.name} className="h-full w-full object-cover" />
           <ChatCountBadge id={c.id} />
+          {c.visibility === "private" && (
+            <span className="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-md">
+              <Lock className="h-3 w-3" /> Private
+            </span>
+          )}
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-left">
             <p className="truncate text-xs font-semibold text-white">{c.name}</p>
             <p className="truncate text-[10px] text-white/70">({c.relation})</p>
