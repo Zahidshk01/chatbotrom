@@ -53,6 +53,7 @@ function CreatePage() {
   const [editingFirst, setEditingFirst] = useState(false);
   const [generatingFirst, setGeneratingFirst] = useState(false);
   const [category, setCategory] = useState<CategoryId>("friends");
+  const [nameMode, setNameMode] = useState<"mixed" | "scenario" | "label" | "name">("mixed");
 
   function onUpload(file?: File) {
     if (!file) return;
