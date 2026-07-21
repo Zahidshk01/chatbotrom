@@ -420,6 +420,17 @@ function ChatPage() {
         <div ref={endRef} />
       </div>
 
+      {showScrollDown && (
+        <button
+          onClick={scrollToBottom}
+          aria-label="Scroll to latest"
+          className="fixed left-1/2 z-40 -translate-x-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-surface/90 text-foreground shadow-lg backdrop-blur-xl border border-border active:scale-95"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 88px)" }}
+        >
+          <ChevronDown className="h-5 w-5" />
+        </button>
+      )}
+
       <div className="fixed inset-x-0 bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-border bg-background/90 px-3 py-3 backdrop-blur-xl safe-bottom md:bottom-6 md:rounded-b-[40px]">
         <div className="flex items-end gap-2">
           <div className="flex flex-1 items-center rounded-full bg-surface px-4 py-2">
