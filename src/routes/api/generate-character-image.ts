@@ -116,11 +116,20 @@ export const Route = createFileRoute("/api/generate-character-image")({
         if (data.status === "error") {
           console.error("[generate-character-image] ModelsLab error", data);
           const msg = data.message || data.messege || "Image generation failed.";
-          return new Response(JSON.stringify({ error: msg }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
+          const isQuota = /limit|quota|subscription|upgrade|credit/i.test(msg);
+          return new Response(
+            JSON.stringify({
+              error: isQuota
+                ? "AI image quota exceeded on the provider. Please try again later."
+                : msg,
+            }),
+            {
+              status: isQuota ? 429 : 502,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
         }
+
 
         const url = data.output?.[0] || data.future_links?.[0];
         if (!url) {
