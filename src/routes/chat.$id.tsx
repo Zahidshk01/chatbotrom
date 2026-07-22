@@ -623,7 +623,7 @@ function CharacterMessage({
           </div>
         ) : (
           <div className="flex items-start gap-2">
-            <div className="max-w-[95%] rounded-2xl rounded-tl-md bg-surface px-4 py-3 text-sm leading-relaxed">
+            <div className="max-w-[85%] rounded-2xl rounded-tl-md bg-surface px-4 py-3 text-sm leading-relaxed">
               <RichText text={text} />
             </div>
             {(onRegenerate || onEdit || onDelete) && (
@@ -706,7 +706,7 @@ function UserMessage({ text, onDelete }: { text: string; onDelete: () => void })
             e.preventDefault();
             setShowDelete(true);
           }}
-          className="max-w-[95%] cursor-pointer select-none rounded-2xl rounded-br-md bg-surface px-4 py-3 text-sm leading-relaxed active:opacity-90"
+          className="max-w-[80%] cursor-pointer select-none rounded-2xl rounded-br-md bg-surface px-4 py-3 text-sm leading-relaxed active:opacity-90"
         >
           {text}
         </div>
