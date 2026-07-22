@@ -126,7 +126,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <div className="dark min-h-screen bg-background pb-24">
+        <div className="dark min-h-screen bg-background pb-24 font-sans antialiased">
           <AuthGate>
             <Outlet />
           </AuthGate>
