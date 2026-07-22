@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { Image as ImageIcon, Sparkles, Upload, RotateCcw, Pencil, Check, X } from "lucide-react";
+import { Image as ImageIcon, Sparkles, Upload, RotateCcw, Pencil, Check, X, ChevronLeft, Wand2, Globe, EyeOff, Lock, Unlock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -53,7 +53,6 @@ function CreatePage() {
   const [editingFirst, setEditingFirst] = useState(false);
   const [generatingFirst, setGeneratingFirst] = useState(false);
   const [category, setCategory] = useState<CategoryId>("friends");
-  
 
   function onUpload(file?: File) {
     if (!file) return;
@@ -115,8 +114,7 @@ function CreatePage() {
       const res = await fetch("/api/generate-name", {
         method: "POST",
         headers: await authHeaders(),
-      body: JSON.stringify({ image, description: aiPrompt, category }),
-
+        body: JSON.stringify({ image, description: aiPrompt, category }),
       });
       const json = (await res.json()) as { name?: string; error?: string };
       if (!res.ok || !json.name) {
@@ -160,7 +158,6 @@ function CreatePage() {
     if (!image) return toast("Add an image first");
     if (!name.trim()) return toast("Give your character a name");
     setStep(2);
-    
   }
 
   async function finish() {
@@ -193,48 +190,60 @@ function CreatePage() {
   }
 
   return (
-    <div className="safe-top px-5 pt-3 pb-28">
-      <div className="flex items-center justify-between">
+    <div className="safe-top min-h-screen bg-background px-5 pb-32">
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-1 pt-3">
         <button
           onClick={() => navigate({ to: "/" })}
-          className="rounded-full bg-surface px-4 py-1.5 text-sm font-medium"
+          className="flex items-center gap-1 rounded-full p-2 text-sm font-medium text-foreground/90 active:bg-surface"
         >
-          Cancel
+          <ChevronLeft className="h-5 w-5" />
         </button>
+        <span className="text-lg font-bold tracking-tight">
+          {step === 1 ? "Create character" : "First message"}
+        </span>
+        <span className="w-10" />
+      </div>
+
+      {/* Step dots */}
+      <div className="mt-2 flex items-center justify-center gap-2">
+        <span className={`h-1.5 rounded-full transition-all ${step === 1 ? "w-6 bg-primary" : "w-1.5 bg-surface-2"}`} />
+        <span className={`h-1.5 rounded-full transition-all ${step === 2 ? "w-6 bg-primary" : "w-1.5 bg-surface-2"}`} />
       </div>
 
       {step === 1 && (
-        <>
-          <h1 className="mt-6 text-center text-3xl font-bold tracking-tight">Create character</h1>
-
-          <section className="mt-7">
-            <label className="mb-3 block text-sm font-semibold">Image</label>
-            <div className="relative flex flex-col items-center gap-3 rounded-2xl bg-surface p-4">
+        <div className="mt-6 space-y-6">
+          {/* Image upload card */}
+          <section className="overflow-hidden rounded-3xl bg-surface p-1">
+            <div className="relative flex flex-col items-center gap-4 rounded-[22px] bg-background p-5">
               <button
                 type="button"
                 onClick={() => setShowImageMenu((v) => !v)}
-                className="relative h-48 w-48 shrink-0 overflow-hidden rounded-2xl bg-surface-2"
+                className="group relative h-56 w-56 shrink-0 overflow-hidden rounded-3xl border border-border bg-surface-2 transition active:scale-95"
               >
                 {image ? (
                   <img src={image} alt="" className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center">
-                    <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
+                    <div className="rounded-2xl bg-surface p-4">
+                      <ImageIcon className="h-8 w-8" />
+                    </div>
                   </div>
                 )}
                 {generating && (
-                  <div className="absolute inset-0 grid place-items-center bg-background/60 backdrop-blur-sm">
-                    <Sparkles className="h-6 w-6 animate-pulse text-primary" />
+                  <div className="absolute inset-0 grid place-items-center bg-background/70 backdrop-blur-md">
+                    <Sparkles className="h-7 w-7 animate-pulse text-primary" />
                   </div>
                 )}
               </button>
-              <div className="flex flex-col items-center gap-1">
-                <p className="text-[15px] font-semibold leading-snug">
+
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-[15px] font-semibold text-foreground">
                   {image ? "Tap the image to change" : "Upload or generate image"}
                 </p>
                 <button
                   onClick={() => setShowImageMenu((v) => !v)}
-                  className="inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-1.5 text-sm"
+                  className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium transition active:bg-surface"
                 >
                   <Upload className="h-4 w-4" />
                   {image ? "Change" : "Upload"}
@@ -242,16 +251,16 @@ function CreatePage() {
               </div>
 
               {showImageMenu && (
-                <div className="absolute top-56 z-20 w-[calc(100%-2rem)] overflow-hidden rounded-2xl border border-border bg-surface-2 shadow-elegant">
+                <div className="absolute left-1/2 top-1/2 z-20 w-[min(20rem,calc(100%-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-border bg-surface-2 shadow-elegant">
                   <button
                     onClick={() => fileRef.current?.click()}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-surface"
+                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm hover:bg-surface"
                   >
                     <Upload className="h-4 w-4 text-primary" /> Upload from device
                   </button>
                   <button
                     onClick={openAiPrompt}
-                    className="flex w-full items-center gap-3 border-t border-border px-4 py-3 text-left text-sm hover:bg-surface"
+                    className="flex w-full items-center gap-3 border-t border-border px-4 py-3.5 text-left text-sm hover:bg-surface"
                   >
                     <Sparkles className="h-4 w-4 text-primary" /> Generate with AI
                   </button>
@@ -267,52 +276,107 @@ function CreatePage() {
             />
           </section>
 
-          <section className="mt-6">
-            <label className="mb-2 block text-sm font-semibold">Name</label>
-            <div className="rounded-2xl bg-surface px-4 py-3">
+          {/* Name field */}
+          <section className="space-y-2">
+            <div className="flex items-center justify-between px-1">
+              <label className="text-sm font-semibold">Name</label>
+              <span className="text-xs text-muted-foreground">{name.length}/30</span>
+            </div>
+            <div className="rounded-2xl bg-surface p-4">
               <input
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value.slice(0, 30))}
                 placeholder="Name your character"
-                className="w-full bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
+                maxLength={30}
+                className="w-full bg-transparent text-[17px] font-semibold outline-none placeholder:text-muted-foreground"
               />
-              <div className="mt-2 flex justify-end gap-5 pt-1 text-sm text-muted-foreground">
+              <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                <span className="text-xs text-muted-foreground">Use a unique, memorable name</span>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={generateName}
+                    disabled={generatingName}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground transition active:text-foreground disabled:opacity-50"
+                  >
+                    <Wand2 className={`h-4 w-4 ${generatingName ? "animate-spin" : ""}`} />
+                    {generatingName ? "Generating…" : "Generate"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Category chips */}
+          <section className="space-y-2">
+            <label className="px-1 text-sm font-semibold">Category</label>
+            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+              {CATEGORIES.map((c) => {
+                const active = category === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => setCategory(c.id)}
+                    className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${
+                      active
+                        ? "bg-primary text-primary-foreground shadow-accent"
+                        : "bg-surface text-foreground/80 active:bg-surface-2"
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Prompt / personality */}
+          <section className="space-y-2">
+            <label className="px-1 text-sm font-semibold">Personality prompt</label>
+            <div className="rounded-2xl bg-surface p-4">
+              <textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Describe how your character looks, acts, and speaks…"
+                rows={3}
+                className="w-full resize-none bg-transparent text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground"
+              />
+              <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
+                <span>Used for image generation and chat behavior</span>
                 <button
-                  onClick={generateName}
-                  disabled={generatingName}
-                  className="flex items-center gap-1.5 active:text-foreground disabled:opacity-50"
+                  onClick={openAiPrompt}
+                  className="flex items-center gap-1.5 text-sm text-primary transition active:opacity-80"
                 >
-                  <RotateCcw className={`h-4 w-4 ${generatingName ? "animate-spin" : ""}`} />
-                  {generatingName ? "Generating…" : "Generate"}
-                </button>
-                <button className="flex items-center gap-1.5 active:text-foreground">
-                  <Pencil className="h-4 w-4" /> Edit
+                  <Sparkles className="h-3.5 w-3.5" /> Generate image
                 </button>
               </div>
             </div>
           </section>
 
-
-          <section className="mt-6">
-            <label className="mb-2 block text-sm font-semibold">Visibility</label>
-            <div className="space-y-2.5">
+          {/* Visibility */}
+          <section className="space-y-2">
+            <label className="px-1 text-sm font-semibold">Visibility</label>
+            <div className="grid gap-3">
               {(
                 [
-                  { id: "public", title: "Public", desc: "Visible and available to everyone" },
-                  { id: "private", title: "Private", desc: "Only visible and available to you" },
+                  { id: "public", title: "Public", desc: "Anyone can see and chat with this character", icon: Globe },
+                  { id: "private", title: "Private", desc: "Only you can see and chat with this character", icon: Lock },
                 ] as const
               ).map((opt) => {
                 const active = visibility === opt.id;
+                const Icon = opt.icon;
                 return (
                   <button
                     key={opt.id}
                     onClick={() => setVisibility(opt.id)}
-                    className={`flex w-full items-start justify-between rounded-2xl bg-surface p-4 text-left transition ${
-                      active ? "ring-2 ring-primary" : ""
+                    className={`flex w-full items-center gap-4 rounded-2xl bg-surface p-4 text-left transition ${
+                      active ? "ring-1 ring-primary" : ""
                     }`}
                   >
-                    <div>
-                      <div className="text-base font-semibold">{opt.title}</div>
+                    <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${active ? "bg-primary/15 text-primary" : "bg-surface-2 text-muted-foreground"}`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[15px] font-semibold">{opt.title}</div>
                       <div className="text-sm text-muted-foreground">{opt.desc}</div>
                     </div>
                     {active ? (
@@ -328,92 +392,102 @@ function CreatePage() {
             </div>
           </section>
 
-          <div className="fixed inset-x-0 bottom-20 left-1/2 w-full max-w-md -translate-x-1/2 px-5">
+          {/* Continue button */}
+          <div className="fixed inset-x-0 bottom-24 left-1/2 w-full max-w-md -translate-x-1/2 px-5">
             <button
               onClick={goToFirstMessage}
               disabled={!image || !name.trim()}
-              className="h-13 w-full rounded-full bg-primary py-3.5 text-base font-semibold text-primary-foreground shadow-accent disabled:opacity-50"
+              className="h-13 w-full rounded-full bg-primary py-3.5 text-base font-semibold text-primary-foreground shadow-accent transition active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
             >
               Continue
             </button>
           </div>
-        </>
+        </div>
       )}
 
       {step === 2 && (
-        <>
-          <h1 className="mt-6 text-center text-3xl font-bold tracking-tight">First message</h1>
-          <p className="mt-2 text-center text-[15px] text-muted-foreground">
-            Specify the first message your chat AI will use to start conversations.
-          </p>
-
-          <div className="mt-6 flex flex-col items-center">
-            <div className="h-24 w-24 overflow-hidden rounded-2xl bg-surface-2">
+        <div className="mt-6 space-y-6">
+          {/* Character preview */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-24 w-24 overflow-hidden rounded-3xl bg-surface-2 ring-4 ring-surface">
               {image && <img src={image} alt="" className="h-full w-full object-cover" />}
             </div>
-            <p className="mt-2 text-[15px] font-medium">{name}</p>
-          </div>
-
-          <div className="mt-5 rounded-2xl bg-surface p-4">
-            {editingFirst ? (
-              <textarea
-                value={firstMessage}
-                onChange={(e) => setFirstMessage(e.target.value)}
-                rows={7}
-                autoFocus
-                className="w-full resize-none bg-transparent text-[15px] leading-relaxed outline-none"
-              />
-            ) : (
-              <div className="min-h-[160px] whitespace-pre-wrap text-[15px] leading-relaxed">
-                {generatingFirst ? (
-                  <span className="flex items-center gap-2 text-muted-foreground">
-                    <Sparkles className="h-4 w-4 animate-pulse text-primary" /> Writing an opening scene…
-                  </span>
-                ) : (
-                  firstMessage || (
-                    <span className="text-muted-foreground">Tap Generate to draft an opener.</span>
-                  )
-                )}
-              </div>
-            )}
-            <div className="mt-3 flex justify-end gap-5 border-t border-border pt-2.5 text-sm text-muted-foreground">
-              <button
-                onClick={generateFirstMessage}
-                disabled={generatingFirst}
-                className="flex items-center gap-1.5 active:text-foreground disabled:opacity-50"
-              >
-                <RotateCcw className="h-4 w-4" /> Generate
-              </button>
-              <button
-                onClick={() => setEditingFirst((v) => !v)}
-                className="flex items-center gap-1.5 active:text-foreground"
-              >
-                <Pencil className="h-4 w-4" /> {editingFirst ? "Done" : "Edit"}
-              </button>
+            <div className="text-center">
+              <p className="text-lg font-bold">{name}</p>
+              <p className="text-sm text-muted-foreground">{aiPrompt || firstMessage.slice(0, 60)}</p>
             </div>
           </div>
 
+          {/* First message card */}
+          <section className="space-y-2">
+            <label className="px-1 text-sm font-semibold">First message</label>
+            <div className="rounded-2xl bg-surface p-4">
+              {editingFirst ? (
+                <textarea
+                  value={firstMessage}
+                  onChange={(e) => setFirstMessage(e.target.value)}
+                  rows={6}
+                  autoFocus
+                  className="w-full resize-none bg-transparent text-[15px] leading-relaxed outline-none"
+                />
+              ) : (
+                <div className="min-h-[140px] whitespace-pre-wrap text-[15px] leading-relaxed">
+                  {generatingFirst ? (
+                    <span className="flex items-center gap-2 text-muted-foreground">
+                      <Sparkles className="h-4 w-4 animate-pulse text-primary" /> Writing an opening scene…
+                    </span>
+                  ) : (
+                    firstMessage || (
+                      <span className="text-muted-foreground">Tap Generate to draft an opener.</span>
+                    )
+                  )}
+                </div>
+              )}
+              <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                <span className="text-xs text-muted-foreground">This is how {name} will greet you</span>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={generateFirstMessage}
+                    disabled={generatingFirst}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground transition active:text-foreground disabled:opacity-50"
+                  >
+                    <Wand2 className={`h-4 w-4 ${generatingFirst ? "animate-spin" : ""}`} />
+                    Generate
+                  </button>
+                  <button
+                    onClick={() => setEditingFirst((v) => !v)}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground transition active:text-foreground"
+                  >
+                    <Pencil className="h-4 w-4" /> {editingFirst ? "Done" : "Edit"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Action buttons */}
           <div className="fixed inset-x-0 bottom-16 left-1/2 flex w-full max-w-md -translate-x-1/2 flex-col items-center gap-3 px-5">
             <button
               onClick={finish}
               disabled={!firstMessage.trim() || generatingFirst}
-              className="h-13 w-full rounded-full bg-foreground py-3.5 text-base font-semibold text-background disabled:opacity-50"
+              className="h-13 w-full rounded-full bg-foreground py-3.5 text-base font-semibold text-background transition active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
             >
-              Continue
+              Create character
             </button>
             <button
               onClick={() => setStep(1)}
-              className="text-sm font-medium text-muted-foreground"
+              className="text-sm font-medium text-muted-foreground transition active:text-foreground"
             >
               Back
             </button>
           </div>
-        </>
+        </div>
       )}
 
+      {/* Generate image modal */}
       {promptOpen && (
         <div
-          className="fixed inset-0 z-[100] grid place-items-center bg-black/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[100] grid place-items-center bg-black/70 backdrop-blur-sm p-4"
           onClick={() => !generating && setPromptOpen(false)}
         >
           <div
@@ -421,8 +495,10 @@ function CreatePage() {
             className="w-full max-w-md rounded-3xl bg-surface p-5 shadow-elegant"
           >
             <div className="mb-3 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Generate anime character</h2>
+              <div className="grid h-9 w-9 place-items-center rounded-2xl bg-primary/15">
+                <Sparkles className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-lg font-bold">Generate image</h2>
             </div>
             <p className="mb-3 text-sm text-muted-foreground">
               Describe your character — looks, vibe, outfit, mood.
@@ -445,22 +521,22 @@ function CreatePage() {
                 }}
                 placeholder="e.g. silver-haired swordswoman with violet eyes, hooded cloak, dusk lighting"
                 rows={4}
-                className="w-full resize-none rounded-2xl bg-surface-2 p-3 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
+                className="w-full resize-none rounded-2xl bg-surface-2 p-3.5 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
               />
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex gap-3">
                 <button
                   type="button"
                   onClick={() => setPromptOpen(false)}
-                  className="flex-1 rounded-full bg-surface-2 py-3 text-sm font-medium"
+                  className="flex-1 rounded-full bg-surface-2 py-3 text-sm font-semibold transition active:bg-surface"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!aiPrompt.trim()}
-                  className="flex-1 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                  className="flex-1 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground transition active:opacity-90 disabled:opacity-50"
                 >
-                  Submit
+                  Generate
                 </button>
               </div>
             </form>
