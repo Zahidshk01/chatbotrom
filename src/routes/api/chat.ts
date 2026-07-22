@@ -168,8 +168,9 @@ export const Route = createFileRoute("/api/chat")({
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                model: "qwen/qwen3-14b",
+                model: "google/gemini-2.5-flash-lite",
                 temperature: 0.95,
+                max_tokens: 200,
                 messages: [
                   { role: "system", content: systemPrompt },
                   ...(messages || []),
