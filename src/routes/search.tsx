@@ -49,11 +49,11 @@ function SearchPage() {
   });
 
   return (
-    <div className="safe-top">
-      <header className="sticky top-0 z-30 bg-background/85 px-4 pt-4 pb-3 backdrop-blur-xl">
-        <h1 className="mb-3 text-center text-xl font-bold tracking-tight">
-          Ken<span className="text-primary">der</span>
-        </h1>
+    <div className="safe-top pb-8">
+      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 px-4 pt-3 pb-3 backdrop-blur-xl">
+        <div className="flex items-center justify-center pb-3">
+          <h1 className="text-lg font-bold tracking-[0.2em] text-white">KENDER</h1>
+        </div>
         <label className="relative flex h-12 items-center rounded-full bg-surface px-4">
           <Search className="h-5 w-5 text-muted-foreground" />
           <input
@@ -71,13 +71,13 @@ function SearchPage() {
       </header>
 
       {results.length ? (
-        <div className="grid grid-cols-2 gap-1 px-1">
+        <div className="grid grid-cols-2 gap-3 px-4 pt-4">
           {results.map((c) => (
             <Link
               key={c.id}
               to="/chat/$id"
               params={{ id: c.id }}
-              className="group relative aspect-square overflow-hidden rounded-md bg-surface"
+              className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-surface transition-transform active:scale-[0.98]"
             >
               <img
                 src={c.image ?? "/placeholder.png"}
@@ -85,14 +85,17 @@ function SearchPage() {
                 loading="lazy"
                 className="absolute inset-0 h-full w-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0" />
-              <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/55 backdrop-blur-md">
-                <MessageSquare className="h-3.5 w-3.5" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+              <span className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/60 backdrop-blur-md">
+                <MessageSquare className="h-4 w-4 text-white" />
               </span>
-              <div className="absolute inset-x-0 bottom-0 p-2">
+              <div className="absolute inset-x-0 bottom-0 p-3">
                 <h3 className="line-clamp-1 text-sm font-semibold text-white">
-                  {c.name} <span className="font-normal opacity-80">({c.relation})</span>
+                  {c.name}
                 </h3>
+                {c.relation && (
+                  <p className="line-clamp-1 text-xs text-white/70">{c.relation}</p>
+                )}
               </div>
             </Link>
           ))}
