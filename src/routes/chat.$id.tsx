@@ -737,13 +737,13 @@ function UserMessage({ text, onDelete }: { text: string; onDelete: () => void })
 function RichText({ text }: { text: string }) {
   const parts = text.split(/("[^"]*"|“[^”]*”)/g).filter(Boolean);
   return (
-    <p className="whitespace-pre-wrap">
+    <p className="whitespace-pre-wrap antialiased">
       {parts.map((p, i) => {
         const isSpeech = /^["“].*["”]$/.test(p);
         return isSpeech ? (
           <span key={i} className="font-bold text-foreground">{p}</span>
         ) : (
-          <span key={i} className="italic text-foreground/85">{p}</span>
+          <span key={i} className="italic text-foreground">{p}</span>
         );
       })}
     </p>
