@@ -190,7 +190,7 @@ function CreatePage() {
   }
 
   return (
-    <div className="safe-top min-h-screen bg-background px-5 pb-32">
+    <div className="safe-top min-h-screen bg-background px-5 pb-48">
       {/* Top bar */}
       <div className="flex items-center justify-between px-1 pt-3">
         <button
