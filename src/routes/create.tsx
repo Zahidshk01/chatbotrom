@@ -203,15 +203,9 @@ function CreatePage() {
         </button>
       </div>
 
-      <div className="mt-6 flex gap-1.5">
-        <div className={`h-1.5 flex-1 rounded-full ${step >= 1 ? "bg-primary/80" : "bg-surface"}`} />
-        <div className={`h-1.5 flex-1 rounded-full ${step >= 2 ? "bg-primary/80" : "bg-surface"}`} />
-        <div className="h-1.5 flex-1 rounded-full bg-surface" />
-      </div>
-
       {step === 1 && (
         <>
-          <h1 className="mt-6 text-center text-3xl font-bold tracking-tight">Identity</h1>
+          <h1 className="mt-6 text-center text-3xl font-bold tracking-tight">Create character</h1>
 
           <section className="mt-7">
             <label className="mb-2 block text-sm font-semibold">Image</label>
