@@ -623,7 +623,7 @@ function CharacterMessage({
           </div>
         ) : (
           <div className="flex items-start gap-2">
-            <div className="max-w-[85%] rounded-2xl rounded-tl-md bg-surface px-4 py-3 text-sm leading-relaxed">
+            <div className="max-w-[85%] rounded-2xl rounded-tl-md bg-surface px-4 py-3 text-sm leading-relaxed font-sans antialiased">
               <RichText text={text} />
             </div>
             {(onRegenerate || onEdit || onDelete) && (
@@ -706,7 +706,7 @@ function UserMessage({ text, onDelete }: { text: string; onDelete: () => void })
             e.preventDefault();
             setShowDelete(true);
           }}
-          className="cursor-pointer select-none whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-surface px-4 py-3 text-sm leading-relaxed active:opacity-90"
+          className="cursor-pointer select-none whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-surface px-4 py-3 text-sm leading-relaxed font-sans antialiased active:opacity-90"
         >
           {text}
         </div>
@@ -737,13 +737,13 @@ function UserMessage({ text, onDelete }: { text: string; onDelete: () => void })
 function RichText({ text }: { text: string }) {
   const parts = text.split(/("[^"]*"|“[^”]*”)/g).filter(Boolean);
   return (
-    <p className="whitespace-pre-wrap antialiased">
+    <p className="whitespace-pre-wrap font-sans antialiased">
       {parts.map((p, i) => {
         const isSpeech = /^["“].*["”]$/.test(p);
         return isSpeech ? (
-          <span key={i} className="font-bold text-foreground">{p}</span>
+          <span key={i} className="font-semibold text-foreground">{p}</span>
         ) : (
-          <span key={i} className="italic text-foreground">{p}</span>
+          <span key={i} className="font-sans font-normal italic text-foreground">{p}</span>
         );
       })}
     </p>
