@@ -466,7 +466,7 @@ function CreatePage() {
           </section>
 
           {/* Action buttons */}
-          <div className="fixed inset-x-0 bottom-16 left-1/2 flex w-full max-w-md -translate-x-1/2 flex-col items-center gap-3 px-5">
+          <div className="fixed inset-x-0 bottom-16 left-1/2 flex w-full max-w-md -translate-x-1/2 flex-col items-center gap-3 bg-gradient-to-t from-background via-background/95 to-transparent px-5 pb-5 pt-8">
             <button
               onClick={finish}
               disabled={!firstMessage.trim() || generatingFirst}
