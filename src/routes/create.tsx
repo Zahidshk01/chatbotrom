@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { Image as ImageIcon, Sparkles, Upload, RotateCcw, Pencil, Check, X, ChevronLeft, Wand2, Globe, EyeOff, Lock, Unlock } from "lucide-react";
+import { Image as ImageIcon, Sparkles, Upload, Pencil, Check, X, ChevronLeft, Wand2, Globe, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
