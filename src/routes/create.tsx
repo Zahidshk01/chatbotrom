@@ -393,7 +393,7 @@ function CreatePage() {
           </section>
 
           {/* Continue button */}
-          <div className="fixed inset-x-0 bottom-24 left-1/2 w-full max-w-md -translate-x-1/2 px-5">
+          <div className="fixed inset-x-0 bottom-20 left-1/2 w-full max-w-md -translate-x-1/2 bg-gradient-to-t from-background via-background/95 to-transparent px-5 pb-5 pt-8">
             <button
               onClick={goToFirstMessage}
               disabled={!image || !name.trim()}
