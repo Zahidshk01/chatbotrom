@@ -94,6 +94,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ff05b8c3-5103-4394-9803-48620fef7c98/id-preview-ada9fabd--96b47234-871a-4d26-a83b-f54bbedeeed8.lovable.app-1784642257090.png" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" },
       { rel: "stylesheet", href: appCss },
     ],
   }),
@@ -123,7 +126,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <div className="dark min-h-screen bg-background pb-24">
+        <div className="dark min-h-screen bg-background pb-24 font-sans antialiased">
           <AuthGate>
             <Outlet />
           </AuthGate>
