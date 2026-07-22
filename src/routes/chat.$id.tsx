@@ -695,7 +695,7 @@ function UserMessage({ text, onDelete }: { text: string; onDelete: () => void })
   };
   return (
     <div className="flex justify-end">
-      <div className="flex flex-col items-end gap-1">
+      <div className="flex max-w-[80%] flex-col items-end gap-1">
         <div
           onMouseDown={start}
           onMouseUp={cancel}
@@ -706,7 +706,7 @@ function UserMessage({ text, onDelete }: { text: string; onDelete: () => void })
             e.preventDefault();
             setShowDelete(true);
           }}
-          className="max-w-[80%] cursor-pointer select-none rounded-2xl rounded-br-md bg-surface px-4 py-3 text-sm leading-relaxed active:opacity-90"
+          className="cursor-pointer select-none whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-surface px-4 py-3 text-sm leading-relaxed active:opacity-90"
         >
           {text}
         </div>
