@@ -1,6 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { Image as ImageIcon, Sparkles, Upload, RotateCcw, Pencil, Check, X } from "lucide-react";
+import {
+  Image as ImageIcon, Sparkles, Upload, RotateCcw, Pencil, Check, X,
+  ChevronLeft, Globe, Lock, Wand2, ArrowRight,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -42,7 +45,6 @@ function CreatePage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<1 | 2>(1);
   const [image, setImage] = useState<string | null>(null);
-  const [showImageMenu, setShowImageMenu] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [name, setName] = useState("");
   const [generatingName, setGeneratingName] = useState(false);
@@ -53,20 +55,17 @@ function CreatePage() {
   const [editingFirst, setEditingFirst] = useState(false);
   const [generatingFirst, setGeneratingFirst] = useState(false);
   const [category, setCategory] = useState<CategoryId>("friends");
-  
 
   function onUpload(file?: File) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       setImage(reader.result as string);
-      setShowImageMenu(false);
     };
     reader.readAsDataURL(file);
   }
 
   function openAiPrompt() {
-    setShowImageMenu(false);
     setPromptOpen(true);
   }
 
@@ -115,8 +114,7 @@ function CreatePage() {
       const res = await fetch("/api/generate-name", {
         method: "POST",
         headers: await authHeaders(),
-      body: JSON.stringify({ image, description: aiPrompt, category }),
-
+        body: JSON.stringify({ image, description: aiPrompt, category }),
       });
       const json = (await res.json()) as { name?: string; error?: string };
       if (!res.ok || !json.name) {
@@ -160,7 +158,6 @@ function CreatePage() {
     if (!image) return toast("Add an image first");
     if (!name.trim()) return toast("Give your character a name");
     setStep(2);
-    
   }
 
   async function finish() {
@@ -193,81 +190,83 @@ function CreatePage() {
   }
 
   return (
-    <div className="safe-top px-5 pt-3 pb-28">
-      <div className="flex items-center justify-between">
+    <div className="safe-top min-h-screen bg-background pb-32">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-3">
+        <button
+          onClick={() => step === 1 ? navigate({ to: "/" }) : setStep(1)}
+          className="rounded-full p-2 text-foreground/90 active:bg-surface"
+          aria-label="Back"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <h1 className="text-lg font-semibold tracking-wide">Create</h1>
         <button
           onClick={() => navigate({ to: "/" })}
-          className="rounded-full bg-surface px-4 py-1.5 text-sm font-medium text-white"
+          className="rounded-full p-2 text-foreground/90 active:bg-surface"
+          aria-label="Cancel"
         >
-          Cancel
+          <X className="h-5 w-5" />
         </button>
       </div>
 
-      <div className="mt-6 flex gap-1.5">
-        <div className={`h-1.5 flex-1 rounded-full ${step >= 1 ? "bg-white" : "bg-surface"}`} />
-        <div className={`h-1.5 flex-1 rounded-full ${step >= 2 ? "bg-white" : "bg-surface"}`} />
-        <div className="h-1.5 flex-1 rounded-full bg-surface" />
+      {/* Progress */}
+      <div className="mx-4 mt-4 overflow-hidden rounded-full bg-surface">
+        <div className="grid grid-cols-2">
+          <div className={`py-2.5 text-center text-xs font-semibold transition-colors ${step === 1 ? "bg-white text-background" : "text-foreground/70"}`}>
+            Identity
+          </div>
+          <div className={`py-2.5 text-center text-xs font-semibold transition-colors ${step === 2 ? "bg-white text-background" : "text-foreground/70"}`}>
+            First message
+          </div>
+        </div>
       </div>
 
       {step === 1 && (
-        <>
-          <h1 className="mt-6 text-center text-3xl font-bold tracking-tight text-white">Identity</h1>
-
-          <section className="mt-7">
-            <label className="mb-2 block text-sm font-semibold text-white">Image</label>
-            <div className="relative rounded-2xl bg-surface p-4">
-              <button
-                type="button"
-                onClick={() => setShowImageMenu((v) => !v)}
-                className="relative flex h-40 w-full items-center justify-center overflow-hidden rounded-xl bg-surface-2"
-              >
-                {image ? (
-                  <img src={image} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <ImageIcon className="h-8 w-8 text-white/60" />
-                    <span className="text-sm text-white/60">Add character image</span>
+        <div className="px-4 pt-6">
+          {/* Image card */}
+          <section className="rounded-[28px] bg-surface p-4">
+            <div className="flex items-center justify-between px-1 pb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Character image</span>
+              <span className="text-[10px] text-muted-foreground">{image ? "1/1" : "0/1"}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-2xl bg-surface-2"
+            >
+              {image ? (
+                <img src={image} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-background">
+                    <ImageIcon className="h-6 w-6 text-foreground/50" />
                   </div>
-                )}
-                {generating && (
-                  <div className="absolute inset-0 grid place-items-center bg-background/60 backdrop-blur-sm">
-                    <Sparkles className="h-5 w-5 animate-pulse text-white" />
-                  </div>
-                )}
-              </button>
-
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-full border border-border py-2.5 text-sm text-white"
-                >
-                  <Upload className="h-4 w-4" />
-                  {image ? "Change" : "Upload"}
-                </button>
-                <button
-                  onClick={openAiPrompt}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-full border border-border py-2.5 text-sm text-white"
-                >
-                  <Sparkles className="h-4 w-4" /> Generate AI
-                </button>
-              </div>
-
-              {showImageMenu && (
-                <div className="absolute left-4 right-4 top-48 z-20 overflow-hidden rounded-2xl border border-border bg-surface-2 shadow-lg">
-                  <button
-                    onClick={() => fileRef.current?.click()}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-white hover:bg-surface"
-                  >
-                    <Upload className="h-4 w-4" /> Upload from device
-                  </button>
-                  <button
-                    onClick={openAiPrompt}
-                    className="flex w-full items-center gap-3 border-t border-border px-4 py-3 text-left text-sm text-white hover:bg-surface"
-                  >
-                    <Sparkles className="h-4 w-4" /> Generate with AI
-                  </button>
+                  <span className="text-sm text-muted-foreground">Tap to upload</span>
                 </div>
               )}
+              {generating && (
+                <div className="absolute inset-0 grid place-items-center bg-background/70 backdrop-blur-sm">
+                  <Sparkles className="h-5 w-5 animate-pulse text-foreground" />
+                </div>
+              )}
+            </button>
+
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex items-center justify-center gap-2 rounded-full bg-surface-2 py-2.5 text-xs font-semibold text-foreground active:bg-background"
+              >
+                <Upload className="h-4 w-4" />
+                {image ? "Change image" : "Upload image"}
+              </button>
+              <button
+                onClick={openAiPrompt}
+                className="flex items-center justify-center gap-2 rounded-full bg-white py-2.5 text-xs font-semibold text-background active:opacity-90"
+              >
+                <Wand2 className="h-4 w-4" />
+                Generate AI
+              </button>
             </div>
             <input
               ref={fileRef}
@@ -278,53 +277,84 @@ function CreatePage() {
             />
           </section>
 
-          <section className="mt-6">
-            <label className="mb-2 block text-sm font-semibold text-white">Name</label>
-            <div className="rounded-2xl bg-surface px-4 py-3">
+          {/* Name */}
+          <section className="mt-5">
+            <label className="mb-2 block px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</label>
+            <div className="rounded-[28px] bg-surface p-4">
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Add a name for your Chat AI"
-                className="w-full bg-transparent text-[15px] text-white outline-none placeholder:text-muted-foreground"
+                placeholder="e.g. Aria Wraith"
+                className="w-full bg-transparent text-[17px] font-semibold text-foreground outline-none placeholder:text-muted-foreground"
               />
-              <div className="mt-2 flex justify-end gap-5 pt-1 text-sm text-muted-foreground">
-                <button
-                  onClick={generateName}
-                  disabled={generatingName}
-                  className="flex items-center gap-1.5 active:text-white disabled:opacity-50"
-                >
-                  <RotateCcw className={`h-4 w-4 ${generatingName ? "animate-spin" : ""}`} />
-                  {generatingName ? "Generating…" : "Generate"}
-                </button>
-                <button className="flex items-center gap-1.5 active:text-white">
-                  <Pencil className="h-4 w-4" /> Edit
-                </button>
+              <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                <span className="text-xs text-muted-foreground">{name.length}/30</span>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={generateName}
+                    disabled={generatingName}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-foreground/80 active:text-foreground disabled:opacity-50"
+                  >
+                    <RotateCcw className={`h-3.5 w-3.5 ${generatingName ? "animate-spin" : ""}`} />
+                    {generatingName ? "Generating…" : "Generate"}
+                  </button>
+                  <button className="flex items-center gap-1.5 text-xs font-semibold text-foreground/80 active:text-foreground">
+                    <Pencil className="h-3.5 w-3.5" /> Edit
+                  </button>
+                </div>
               </div>
             </div>
           </section>
 
+          {/* Category */}
+          <section className="mt-5">
+            <label className="mb-2 block px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Category</label>
+            <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+              {CATEGORIES.map((c) => {
+                const active = category === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => setCategory(c.id)}
+                    className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition active:scale-95 ${
+                      active
+                        ? "bg-white text-background"
+                        : "bg-surface text-foreground/80"
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
 
-          <section className="mt-6">
-            <label className="mb-2 block text-sm font-semibold text-white">Visibility</label>
+          {/* Visibility */}
+          <section className="mt-5">
+            <label className="mb-2 block px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Visibility</label>
             <div className="space-y-2.5">
               {(
                 [
-                  { id: "public", title: "Public", desc: "Visible and available to everyone" },
-                  { id: "private", title: "Private", desc: "Only visible and available to you" },
+                  { id: "public", title: "Public", desc: "Visible to everyone on Kender", icon: Globe },
+                  { id: "private", title: "Private", desc: "Only you can see this character", icon: Lock },
                 ] as const
               ).map((opt) => {
                 const active = visibility === opt.id;
+                const Icon = opt.icon;
                 return (
                   <button
                     key={opt.id}
                     onClick={() => setVisibility(opt.id)}
-                    className={`flex w-full items-start justify-between rounded-2xl bg-surface p-4 text-left transition ${
-                      active ? "ring-2 ring-white" : ""
+                    className={`flex w-full items-center gap-4 rounded-[24px] bg-surface p-4 text-left transition active:scale-[0.99] ${
+                      active ? "ring-1 ring-inset ring-foreground/30" : ""
                     }`}
                   >
-                    <div>
-                      <div className="text-base font-semibold text-white">{opt.title}</div>
-                      <div className="text-sm text-muted-foreground">{opt.desc}</div>
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-2">
+                      <Icon className="h-4 w-4 text-foreground/80" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[15px] font-semibold text-foreground">{opt.title}</div>
+                      <div className="text-xs text-muted-foreground">{opt.desc}</div>
                     </div>
                     {active ? (
                       <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-background">
@@ -339,104 +369,117 @@ function CreatePage() {
             </div>
           </section>
 
-          <div className="fixed inset-x-0 bottom-20 left-1/2 w-full max-w-md -translate-x-1/2 px-5">
+          {/* Continue */}
+          <div className="fixed inset-x-0 bottom-20 left-1/2 w-full max-w-md -translate-x-1/2 px-4">
             <button
               onClick={goToFirstMessage}
               disabled={!image || !name.trim()}
-              className="h-13 w-full rounded-full bg-white py-3.5 text-base font-semibold text-background disabled:opacity-50"
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-white text-base font-semibold text-background active:opacity-90 disabled:opacity-40"
             >
               Continue
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
-        </>
+        </div>
       )}
 
       {step === 2 && (
-        <>
-          <h1 className="mt-6 text-center text-3xl font-bold tracking-tight text-white">First message</h1>
-          <p className="mt-2 text-center text-[15px] text-muted-foreground">
-            Specify the first message your chat AI will use to start conversations.
-          </p>
-
-          <div className="mt-6 flex flex-col items-center">
-            <div className="h-24 w-24 overflow-hidden rounded-2xl bg-surface-2">
+        <div className="px-4 pt-8">
+          {/* Character preview */}
+          <div className="flex flex-col items-center">
+            <div className="relative h-28 w-28 overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
               {image && <img src={image} alt="" className="h-full w-full object-cover" />}
             </div>
-            <p className="mt-2 text-[15px] font-medium text-white">{name}</p>
+            <h2 className="mt-3 text-xl font-semibold">{name}</h2>
+            <p className="text-xs text-muted-foreground">{CATEGORIES.find(c => c.id === category)?.label} · {visibility}</p>
           </div>
 
-          <div className="mt-5 rounded-2xl bg-surface p-4">
-            {editingFirst ? (
-              <textarea
-                value={firstMessage}
-                onChange={(e) => setFirstMessage(e.target.value)}
-                rows={7}
-                autoFocus
-                className="w-full resize-none bg-transparent text-[15px] leading-relaxed text-white outline-none"
-              />
-            ) : (
-              <div className="min-h-[160px] whitespace-pre-wrap text-[15px] leading-relaxed text-white">
-                {generatingFirst ? (
-                  <span className="flex items-center gap-2 text-muted-foreground">
-                    <Sparkles className="h-4 w-4 animate-pulse text-white" /> Writing an opening scene…
-                  </span>
-                ) : (
-                  firstMessage || (
-                    <span className="text-muted-foreground">Tap Generate to draft an opener.</span>
-                  )
-                )}
+          {/* First message */}
+          <section className="mt-6">
+            <label className="mb-2 block px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opening message</label>
+            <div className="rounded-[28px] bg-surface p-4">
+              {editingFirst ? (
+                <textarea
+                  value={firstMessage}
+                  onChange={(e) => setFirstMessage(e.target.value)}
+                  rows={6}
+                  autoFocus
+                  className="w-full resize-none bg-transparent text-[15px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground"
+                />
+              ) : (
+                <div className="min-h-[140px] whitespace-pre-wrap text-[15px] leading-relaxed text-foreground">
+                  {generatingFirst ? (
+                    <span className="flex items-center gap-2 text-muted-foreground">
+                      <Sparkles className="h-4 w-4 animate-pulse text-foreground" /> Writing an opening scene…
+                    </span>
+                  ) : (
+                    firstMessage || (
+                      <span className="text-muted-foreground">Tap generate to draft an opener.</span>
+                    )
+                  )}
+                </div>
+              )}
+              <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                <span className="text-xs text-muted-foreground">{firstMessage.length}/500</span>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={generateFirstMessage}
+                    disabled={generatingFirst}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-foreground/80 active:text-foreground disabled:opacity-50"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" /> Generate
+                  </button>
+                  <button
+                    onClick={() => setEditingFirst((v) => !v)}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-foreground/80 active:text-foreground"
+                  >
+                    <Pencil className="h-3.5 w-3.5" /> {editingFirst ? "Done" : "Edit"}
+                  </button>
+                </div>
               </div>
-            )}
-            <div className="mt-3 flex justify-end gap-5 border-t border-border pt-2.5 text-sm text-muted-foreground">
+            </div>
+          </section>
+
+          {/* Action buttons */}
+          <div className="fixed inset-x-0 bottom-20 left-1/2 w-full max-w-md -translate-x-1/2 px-4">
+            <div className="space-y-3">
               <button
-                onClick={generateFirstMessage}
-                disabled={generatingFirst}
-                className="flex items-center gap-1.5 active:text-white disabled:opacity-50"
+                onClick={finish}
+                disabled={!firstMessage.trim() || generatingFirst}
+                className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-white text-base font-semibold text-background active:opacity-90 disabled:opacity-40"
               >
-                <RotateCcw className="h-4 w-4" /> Generate
+                Create character
+                <ArrowRight className="h-4 w-4" />
               </button>
               <button
-                onClick={() => setEditingFirst((v) => !v)}
-                className="flex items-center gap-1.5 active:text-white"
+                onClick={() => setStep(1)}
+                className="w-full text-center text-sm font-medium text-muted-foreground active:text-foreground"
               >
-                <Pencil className="h-4 w-4" /> {editingFirst ? "Done" : "Edit"}
+                Back to identity
               </button>
             </div>
           </div>
-
-          <div className="fixed inset-x-0 bottom-16 left-1/2 flex w-full max-w-md -translate-x-1/2 flex-col items-center gap-3 px-5">
-            <button
-              onClick={finish}
-              disabled={!firstMessage.trim() || generatingFirst}
-              className="h-13 w-full rounded-full bg-white py-3.5 text-base font-semibold text-background disabled:opacity-50"
-            >
-              Continue
-            </button>
-            <button
-              onClick={() => setStep(1)}
-              className="text-sm font-medium text-muted-foreground"
-            >
-              Back
-            </button>
-          </div>
-        </>
+        </div>
       )}
 
+      {/* AI prompt modal */}
       {promptOpen && (
         <div
-          className="fixed inset-0 z-[100] grid place-items-center bg-black/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[100] grid place-items-center bg-black/70 backdrop-blur-sm p-4"
           onClick={() => !generating && setPromptOpen(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-3xl bg-surface p-5 shadow-elegant"
+            className="w-full max-w-md rounded-[28px] bg-surface p-5"
           >
-            <div className="mb-3 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-white" />
-              <h2 className="text-lg font-semibold text-white">Generate anime character</h2>
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-2">
+                <Wand2 className="h-4 w-4 text-foreground" />
+              </div>
+              <h2 className="text-lg font-semibold text-foreground">Generate with AI</h2>
             </div>
             <p className="mb-3 text-sm text-muted-foreground">
-              Describe your character — looks, vibe, outfit, mood.
+              Describe the look, vibe, and outfit of your character.
             </p>
             <form
               onSubmit={(e) => {
@@ -456,13 +499,13 @@ function CreatePage() {
                 }}
                 placeholder="e.g. silver-haired swordswoman with violet eyes, hooded cloak, dusk lighting"
                 rows={4}
-                className="w-full resize-none rounded-2xl bg-surface-2 p-3 text-sm text-white outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-white"
+                className="w-full resize-none rounded-2xl bg-surface-2 p-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-white"
               />
               <div className="mt-4 flex gap-2">
                 <button
                   type="button"
                   onClick={() => setPromptOpen(false)}
-                  className="flex-1 rounded-full bg-surface-2 py-3 text-sm font-medium text-white"
+                  className="flex-1 rounded-full bg-surface-2 py-3 text-sm font-medium text-foreground"
                 >
                   Cancel
                 </button>
@@ -471,7 +514,7 @@ function CreatePage() {
                   disabled={!aiPrompt.trim()}
                   className="flex-1 rounded-full bg-white py-3 text-sm font-semibold text-background disabled:opacity-50"
                 >
-                  Submit
+                  Generate
                 </button>
               </div>
             </form>
