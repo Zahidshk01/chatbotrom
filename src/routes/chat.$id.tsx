@@ -623,7 +623,7 @@ function CharacterMessage({
           </div>
         ) : (
           <div className="flex items-start gap-2">
-            <div className="max-w-[85%] rounded-2xl rounded-tl-md bg-surface px-4 py-3 text-sm leading-relaxed">
+            <div className="max-w-[95%] rounded-2xl rounded-tl-md bg-surface px-4 py-3 text-sm leading-relaxed">
               <RichText text={text} />
             </div>
             {(onRegenerate || onEdit || onDelete) && (
