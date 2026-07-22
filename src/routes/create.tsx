@@ -208,33 +208,33 @@ function CreatePage() {
           <h1 className="mt-6 text-center text-3xl font-bold tracking-tight">Create character</h1>
 
           <section className="mt-7">
-            <label className="mb-2 block text-sm font-semibold">Image</label>
-            <div className="relative flex items-center gap-3 rounded-2xl bg-surface p-3">
+            <label className="mb-3 block text-sm font-semibold">Image</label>
+            <div className="relative flex flex-col items-center gap-3 rounded-2xl bg-surface p-4">
               <button
                 type="button"
                 onClick={() => setShowImageMenu((v) => !v)}
-                className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-surface-2"
+                className="relative h-48 w-48 shrink-0 overflow-hidden rounded-2xl bg-surface-2"
               >
                 {image ? (
                   <img src={image} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
-                    <ImageIcon className="h-7 w-7 text-muted-foreground" />
+                    <ImageIcon className="h-10 w-10 text-muted-foreground" />
                   </div>
                 )}
                 {generating && (
                   <div className="absolute inset-0 grid place-items-center bg-background/60 backdrop-blur-sm">
-                    <Sparkles className="h-5 w-5 animate-pulse text-primary" />
+                    <Sparkles className="h-6 w-6 animate-pulse text-primary" />
                   </div>
                 )}
               </button>
-              <div className="flex-1">
+              <div className="flex flex-col items-center gap-1">
                 <p className="text-[15px] font-semibold leading-snug">
-                  {image ? "Tap the image to change" : "Upload an Image for your Chat AI"}
+                  {image ? "Tap the image to change" : "Upload or generate image"}
                 </p>
                 <button
                   onClick={() => setShowImageMenu((v) => !v)}
-                  className="mt-2 inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-1.5 text-sm"
+                  className="inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-1.5 text-sm"
                 >
                   <Upload className="h-4 w-4" />
                   {image ? "Change" : "Upload"}
@@ -242,7 +242,7 @@ function CreatePage() {
               </div>
 
               {showImageMenu && (
-                <div className="absolute left-3 top-[108px] z-20 w-[calc(100%-1.5rem)] overflow-hidden rounded-2xl border border-border bg-surface-2 shadow-elegant">
+                <div className="absolute top-56 z-20 w-[calc(100%-2rem)] overflow-hidden rounded-2xl border border-border bg-surface-2 shadow-elegant">
                   <button
                     onClick={() => fileRef.current?.click()}
                     className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-surface"
