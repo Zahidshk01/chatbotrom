@@ -273,7 +273,7 @@ function CreatePage() {
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Add a name for your Chat AI"
+                placeholder="Name your character"
                 className="w-full bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
               />
               <div className="mt-2 flex justify-end gap-5 pt-1 text-sm text-muted-foreground">
