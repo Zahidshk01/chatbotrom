@@ -4,6 +4,7 @@ import { Search, Trash2, MessageCircle, X, CheckCircle2, Circle } from "lucide-r
 import { supabase } from "@/integrations/supabase/client";
 import { characters as localCharacters } from "@/lib/mock-data";
 import { resolveImage } from "@/lib/character-images";
+import { useAuth } from "@/hooks/useAuth";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +47,7 @@ function timeAgo(iso: string) {
 
 function ChatsPage() {
   const navigate = useNavigate();
+  const { session } = useAuth();
   const [chats, setChats] = useState<ChatRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectMode, setSelectMode] = useState(false);
@@ -57,14 +59,12 @@ function ChatsPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data: sess } = await supabase.auth.getSession();
-    const uid = sess.session?.user.id;
+    const uid = session?.user.id;
     if (!uid) {
-      setChats([]);
       setLoading(false);
       return;
     }
-    const { data: msgs } = await (supabase as any)
+    const { data: msgs, error: messagesError } = await (supabase as any)
       .from("chat_messages")
       .select("character_id, content, created_at, role")
       .eq("user_id", uid)
@@ -72,8 +72,7 @@ function ChatsPage() {
       // Only the newest slice is needed to build the conversation list —
       // pulling the entire message history made this page slow to open.
       .limit(300);
-    if (!msgs) {
-      setChats([]);
+    if (messagesError) {
       setLoading(false);
       return;
     }
@@ -114,8 +113,8 @@ function ChatsPage() {
   };
 
   useEffect(() => {
-    load();
-  }, []);
+    void load();
+  }, [session?.user.id, session?.access_token]);
 
   const exitSelect = () => {
     setSelectMode(false);
