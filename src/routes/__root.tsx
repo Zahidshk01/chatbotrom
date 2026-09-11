@@ -123,6 +123,14 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    const refreshAccountData = () => {
+      void queryClient.invalidateQueries({ queryKey: ["characters"] });
+    };
+    window.addEventListener("kender:session-ready", refreshAccountData);
+    return () => window.removeEventListener("kender:session-ready", refreshAccountData);
+  }, [queryClient]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

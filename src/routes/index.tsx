@@ -27,7 +27,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const { data: characters = [], isLoading: loading } = useQuery(charactersQuery(true));
+  const { data: characters = [], isLoading: loading, isError, refetch } = useQuery(charactersQuery(true));
   const blocked = useBlockedTargets();
   const isPro = useIsPro();
 
@@ -69,10 +69,19 @@ function HomePage() {
 
       {loading ? (
         <div className="p-4 text-sm text-muted-foreground">Loading characters...</div>
-      ) : characters.length === 0 ? (
-        <div className="p-4 text-sm text-muted-foreground">
-          No characters found in Supabase.
+      ) : isError ? (
+        <div className="px-6 py-16 text-center">
+          <p className="text-sm text-muted-foreground">Characters couldn&apos;t load right now.</p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="mt-4 rounded-full bg-surface px-5 py-2.5 text-sm font-semibold text-foreground"
+          >
+            Try again
+          </button>
         </div>
+      ) : characters.length === 0 ? (
+        <div className="p-4 text-sm text-muted-foreground">No characters are available yet.</div>
       ) : (
         <div className="divide-y divide-border/60">
           {feed.map((c, i) => (

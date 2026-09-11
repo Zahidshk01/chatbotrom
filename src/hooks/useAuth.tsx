@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const signedOutRef = useRef(false);
-  const refreshInFlightRef = useRef<Promise<void> | null>(null);
+  const restoreInFlightRef = useRef<Promise<void> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,35 +85,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signedOutRef.current = false;
       setSession(s);
       setLoading(false);
+      window.dispatchEvent(new CustomEvent("kender:session-ready"));
     });
 
     const load = async () => {
       if (signedOutRef.current) return;
-      if (refreshInFlightRef.current) return refreshInFlightRef.current;
+      if (restoreInFlightRef.current) return restoreInFlightRef.current;
 
-      const refresh = (async () => {
+      const restore = (async () => {
         try {
           const { data, error } = await supabase.auth.getSession();
           if (cancelled) return;
 
-          let nextSession = data.session;
-          const expiresAtMs = (nextSession?.expires_at ?? 0) * 1000;
-          const needsRefresh = !!nextSession && expiresAtMs <= Date.now() + 60_000;
-
-          // Mobile browsers suspend refresh timers while the app is closed.
-          // Force exactly one refresh on wake when the stored access token is
-          // expired/near expiry. The shared promise prevents focus,
-          // visibilitychange and online events from rotating it concurrently.
-          if (needsRefresh) {
-            const refreshed = await supabase.auth.refreshSession();
-            if (cancelled) return;
-            if (refreshed.data.session) nextSession = refreshed.data.session;
-            else if (refreshed.error) return;
-          }
-
-          if (nextSession) {
+          // getSession() already performs the SDK's serialized refresh when an
+          // access token is stale. Calling refreshSession() again here races
+          // the SDK's own wake-up refresh and can invalidate a rotated token.
+          if (data.session) {
             signedOutRef.current = false;
-            setSession(nextSession);
+            setSession(data.session);
+            window.dispatchEvent(new CustomEvent("kender:session-ready"));
           } else if (error && hasStoredSession()) {
             return;
           }
@@ -124,11 +114,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       })();
 
-      refreshInFlightRef.current = refresh;
+      restoreInFlightRef.current = restore;
       try {
-        await refresh;
+        await restore;
       } finally {
-        if (refreshInFlightRef.current === refresh) refreshInFlightRef.current = null;
+        if (restoreInFlightRef.current === restore) restoreInFlightRef.current = null;
       }
     };
 
@@ -144,12 +134,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     document.addEventListener("visibilitychange", revalidate);
     window.addEventListener("online", handleOnline);
     window.addEventListener("focus", revalidate);
+    window.addEventListener("pageshow", revalidate);
 
     return () => {
       cancelled = true;
       document.removeEventListener("visibilitychange", revalidate);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("focus", revalidate);
+      window.removeEventListener("pageshow", revalidate);
       sub.subscription.unsubscribe();
     };
   }, []);
